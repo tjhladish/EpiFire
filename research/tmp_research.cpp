@@ -4,10 +4,10 @@ int main() {
     
         // Construct Network
         Network net("name", false);
-        net.populate(10000);
+        net.populate(10001);
         net.erdos_renyi(5);
 
-    for (int i = 0; i < 10000; i++){
+    for (int i = 0; i < 10001; i++){
         // Choose and run simulation
         Percolation_Sim sim(&net);
         sim.set_transmissibility(0.2);
