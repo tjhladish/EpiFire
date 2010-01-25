@@ -1,3 +1,5 @@
+//example code
+
 #include <Percolation_Sim.h>
 
 int main() {
