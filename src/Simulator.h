@@ -1,0 +1,85 @@
+#ifndef SIMULATOR_H
+#define SIMULATOR_H
+
+#include "Network.h"
+#include <assert.h>
+#include <queue>
+
+class Simulator
+{
+
+    public:
+
+        int time;
+        Network* net;
+        MTRand* mtrand;
+
+        Simulator() { time = 0; net=NULL; mtrand=NULL; };
+        Simulator(Network* net) { this->net = net; this->time = 0; this->mtrand = net->get_rng(); };
+        //       ~Simulator(){};
+
+        void set_network( Network* net ) { this->net = net; this->mtrand = net->get_rng(); };
+        Network* network() { return(net); };
+        
+        int get_time() { return(time); };
+        
+        void reset_time() { time = 0; };
+        
+        void set_all_nodes_to_state ( stateType s ) {
+            vector<Node*> nodes = net->get_nodes();
+            set_these_nodes_to_state(nodes, s);
+        };
+        
+        void set_these_nodes_to_state (vector<Node*> nodes, stateType s) {
+            for (int i = 0; i < nodes.size(); i++) nodes[i]->set_state(s);
+        }
+       
+        // change n random nodes to state s (e.g. vaccinate them or infect them randomly)
+        vector<Node*> rand_set_nodes_to_state (int n, stateType state) {
+            assert(n > -1);
+            vector<Node*> nodes = net->get_nodes();
+            vector<Node*> sample(n);
+            vector<int> sample_ids(n);
+            rand_nchoosek(net->size(), sample_ids, mtrand);
+            Node* node;
+            for (int i = 0; i < sample_ids.size(); i++) {
+                node = nodes[ sample_ids[i] ];
+                node->set_state(state);
+                sample[i] = node;
+            };
+            return sample;
+        }
+
+
+        double calc_critical_transmissibility() {
+            vector<double> dist = net->get_gen_deg_dist();
+            double numerator = 0;   // mean degree, (= <k>)
+            double denominator = 0; // mean sq(deg) - mean deg (= <k^2> - <k>) 
+            for (int k=1; k < dist.size(); k++) {
+                numerator += k * dist[k];
+                denominator += k * (k-1) * dist[k];
+            }
+            return numerator/denominator;
+        }
+       
+        //these functions must be derived in child class
+        virtual void step_simulation() {};
+        virtual void run_simulation() {};
+
+};
+
+/*
+class Derived_Example_Simulator: public Simulator {
+
+    public:
+        Derived_Example_Simulator();
+        Derived_Example_Simulator(Network* net);
+        ~Derived_Example_Simulator();
+
+        void step_simulation() { time++; do_stuff_to_network;  };
+        void run_simulation() { while(conditional) { step_simulation() } };
+
+};
+*/
+
+#endif
