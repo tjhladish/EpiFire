@@ -3,19 +3,21 @@ INCLUDE= -I../src/
 #LDFLAGS= -L../src/ -lsim 
 LDFLAGS=  ../src/*.o
 
-all: test_network  example2 EX1_mass_action
+all: test_network ex1_mass_action ex2_percolation ex3_chain_binomial
 
 test_network: test_network.cpp 
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_network.cpp -o test_network  
 
-example2: example2.cpp
-	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) example2.cpp -o example2
+ex1_mass_action: ex1_mass_action.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex1_mass_action.cpp -o ex1_mass_action
 
-EX1_mass_action: EX1_mass_action.cpp
-	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) EX1_mass_action.cpp -o EX1_mass_action
+ex2_percolation: ex2_percolation.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex2_percolation.cpp -o ex2_percolation
 
+ex3_chain_binomial: ex3_chain_binomial.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex3_chain_binomial.cpp -o ex3_chain_binomial
 
 
 clean:
-	rm -f test_network 
+	rm -f test_network ex1_mass_action ex2_percolation ex3_chain_binomial
 
