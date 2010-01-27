@@ -1,8 +1,8 @@
 
-all: test
+all: tmp_research
 
-test: tmp_research.cpp
-	g++ -I ../src ../src/*.o  tmp_research.cpp -o test
+tmp_research: tmp_research.cpp
+	g++ -I ../src ../src/*.o  tmp_research.cpp -o tmp_research
 
 
 
