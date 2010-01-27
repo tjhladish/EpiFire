@@ -89,6 +89,7 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
              << ".  Fix this using Utilities::normalize_dist()\n";
         exit(1);
     }
+    return -1;
 }
 
 double rand_exp(double lambda, MTRand* mtrand) {

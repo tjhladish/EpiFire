@@ -371,7 +371,7 @@ vector<Node*> Network::get_major_component() {
     vector<int> remaining_nodes(size(),1);
 
     while (sum(remaining_nodes) > major_comp.size()) {
-        Node* starting_point;
+        Node* starting_point = NULL;
         for ( int i = 0; i < remaining_nodes.size(); i++ ) {
             if (remaining_nodes[i] == 1) {
                 starting_point = get_node(i);
@@ -508,7 +508,7 @@ double Network::transitivity (vector<Node*> node_set) {
 
 double Network::mean_dist() { // average distance between nodes in network
     vector< vector<double> > distance_matrix = all_distances();
-    double grand_total;
+    double grand_total = 0;
     for( int i=0; i < distance_matrix.size(); i++ ) {
         grand_total += sum(distance_matrix[i]); 
     }
