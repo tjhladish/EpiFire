@@ -56,7 +56,7 @@ Network* Network::duplicate() {
         vector<Edge*> edges = node->get_edges_out();
         vector<Edge*> edge_copies = node_copy->get_edges_out();
 
-        for (int j = 0; j < edges.size(); j++) {
+        for (unsigned int j = 0; j < edges.size(); j++) {
             edge_copies[j]->id    = edges[j]->get_id();
             edge_copies[j]->cost  = edges[j]->get_cost();
             edge_copies[j]->end   = edges[j]->get_end();
@@ -67,7 +67,7 @@ Network* Network::duplicate() {
 
 
 Network::~Network() {
-    for (int i = 0; i < node_list.size(); i++) {
+    for (unsigned int i = 0; i < node_list.size(); i++) {
         delete node_list[i];
     }
     //delete mtrand;
@@ -100,7 +100,7 @@ void Network::delete_node(Node* node) {
 
 
 Node* Network::get_node(int node_id) {
-    assert(node_id < node_list.size() );
+    assert((unsigned) node_id < node_list.size() );
     
     Node* lucky_node = node_list[node_id];
     if (lucky_node->id == node_id) {
@@ -116,7 +116,7 @@ Node* Network::get_node(int node_id) {
 }
 
 void Network::ring_lattice(int k) {
-    for (int i = 0; i < node_list.size(); i++) {
+    for (unsigned int i = 0; i < node_list.size(); i++) {
         for (int j = 1; j <= k; j++) {
             int dest = (i+j) % node_list.size();
             node_list[i]->connect_to(node_list[dest]);
@@ -153,7 +153,7 @@ void Network::square_lattice(int R, int C, bool diag) {
     }
 }
 
-void Network::small_world(double p) {}
+//void Network::small_world(double p) {}
 
                 // generates a poisson network vi the Erdos & Renyi algorithm
 void Network::erdos_renyi(double lambda) {
@@ -201,7 +201,7 @@ void Network::rand_connect_user(map<int,double>) {
 void Network::rand_connect_explicit(vector<int> degree_series) {
     assert(degree_series.size() == node_list.size());
     assert(sum(degree_series) % 2 == 0);
-    for (int i = 0; i < degree_series.size(); i++ ) {
+    for (unsigned int i = 0; i < degree_series.size(); i++ ) {
         node_list[i]->add_stubs(degree_series[i]);
     }
     rand_connect_stubs( get_edges() );
@@ -238,7 +238,7 @@ void Network::rand_connect_stubs(vector<Edge*> stubs) {
     //connect stubs
 
     //int stupid_var = stubs.size() - 1;
-    for (int i = 0; i < stubs.size() - 1; i += 2 ) {
+    for (unsigned int i = 0; i < stubs.size() - 1; i += 2 ) {
         m  = stubs[i];
         n  = stubs[i  + 1];
         m->define_end(n->start);
@@ -321,7 +321,7 @@ void Network::lose_loops() {
         Edge* edge1_comp = edge1->get_complement();
         bad_edges.pop_back();
 
-        for ( int i = 0; i < bad_edges.size(); i++ ) {
+        for ( unsigned int i = 0; i < bad_edges.size(); i++ ) {
             if ( bad_edges[i]==edge1_comp ) {
                 bad_edges.erase(bad_edges.begin() + i);
 //                cerr << "spliced out complement " << endl;
@@ -348,7 +348,7 @@ void Network::get_bad_edges(vector<Edge*> &self_loops, vector<Edge*> &multiedges
     Edge* edge;
     Node* start;
     Node* end;
-    for(int i=0; i < edges.size(); i++ ) {
+    for(unsigned int i=0; i < edges.size(); i++ ) {
         edge = edges[i];
         start = edge->start;
         end = edge->end;
@@ -370,9 +370,9 @@ vector<Node*> Network::get_major_component() {
     vector<Node*> major_comp(0);
     vector<int> remaining_nodes(size(),1);
 
-    while (sum(remaining_nodes) > major_comp.size()) {
+    while ((unsigned) sum(remaining_nodes) > major_comp.size()) {
         Node* starting_point = NULL;
-        for ( int i = 0; i < remaining_nodes.size(); i++ ) {
+        for ( unsigned int i = 0; i < remaining_nodes.size(); i++ ) {
             if (remaining_nodes[i] == 1) {
                 starting_point = get_node(i);
                 break;
@@ -380,7 +380,7 @@ vector<Node*> Network::get_major_component() {
         }
 
         vector<Node*> temp_comp = get_component(starting_point);
-        for ( int i = 0; i < temp_comp.size(); i++ ) remaining_nodes[i] = 0;
+        for ( unsigned int i = 0; i < temp_comp.size(); i++ ) remaining_nodes[i] = 0;
         if (temp_comp.size() > major_comp.size()) major_comp = temp_comp;        
     }
     return major_comp;
@@ -396,9 +396,9 @@ vector<Node*> Network::get_component(Node* node) {
     
     while (hot_nodes.size() > 0) {
        vector<Node*> new_hot_nodes;
-       for (int i = 0; i < hot_nodes.size(); i++) {
+       for (unsigned int i = 0; i < hot_nodes.size(); i++) {
             vector<Node*> neighbors = hot_nodes[i]->get_neighbors();
-            for (int j = 0; j < neighbors.size(); j++) {
+            for (unsigned int j = 0; j < neighbors.size(); j++) {
                 if ( state[neighbors[j]->id] > 0 ) continue; // maybe you've already looked at this node
                 state[neighbors[j]->id] = 1;
                 new_hot_nodes.push_back( neighbors[j] );
@@ -423,7 +423,7 @@ void Network::_assign_deg_series() {
 }
 
 void Network::gen_deg_series(vector<int> &deg_series) {
-    for (int i = 0; i < deg_series.size(); i++ ) {
+    for (unsigned int i = 0; i < deg_series.size(); i++ ) {
         deg_series[i] = rand_nonuniform_int(gen_deg_dist, &mtrand);
     }
 
@@ -442,7 +442,7 @@ vector<int> Network::get_deg_series () {
 vector<int> Network::get_deg_dist () {
     vector<int> series = get_deg_series();
     vector<int> deg_dist(max_element(series) + 1);
-    for (int i = 0; i < series.size(); i++) deg_dist[ series[i] ]++;
+    for (unsigned int i = 0; i < series.size(); i++) deg_dist[ series[i] ]++;
     return deg_dist;
 }
 
@@ -457,7 +457,7 @@ double Network::mean_deg () {
 vector<int> Network::get_states() {
     vector<int> states(size());
     vector<Node*> nodes = get_nodes();
-    for (int i = 0; i < nodes.size(); i++) {
+    for (unsigned int i = 0; i < nodes.size(); i++) {
         states[i] = nodes[i]->get_state();
     }
     return states;
@@ -468,13 +468,13 @@ vector<int> Network::get_states() {
 vector< vector<int> > Network::get_states_by_degree() {
     vector<int> deg_dist = get_deg_dist();
     vector< vector<int> > states_by_degree(deg_dist.size());
-    for (int i=0; i<states_by_degree.size(); i++ ) {
+    for (unsigned int i=0; i<states_by_degree.size(); i++ ) {
         vector<int> states(deg_dist[i], 0);
         states_by_degree[i] = states;
     }
     vector<int> counter(deg_dist.size(), 0);
     vector<Node*> nodes = get_nodes();
-    for ( int i = 0; i < nodes.size(); i++ ) {
+    for ( unsigned int i = 0; i < nodes.size(); i++ ) {
         int deg   = nodes[i]->deg();
         states_by_degree[deg][counter[deg]] = nodes[i]->get_state();
         counter[deg]++;
@@ -488,13 +488,13 @@ double Network::transitivity (vector<Node*> node_set) {
     int tripples  = 0;
     Node *a, *b, *c;
     
-    for (int i = 0; i < node_list.size(); i++) {
+    for (unsigned int i = 0; i < node_list.size(); i++) {
         a = node_list[i];
         vector<Node*> neighborhood_a = a->get_neighbors();
-        for (int j = 0; j < neighborhood_a.size(); j++) {
+        for (unsigned int j = 0; j < neighborhood_a.size(); j++) {
             b = neighborhood_a[j];
             vector<Node*> neighborhood_b = b->get_neighbors();
-            for (int k = 0; k < neighborhood_b.size(); k++) {
+            for (unsigned int k = 0; k < neighborhood_b.size(); k++) {
                 c = neighborhood_b[k];
                 if ( c == a ) continue;
                 if ( c->is_neighbor(a) ) triangles++;
@@ -509,7 +509,7 @@ double Network::transitivity (vector<Node*> node_set) {
 double Network::mean_dist() { // average distance between nodes in network
     vector< vector<double> > distance_matrix = all_distances();
     double grand_total = 0;
-    for( int i=0; i < distance_matrix.size(); i++ ) {
+    for( unsigned int i=0; i < distance_matrix.size(); i++ ) {
         grand_total += sum(distance_matrix[i]); 
     }
     double mean = grand_total / ( size()*size() );
@@ -519,7 +519,7 @@ double Network::mean_dist() { // average distance between nodes in network
 
 vector< vector<double> > Network::all_distances() {
     vector< vector<double> > all_dist( size() );
-    for(int i = 0; i < node_list.size(); i++ ) {
+    for(unsigned int i = 0; i < node_list.size(); i++ ) {
         all_dist[i] = node_list[i]->min_paths();
     }
     return all_dist;
@@ -527,9 +527,9 @@ vector< vector<double> > Network::all_distances() {
 
 
 Edge* Network::get_edge(int edge_id) {
-   for (int i=0; i< node_list.size(); i++ ) {
+   for (unsigned int i=0; i< node_list.size(); i++ ) {
         vector<Edge*> edges = node_list[i]->edges_out;
-        for(int j=0; j < edges.size(); j++ ) {
+        for(unsigned int j=0; j < edges.size(); j++ ) {
             if ( edges[j]->id == edge_id ) {
                 return(edges[j]);
             }
@@ -541,9 +541,9 @@ Edge* Network::get_edge(int edge_id) {
 
 vector<Edge*> Network::get_edges() {
     vector<Edge*> all_edges;
-    for (int i=0; i< node_list.size(); i++ ) {
+    for (unsigned int i=0; i< node_list.size(); i++ ) {
         vector<Edge*> edges = node_list[i]->edges_out;
-        for(int j=0; j < edges.size(); j++ ) {
+        for(unsigned int j=0; j < edges.size(); j++ ) {
             all_edges.push_back(edges[j]);
         }
     }
@@ -568,7 +568,7 @@ void Network::clear_nodes() {
 void Network::clear_edges() {
     for (int i = 0; i < size(); i++) {
         vector<Edge*> edges = node_list[i]->edges_out;
-        for (int j = 0; j < edges.size(); j++ ) delete edges[j];
+        for (unsigned int j = 0; j < edges.size(); j++ ) delete edges[j];
         node_list[i]->edges_out.clear();
         node_list[i]->edges_in.clear();
     }
@@ -582,14 +582,14 @@ void Network::clear_edges() {
 void Network::disconnect_edges() {
     for (int i = 0; i < size(); i++) {
         vector<Edge*> edges = node_list[i]->edges_out;
-        for (int j=0; j< edges.size(); j++ ) edges[j]->break_end();
+        for (unsigned int j=0; j< edges.size(); j++ ) edges[j]->break_end();
     }
     set_topology_altered(true);
 }
 
 
 void Network::set_node_states(vector<stateType> &states) {
-    if (states.size() != size()) {
+    if ((signed) states.size() != size()) {
         cerr << "Error in Network::set_node_states(): Vector of node states has size " << states.size() << " but there are " << size() << " nodes in network.\n";
     } else {
         for (int i = 0; i < size() ; i++) {
@@ -629,7 +629,7 @@ bool Network::validate() {
         if (in.size() != out.size() && directed == false) cerr << "node" << node << ": Number of edges in does not match number out: " << in.size() << ", " << out.size() << endl;
         map<int, int> seen;
         int error_ct = 0;
-        for (int j = 0; j < in.size(); j++) {
+        for (unsigned int j = 0; j < in.size(); j++) {
             Edge* edge = in[j];
             Node* start = edge->start;
             Node* end = edge->end;
@@ -639,7 +639,7 @@ bool Network::validate() {
             if (start != NULL && end != NULL && end == start) {cerr << "node" << node << ": Found self-loop in edges_in vector: edge" << edge << endl; error_ct++;}
             if (start != NULL && seen[start->id]++ != 0) {cerr <<  "node" << node << ": Found " << seen[start->id]  << " multi-edges from node" << start << endl; error_ct++;}
         }
-        for (int j = 0; j < out.size(); j++) {
+        for (unsigned int j = 0; j < out.size(); j++) {
             Edge* edge = out[j];
             Node* start = edge->start;
             Node* end = edge->end;
@@ -717,7 +717,7 @@ void Network::write_edgelist(string filename) {
     //ofstream pipe(filename, ios::out);
     ofstream pipe("./edgelist.out", ios::out);
     vector<Edge*> edges = get_edges();
-    for (int i = 0; i < edges.size(); i++) {
+    for (unsigned int i = 0; i < edges.size(); i++) {
         int start_id = edges[i]->start->id;
         int end_id   = edges[i]->end->id;
         if (start_id > end_id) continue;
@@ -816,7 +816,7 @@ Node::Node() {              //empty constructor
 
 Node::~Node() {             //destructor
     //cerr << "~Node() " << id << endl;
-    for(int i=0; i< edges_out.size(); i++ ) delete edges_out[i];
+    for(unsigned int i=0; i< edges_out.size(); i++ ) delete edges_out[i];
 }
 
 
@@ -856,7 +856,7 @@ Edge* Node::get_rand_edge() {
 
 vector<Node*> Node::get_neighbors () {
     vector<Node*> neighbors;
-    for (int i = 0; i < edges_out.size(); i++) {
+    for (unsigned int i = 0; i < edges_out.size(); i++) {
         neighbors.push_back(edges_out[i]->end);
     }
     return neighbors;
@@ -865,7 +865,7 @@ vector<Node*> Node::get_neighbors () {
 
 bool Node::is_neighbor (Node* node2) {
     vector<Node*> neighbors = get_neighbors();
-    for (int i = 0; i < neighbors.size(); i++) if (neighbors[i] == node2) return true;
+    for (unsigned int i = 0; i < neighbors.size(); i++) if (neighbors[i] == node2) return true;
     return false;
 }
 
@@ -933,7 +933,7 @@ double Node::mean_min_path() {
     int component_size = 0;
     vector<double> distances = min_paths();
     double sum = 0;
-    for (int i = 0; i < distances.size(); i++) {
+    for (int i = 0; i < (signed) distances.size(); i++) {
         if (distances[i] > -1 && id != i) {
             component_size++;
             sum += distances[i];
@@ -959,14 +959,14 @@ vector<double> Node::min_paths() {
                                         //the following initializes the 'uncertain' set with undefined values,
                                         //since we have no information about these nodes yet.
     vector <Node*> nodes = network->node_list;
-    for (int i = 0; i < nodes.size(); i++) {
+    for (unsigned int i = 0; i < nodes.size(); i++) {
         if (this == nodes[i]) continue;
         uncertain_cost[ nodes[i] ] = 1e+99; // infinity =: 10^99
     }
     known_cost[this] = 0;               //We only know initially that there is no cost to get to the starting node
     
     int j = 0;
-    while ( j++ < nodes.size() ) {//As long as there are nodes with uncertain min costs
+    while ( j++ < (signed) nodes.size() ) {//As long as there are nodes with uncertain min costs
                                         //Loop through the nodes we know about.
                                         //Initialize min to an arbitrary node in the "uncertain" map
         Node* min = NULL;//(*uncertain_cost.begin()).first;
@@ -975,7 +975,7 @@ vector<double> Node::min_paths() {
                                                 //Get the outbound edges for this known node
 
             vector <Edge*> edges = known_node->edges_out;
-            for (int i = 0; i < edges.size(); i++) {
+            for (unsigned int i = 0; i < edges.size(); i++) {
                                         //Get this neighbor
                 Node* end = edges[i]->end;
                                         //Move on if this endpoint already has a known cost
@@ -1006,7 +1006,7 @@ vector<double> Node::min_paths() {
             known_cost[min] = (int) uncertain_cost[min];
 //            uncertain_cost.erase(min);
         }
-        if (size == known_cost.size()) break;
+        if ((unsigned) size == known_cost.size()) break;
     }//test  this->id = start;
 
     int n = nodes.size();
@@ -1063,7 +1063,7 @@ void Edge::set_cost(int c) {
 Edge* Edge::get_complement () {
     vector<Edge*> edges = end->edges_out; // get the edges leaving the endpoint;
                                           // one is bound to be the complement
-    for (int i = 0; i < edges.size(); i++) {
+    for (unsigned int i = 0; i < edges.size(); i++) {
         //    cerr << edges[i]->start->id << " " << edges[i]->end->id << endl;
         if (edges[i]==this) continue;
         if (edges[i]->end==start) return edges[i];

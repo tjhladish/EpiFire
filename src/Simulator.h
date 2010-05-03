@@ -31,7 +31,7 @@ class Simulator
         };
         
         void set_these_nodes_to_state (vector<Node*> nodes, stateType s) {
-            for (int i = 0; i < nodes.size(); i++) nodes[i]->set_state(s);
+            for (unsigned int i = 0; i < nodes.size(); i++) nodes[i]->set_state(s);
         }
        
         // change n random nodes to state s (e.g. vaccinate them or infect them randomly)
@@ -42,7 +42,7 @@ class Simulator
             vector<int> sample_ids(n);
             rand_nchoosek(net->size(), sample_ids, mtrand);
             Node* node;
-            for (int i = 0; i < sample_ids.size(); i++) {
+            for (unsigned int i = 0; i < sample_ids.size(); i++) {
                 node = nodes[ sample_ids[i] ];
                 node->set_state(state);
                 sample[i] = node;
@@ -55,7 +55,7 @@ class Simulator
             vector<double> dist = net->get_gen_deg_dist();
             double numerator = 0;   // mean degree, (= <k>)
             double denominator = 0; // mean sq(deg) - mean deg (= <k^2> - <k>) 
-            for (int k=1; k < dist.size(); k++) {
+            for (unsigned int k=1; k < dist.size(); k++) {
                 numerator += k * dist[k];
                 denominator += k * (k-1) * dist[k];
             }

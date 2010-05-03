@@ -66,7 +66,7 @@ vector<double> gen_trunc_exponential(double lambda, int min, int max) {
 
 
 vector<double> normalize_dist(vector<double> dist, double sum) {
-    for ( int i = 1; i < dist.size(); i++) dist[i] = dist[i] / sum;
+    for (unsigned int i = 1; i < dist.size(); i++) dist[i] = dist[i] / sum;
     return dist;
 }
 
@@ -74,7 +74,7 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
     //assert(sum(dist) == 1);  // why doesn't this work?
     double last = 0;
     double rand = mtrand->rand();
-    for ( int i = 0; i < dist.size(); i++ ) {
+    for (unsigned int i = 0; i < dist.size(); i++ ) {
        
         double current = last + dist[i];
         if ( rand <= current ) {
@@ -175,7 +175,7 @@ double factorial(int num) {
 
 int max_element(vector<int> list) {
     int element = list[0];
-    for (int i = 0; i < list.size(); i++) {
+    for (unsigned int i = 0; i < list.size(); i++) {
         element = max(element, list[i]);
     }
     return element;

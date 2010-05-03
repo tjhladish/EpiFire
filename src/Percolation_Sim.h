@@ -32,10 +32,10 @@ class Percolation_Sim: public Simulator
             time++;
             //cerr << "\t" << infected.size() << endl;
             vector<Node*> new_infected;
-            for (int i = 0; i < infected.size(); i++) {
+            for (unsigned int i = 0; i < infected.size(); i++) {
                 Node* inode = infected[i];
                 vector<Node*> neighbors = inode->get_neighbors();
-                for (int j = 0; j < neighbors.size(); j++) {
+                for (unsigned int j = 0; j < neighbors.size(); j++) {
                     Node* test = neighbors[j];
                     if ( test->get_state() == S && mtrand->rand() < T ) {
                         test->set_state( I );

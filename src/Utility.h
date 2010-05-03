@@ -12,7 +12,7 @@
 
 using namespace std;
 
-template <typename T> inline T sum(vector<T> list) { T sum=0; for (int i=0; i<list.size(); i++) sum += list[i]; return sum;}
+template <typename T> inline T sum(vector<T> list) { T sum=0; for (unsigned int i=0; i<list.size(); i++) sum += list[i]; return sum;}
 template <typename T> inline double mean(vector<T> list) { return (double) sum(list) / list.size(); }
 
 double factorial (int num);
@@ -67,7 +67,7 @@ inline void delete_element(vector<T> & my_vector, T element) {
 
 inline vector<int> tabulate_vector( vector<int> my_vector ) {
     vector<int> tabulated(max_element(my_vector));
-    for (int i = 0; i<my_vector.size(); i++) tabulated[my_vector[i]]++;
+    for (unsigned int i = 0; i<my_vector.size(); i++) tabulated[my_vector[i]]++;
     return tabulated;
 }
 
