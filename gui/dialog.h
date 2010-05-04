@@ -1,10 +1,32 @@
- #ifndef DIALOG_H
- #define DIALOG_H
+#ifndef DIALOG_H
+#define DIALOG_H
 
+#include <QtGui>
 #include <QDialog>
 #include <iostream>
+#include "gui_sim.h"
+//#include "main_histexample.h"
+#include <math.h>
 #include "plotarea.h"
 
+//Temporary includes for making the histogram
+#include <stdlib.h>
+#include <qapplication.h>
+#include <qpen.h>
+#include <qwt_plot.h>
+#include <qwt_plot_grid.h>
+#include <qwt_plot_marker.h>
+#include <qwt_interval_data.h>
+#include "histogram_item.h"
+
+//Set default values that are not related to distribution
+
+const QString default_R0="1.5";
+const QString default_num_runs="1";
+const QString default_network_size="10000";
+const QString default_P0="1";
+
+// Forward definitions of classes
 class QAction;
 class QDialogButtonBox;
 class QGroupBox;
@@ -18,7 +40,8 @@ class QComboBox;
 class QCheckBox;
 class PlotArea;
 
-class Dialog : public QDialog
+//Define public and private functions and slots for 'Dialog' class
+class Dialog : public QWidget
 {
      Q_OBJECT
 
@@ -30,7 +53,9 @@ class Dialog : public QDialog
 
   public slots:
 
-  void simWindow();
+  void percolationSim();
+  void changeParameterLabels(int dist_type);
+  void defaultSettings();
 
  private:
   
@@ -38,20 +63,19 @@ class Dialog : public QDialog
   void createHorizontalGroupBox();
   void createGridGroupBox();
   void createFormGroupBox();
-   
-  enum { NumGridRows = 6, NumButtons = 4 };
+
+  void makeHistogram(int* data_series, int num_runs, int pop_size);
+
+ 
+  QLabel *param1Label;
+  QLabel *param2Label;
 
   QMenuBar *menuBar;
   QGroupBox *horizontalGroupBox;
   QGroupBox *gridGroupBox;
-  QGroupBox *formGroupBox;
-  QTextEdit *smallEditor;
   QComboBox *distBox;
   QCheckBox *reuseCheckBox;
-  QTextEdit *texttest; // Get rid of this one
-  QLabel *labels[NumGridRows];
-  QLineEdit *lineEdits[NumGridRows];
-  QPushButton *buttons[NumButtons];
+  QPushButton *buttons[4];
   QDialogButtonBox *buttonBox;
 
   // Define textboxes and other main menu items

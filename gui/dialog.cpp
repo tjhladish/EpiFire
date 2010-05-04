@@ -1,10 +1,7 @@
-#include <QtGui>
-#include <iostream>
 #include "dialog.h"
-#include "gui_sim.h"
-
 
 void Dialog::createMenu()
+//Creates 'File' menu at the top
 {
   menuBar = new QMenuBar;
 
@@ -12,27 +9,43 @@ void Dialog::createMenu()
   exitAction = fileMenu->addAction(tr("E&xit"));
   menuBar->addMenu(fileMenu);
 
-  connect(exitAction, SIGNAL(triggered()), this, SLOT(accept()));
+  connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
 }
 
 void Dialog::appendOutput(QString teststring)
+// Used to append output to the main textbox
 {
   bigEditor->append(teststring);
 }
 
+void Dialog::defaultSettings()
+//Resets GUI to its default settings (as specified in .h file)
+{
+  distBox->setCurrentIndex(0); 
+  numrunsLine->setText(default_num_runs);
+  numnodesLine->setText(default_network_size);
+  rzeroLine->setText(default_R0);
+  pzeroLine->setText(default_P0);
+  reuseCheckBox->setChecked(true);
+ 
+}
+
 void Dialog::createHorizontalGroupBox()
+  //Creates the horizontal control box at the bottom of the interface
+
 {
   horizontalGroupBox = new QGroupBox(tr("Control"));
   QHBoxLayout *layout = new QHBoxLayout;
 
   buttons[0] = new QPushButton("Simulate");
-  connect(buttons[0], SIGNAL(clicked()), this, SLOT(simWindow()));
+  connect(buttons[0], SIGNAL(clicked()), this, SLOT(percolationSim()));
 
   buttons[1] = new QPushButton("Default Settings");
+  connect(buttons[1], SIGNAL(clicked()), this, SLOT(defaultSettings()));
+
   buttons[2] = new QPushButton("Help");
   buttons[3] = new QPushButton("Exit");
-
-  connect(buttons[3], SIGNAL(clicked()), this, SLOT(accept()));
+  connect(buttons[3], SIGNAL(clicked()), this, SLOT(close()));
 
   for (int i = 0; i < 4; ++i) {
     layout->addWidget(buttons[i]);
@@ -41,40 +54,89 @@ void Dialog::createHorizontalGroupBox()
 }
 
 
+void Dialog::changeParameterLabels(int dist_type)
+//Changes the labels for the parameter boxes, and grays them out as appropriate
+{
+  
+  if (dist_type == 0) 
+    {
+      param1Line->setVisible(1);
+      param1Label->setText("Lambda:");
+      param1Line->setText("3.0");
+      param2Line->setVisible(0);
+      param2Label->setText("");
+      param2Line->setText("");
+    }
+  else if (dist_type == 1)
+    {
+     param1Line->setVisible(1);
+     param1Label->setText("Beta:");
+     param1Line->setText("0.3");
+     param2Line->setVisible(0);
+     param2Label->setText("");
+     param2Line->setText("");
+    } 
+  else if (dist_type == 2)
+    {
+      param1Line->setVisible(1);
+      param1Line->setText("1.0");
+      param1Label->setText("Alpha:");
+      param2Line->setVisible(1);
+      param2Label->setText("Kappa:");
+      param2Line->setText("2.0");
+    }
+  else if (dist_type == 3)
+    {
+      param1Line->setVisible(0);
+      param1Line->setText("");
+      param1Label->setText("");
+      param2Line->setVisible(0);
+      param2Label->setText("");
+      param2Line->setText("");
+    }
+  else if (dist_type == 4)
+    {
+      param1Line->setVisible(1);
+      param1Line->setText("3");
+      param1Label->setText("Fixed degree:");
+      param2Line->setVisible(0);
+      param2Label->setText("");
+      param2Line->setText("");
+    }
+
+}
+
 void Dialog::createGridGroupBox()
+// Creates the main input forms and their labels
 {
 
   // Define text boxes
-  numrunsLine = new QLineEdit("1");
+  numrunsLine = new QLineEdit();
   numrunsLine->setAlignment(Qt::AlignRight);
-  numnodesLine = new QLineEdit("10000");
+  numnodesLine = new QLineEdit();
   numnodesLine->setAlignment(Qt::AlignRight);
-  param1Line = new QLineEdit("5");
+  param1Line = new QLineEdit();
   param1Line->setAlignment(Qt::AlignRight);
-  param2Line = new QLineEdit("-1");
+  param2Line = new QLineEdit();
   param2Line->setAlignment(Qt::AlignRight);
-  pzeroLine = new QLineEdit("1");
+  pzeroLine = new QLineEdit();
   pzeroLine->setAlignment(Qt::AlignRight);
-  rzeroLine = new QLineEdit("3.5");
+  rzeroLine = new QLineEdit();
   rzeroLine->setAlignment(Qt::AlignRight);
-
 
   // Define all of the labels, in order of appearance
 
   QLabel *numrunsLabel = new QLabel(tr("Number of runs:"));
   QLabel *numnodesLabel = new QLabel(tr("Number of nodes:"));
   QLabel *distLabel = new QLabel(tr("Degree distribution:"));
-  QLabel *param1Label = new QLabel(tr("Parameter 1 value:"));
-  QLabel *param2Label = new QLabel(tr("Parameter 2 value:"));
+  param1Label = new QLabel(tr("Parameter 1 value:"));
+  param2Label = new QLabel(tr("Parameter 2 value:"));
   QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
   QLabel *rzeroLabel = new QLabel(tr("Basic reproductive ratio:"));
 
-  // Build checkbox
+  // Build dropdown box
 
   distBox = new QComboBox;
-
-  reuseCheckBox = new QCheckBox(tr("Reuse network"));
-  reuseCheckBox->setChecked(true);
 
   distBox->addItem("Poisson");
   distBox->addItem("Exponential");
@@ -82,10 +144,18 @@ void Dialog::createGridGroupBox()
   distBox->addItem("Urban");
   distBox->addItem("Constant");
 
+  // Initialize layout to parameters for first distribution listed, and listen for changes
+  changeParameterLabels(0);
+  connect(distBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeParameterLabels(int))); 
+
+  //Build checkbox
+
+  reuseCheckBox = new QCheckBox(tr("Reuse network"));
+
+  // Put everything together
 
   gridGroupBox = new QGroupBox(tr("Simulation parameters"));
   QGridLayout *layout = new QGridLayout;
-
 
   //First column
   layout->addWidget(numrunsLabel, 0, 0);
@@ -105,67 +175,24 @@ void Dialog::createGridGroupBox()
   layout->addWidget(param1Line, 2, 4);
   layout->addWidget(param2Label, 3, 3);
   layout->addWidget(param2Line, 3, 4);
-
   
   gridGroupBox->setLayout(layout);
 
-  param1Line->text();
-
-  /*
-
-    // OLD FORMAT -- DON'T USE
-
-  gridGroupBox = new QGroupBox(tr("Grid layout"));
-  QGridLayout *layout = new QGridLayout;
-
-  for (int i = 0; i < NumGridRows; ++i) {
-    labels[i] = new QLabel(tr("Line %1:").arg(i + 1));
-    lineEdits[i] = new QLineEdit;
-    layout->addWidget(labels[i], i + 1, 0);
-    layout->addWidget(lineEdits[i], i + 1, 1);
-  }
-
-  smallEditor = new QTextEdit;
-  smallEditor->setPlainText(tr("This widget takes up about two thirds of the "
-			       "grid layout."));
-  layout->addWidget(smallEditor, 0, 2, 4, 1);
-
-  layout->setColumnStretch(1, 10);
-  layout->setColumnStretch(2, 20);
-  gridGroupBox->setLayout(layout);
-  */
+  defaultSettings();
 
 }
-
-void Dialog::createFormGroupBox()
-{
-
-  // Not currently used -- trying grid method instead, for more flexibility and control
-
-  formGroupBox = new QGroupBox(tr("Simulation Parameters"));
-  QFormLayout *layout = new QFormLayout;
-  layout->addRow(new QLabel(tr("Size of network:")), new QLineEdit("10000"));
-  layout->addRow(new QLabel(tr("Number of seasons:")), new QLineEdit("50"));
-  layout->addRow(new QLabel(tr("R0:")), new QLineEdit("3.5"));
-  layout->addRow(new QLabel(tr("D:")), new QLineEdit("0.2"));
-  layout->addRow(new QLabel(tr("P0:")), new QLineEdit("50"));
-  layout->addRow(new QLabel(tr("Network type:")), new QComboBox());
- 
-  formGroupBox->setLayout(layout);
-}
-
-
-
 
 Dialog::Dialog()
+// Constructor for the main interface
 {
   
   createMenu();
   createHorizontalGroupBox();
   createGridGroupBox();
-  createFormGroupBox();
 
-  bigEditor = new QTextEdit("Output");
+
+  bigEditor = new QTextEdit();
+  bigEditor->setReadOnly (1);
   bigEditor->setPlainText(tr("No output yet"));
 
   QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -183,10 +210,72 @@ Dialog::Dialog()
 }
 
 
-void Dialog::simWindow()
+void Dialog::makeHistogram(int* data_series, int num_runs, int pop_size)
 {
 
-  // This is supposed to be the function that runs when a simulation is triggered
+   QwtPlot *plot= new QwtPlot(this);
+
+    plot->setCanvasBackground(QColor(Qt::white));
+    plot->setTitle("Histogram");
+
+    QwtPlotGrid *grid = new QwtPlotGrid;
+    grid->enableXMin(true);
+    grid->enableYMin(true);
+    grid->setMajPen(QPen(Qt::black, 0, Qt::DotLine));
+    grid->setMinPen(QPen(Qt::gray, 0 , Qt::DotLine));
+    grid->attach(plot);
+
+    HistogramItem *histogram = new HistogramItem();
+    histogram->setColor(Qt::blue);
+
+    const int numValues = 20; //Number of bins
+
+    //Perform the actual binning
+
+    int histogramValues[numValues]={0};
+    int bin;
+
+    for (int i=0; i<num_runs; i++)
+      {
+	bin=floor((((float)*data_series)/((float)pop_size))*numValues);
+	histogramValues[bin]++;
+	data_series++;
+      }
+	
+    QwtArray<QwtDoubleInterval> intervals(numValues);
+    QwtArray<double> values(numValues);
+
+    double pos = 0.0;
+    for ( int i = 0; i < (int)intervals.size(); i++ )
+    {
+        const double width = 100.0/(float)numValues;
+
+        intervals[i] = QwtDoubleInterval(pos, pos + double(width));
+        values[i] = histogramValues[i]; 
+
+        pos += width;
+    }
+
+    histogram->setData(QwtIntervalData(intervals, values));
+    histogram->attach(plot);
+
+    plot->setAxisScale(QwtPlot::yLeft, 0.0, num_runs);
+    plot->setAxisScale(QwtPlot::xBottom, 0.0, 100.0);
+    plot->replot();
+
+    plot->resize(400,300);
+
+    plot->setWindowFlags(Qt::Drawer);
+    plot->setEnabled(1);
+    plot->show();
+    plot->activateWindow();
+    plot->raise();
+   
+}
+
+void Dialog::percolationSim()
+//Connects the GUI information to the percolation simulator
+{
   
   // Get values from textboxes
 
@@ -200,14 +289,22 @@ void Dialog::simWindow()
   int index_current_dist=distBox->currentIndex();
   string RunID="1"; // This needs to be updated
 
-  cout << index_current_dist;
-
+  Dialog::appendOutput("-----------------------------------");
   Dialog::appendOutput("Simulation running...");
 
-  vector< vector<int> > epi_curves = simulate_main(j_max, reuse_net,n, r_zero, DistType(index_current_dist), param1, param2, p_zero, RunID);
+  int dist_size_array[j_max]; //Initiate array that will contain distribution sizes
+  int* dist_size_point=dist_size_array;
+
+
+  vector< vector<int> > epi_curves = simulate_main(j_max, reuse_net,n, r_zero, DistType(index_current_dist), param1, param2, p_zero, RunID, dist_size_point);
   Dialog::appendOutput("\tDone\n");
   for (unsigned int i =0; i<epi_curves.size(); i++) {
         Dialog::plotArea->addData(epi_curves[i]);
+        QString start_of_line="Epidemic size from run ";
+        QString epi_size=QString::number(i+1,10).append(":   ").append(QString::number(dist_size_array[i],10));
+      
+        Dialog::appendOutput(start_of_line.append(epi_size));
   }
+  makeHistogram(dist_size_point,j_max,n);
   Dialog::plotArea->replot();
 }

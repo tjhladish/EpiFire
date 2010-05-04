@@ -1,12 +1,4 @@
-#include "../src/Percolation_Sim.h"
-#include <time.h>
-#include <stdlib.h>
-#include <QApplication>
-//#include <dialog.h>
 #include <gui_sim.h>
-//#include <main.h> 
-// INCLUDE THIS LINE TOMORROW
-
 
 /*
 int j_max; // number of different networks or (repetitions on same network) to iterate through
@@ -51,7 +43,7 @@ void generate_network(Network* net, int n, DistType dist, double param1, double 
     sim->set_transmissibility(T);
 }
 
-vector< vector<int> > simulate_main(int j_max, bool reuse_net, int n, double R_zero, DistType dist, double param1, double param2, int patient_zero_ct, string RunID) {
+vector< vector<int> > simulate_main(int j_max, bool reuse_net, int n, double R_zero, DistType dist, double param1, double param2, int patient_zero_ct, string RunID, int* dist_size_loc) {
     // Header line
     //cout << "# RunID Network Season Epi_size P0_size R0\n";
     if (reuse_net == true) {
@@ -96,11 +88,12 @@ vector< vector<int> > simulate_main(int j_max, bool reuse_net, int n, double R_z
         //plotArea->addData(epi_curve);
 	//QString simOutput;
 
-	//simOutput="Testing, testing";
+	//Use pointer to report epidemic size back to Dialog class
+	*dist_size_loc=sim->epidemic_size();
+	dist_size_loc++;
 
-	//THIS IS THE LINE THAT NEEDS TO BE CHECKED
-	
-	//dialog.appendOutput(simOutput);
+        //cout << RunID << " " << j << " " << sim->epidemic_size() << " " << patients_zero.size() << " ";
+        cout << RunID << " " << j << " " << sim->epidemic_size() << " ";
 
         //sim.summary();
         sim->reset();
