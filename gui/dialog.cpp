@@ -225,8 +225,8 @@ void Dialog::makeHistogram(int* data_series, int num_runs, int pop_size)
     grid->setMinPen(QPen(Qt::gray, 0 , Qt::DotLine));
     grid->attach(plot);
 
-    HistogramItem *histogram = new HistogramItem();
-    histogram->setColor(Qt::blue);
+    //HistogramItem *histogram = new HistogramItem();
+    //histogram->setColor(Qt::blue);
 
     const int numValues = 20; //Number of bins
 
@@ -256,7 +256,7 @@ void Dialog::makeHistogram(int* data_series, int num_runs, int pop_size)
         pos += width;
     }
 
-    histogram->setData(QwtIntervalData(intervals, values));
+    /*histogram->setData(QwtIntervalData(intervals, values));
     histogram->attach(plot);
 
     plot->setAxisScale(QwtPlot::yLeft, 0.0, num_runs);
@@ -270,7 +270,7 @@ void Dialog::makeHistogram(int* data_series, int num_runs, int pop_size)
     plot->show();
     plot->activateWindow();
     plot->raise();
-   
+    */ 
 }
 
 void Dialog::percolationSim()

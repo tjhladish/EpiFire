@@ -4,14 +4,16 @@ CONFIG += qt thread warn_off debug
 HEADERS     = dialog.h \
    gui_sim.h \
    histogram_item.h \
-   plotarea.h
+   plotarea.h \
+   plot_axes.h
 
  SOURCES     = dialog.cpp \
                gui_sim.cpp \
                ../src/*.cpp \
                main.cpp \
                histogram_item.cpp \
-               plotarea.cpp
+               plotarea.cpp \
+               plot_axes.cpp
 
 INCLUDEPATH += /usr/include/qwt-qt4
 LIBS += -lqwt-qt4
