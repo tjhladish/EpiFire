@@ -668,17 +668,14 @@ void Network::read_edgelist(string filename) {
     cerr << "Loading " << filename << endl;
     ifstream myfile(filename.c_str());
     std::stringstream ss;
+    map<string,Node*> idmap;
+    vector<string>fields;
     
     if (myfile.is_open()) { 
         string line;
         while ( getline(myfile,line) ) {
-            cout << line << endl;
-            //variables to be read from each line
-            int id1;
-            int id2;
-               
             //split string based on "," and store results into vector
-            vector<string>fields;
+            fields.clear();
             split(line,',', fields);  
             
             //format check
@@ -686,26 +683,31 @@ void Network::read_edgelist(string filename) {
                 cerr << "problem with line " << line << endl;
                 continue;
             }
-            
-            //this is where the magic happens
-            //convert field strings to proper formated variables.
-            ss.clear(); 
-            ss << fields[0] << " " << fields[1]; //push strings in
-            ss >> id1 >> id2;  //pull out formatted variables
-            int max = MAX(id1, id2);
-            
-            int old_size = node_list.size();
-            if ( max > size() - 1 ) {
-                node_list.resize(max + 1);
-                // add new nodes if these indeces are bigger than any seen before
-                for (int i = old_size; i < max + 1; i++ ) {
-                    Node* node = new Node();     //allocate memory for new node
-                    node->id = node_id_counter++;
-                    node->set_network(this);     //set the network
-                    node_list[i] = node;
-                }
-            }
-            node_list[id1]->connect_to(node_list[id2]);
+
+            string name1 = fields[0];
+            string name2 = fields[1];
+
+            if(idmap.count(name1)==0) { //new node;
+                Node* node = new Node();     //allocate memory for new node
+                node->id = node_id_counter++;
+                node->name = name1;
+                node->set_network(this);     //set the network
+                node_list.push_back(node);
+                idmap[name1]=node;
+             }
+
+            if(idmap.count(name2)==0) { //new node;
+                Node* node = new Node();     //allocate memory for new node
+                node->id = node_id_counter++;
+                node->name = name2;
+                node->set_network(this);     //set the network
+                node_list.push_back(node);
+               idmap[name2]=node;
+             }
+
+            Node *n1 = idmap[name1];
+            Node *n2 = idmap[name2];
+            n1->connect_to(n2);
         } 
     }
 }

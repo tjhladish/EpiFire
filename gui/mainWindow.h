@@ -58,6 +58,8 @@ class MainWindow : public QMainWindow
 
   void percolationSim();
   void changeParameterLabels(int dist_type);
+  void changeNetSource(int source);
+  void changeSimType(int type);
   void defaultSettings();
   void readEdgeList();
 
@@ -70,16 +72,26 @@ class MainWindow : public QMainWindow
 
   void makeHistogram(int* data_series, int num_runs, int pop_size);
 
- 
+  QLabel *distLabel; 
   QLabel *param1Label;
   QLabel *param2Label;
+  QLabel *netsourceLabel;
+  QLabel *netfileLabel;
+  QLabel *simLabel;
+
 
   QMenuBar *menuBar;
   QGroupBox *horizontalGroupBox;
   QGroupBox *gridGroupBox;
   QComboBox *distBox;
   QCheckBox *reuseCheckBox;
+  QComboBox *netsourceBox;
+  QComboBox *simBox;
+
   QPushButton *buttons[4];
+  QPushButton* clearnetButton;
+  QPushButton* loadNetButton;
+
   QMainWindowButtonBox *buttonBox;
 
   // Define textboxes and other main menu items
@@ -90,7 +102,9 @@ class MainWindow : public QMainWindow
   QLineEdit *param2Line;
   QLineEdit *pzeroLine;
   QLineEdit *rzeroLine;
+  QLineEdit *netfileLine;
 
+  
   PlotArea* plotArea;
   
   QMenu *fileMenu;

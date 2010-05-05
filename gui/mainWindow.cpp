@@ -29,8 +29,16 @@ void MainWindow::readEdgeList() {
     if (filelist.size() == 0) return;
     QString fileName = filelist[0];
 
-    network->clear_nodes();
-    network->read_edgelist(fileName.toStdString());
+    if(network) {
+       network->clear_nodes();
+       network->read_edgelist(fileName.toStdString());
+       network->dumper();
+       netfileLine->setText(fileName);
+       numnodesLine->setText(QString::number(network->size()));
+    }
+    
+
+
 }
 
 void MainWindow::appendOutput(QString teststring)
@@ -75,6 +83,33 @@ void MainWindow::createHorizontalGroupBox()
   horizontalGroupBox->setLayout(layout);
 }
 
+void MainWindow::changeSimType(int type) {
+
+}
+
+void MainWindow::changeNetSource(int source) {
+    if(source == 1 ) {
+        netfileLabel->show();
+        netfileLine->show();
+        clearnetButton->show();
+        distBox->hide();
+        distLabel->hide();
+        changeParameterLabels(3);
+        readEdgeList();
+    } else {
+        netfileLabel->hide();
+        netfileLine->hide();
+        clearnetButton->hide();
+
+        distBox->show();
+        distLabel->show();
+        
+        param1Label->show();
+        param2Label->show();
+        changeParameterLabels(0);
+    }
+}
+
 
 void MainWindow::changeParameterLabels(int dist_type)
 //Changes the labels for the parameter boxes, and grays them out as appropriate
@@ -85,46 +120,44 @@ void MainWindow::changeParameterLabels(int dist_type)
       param1Line->setVisible(1);
       param1Label->setText("Lambda:");
       param1Line->setText("3.0");
-      param2Line->setVisible(0);
-      param2Label->setText("");
-      param2Line->setText("");
+      param2Label->hide();
+      param2Line->hide();
     }
   else if (dist_type == 1)
     {
      param1Line->setVisible(1);
      param1Label->setText("Beta:");
      param1Line->setText("0.3");
-     param2Line->setVisible(0);
-     param2Label->setText("");
-     param2Line->setText("");
+     param2Label->hide();
+     param2Line->hide();
     } 
   else if (dist_type == 2)
     {
-      param1Line->setVisible(1);
+      param1Line->show();
       param1Line->setText("1.0");
       param1Label->setText("Alpha:");
-      param2Line->setVisible(1);
+      param2Line->show();
+      param2Label->show();
       param2Label->setText("Kappa:");
       param2Line->setText("2.0");
     }
   else if (dist_type == 3)
     {
-      param1Line->setVisible(0);
-      param1Line->setText("");
-      param1Label->setText("");
-      param2Line->setVisible(0);
-      param2Label->setText("");
-      param2Line->setText("");
+      param1Line->hide();
+      param1Label->hide();
+      param2Line->hide();
+      param2Label->hide();
     }
   else if (dist_type == 4)
     {
       param1Line->setVisible(1);
       param1Line->setText("3");
       param1Label->setText("Fixed degree:");
-      param2Line->setVisible(0);
-      param2Label->setText("");
-      param2Line->setText("");
+      param2Line->hide();
+      param2Label->hide();
     }
+
+
 
 }
 
@@ -146,11 +179,28 @@ void MainWindow::createGridGroupBox()
   rzeroLine = new QLineEdit();
   rzeroLine->setAlignment(Qt::AlignRight);
 
+
+  netsourceLabel = new QLabel(tr("Select Network Source"));
+  netfileLabel = new QLabel(tr("Filename"));
+  netfileLine = new QLineEdit();
+  clearnetButton = new QPushButton("Clear Network");
+
+  simLabel = new QLabel("Simulation Type");
+
+  simBox  =  new QComboBox(this);
+  simBox->addItem("Chain Binomial");
+  simBox->addItem("Percolation");
+ 
+  netsourceBox= new QComboBox(this);
+  netsourceBox->addItem("Generate");
+  netsourceBox->addItem("Load From File");
+ 
+
   // Define all of the labels, in order of appearance
 
   QLabel *numrunsLabel = new QLabel(tr("Number of runs:"));
   QLabel *numnodesLabel = new QLabel(tr("Number of nodes:"));
-  QLabel *distLabel = new QLabel(tr("Degree distribution:"));
+  distLabel = new QLabel(tr("Degree distribution:"));
   param1Label = new QLabel(tr("Parameter 1 value:"));
   param2Label = new QLabel(tr("Parameter 2 value:"));
   QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
@@ -169,6 +219,8 @@ void MainWindow::createGridGroupBox()
   // Initialize layout to parameters for first distribution listed, and listen for changes
   changeParameterLabels(0);
   connect(distBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeParameterLabels(int))); 
+  changeNetSource(0); 
+  connect(netsourceBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeNetSource(int))); 
 
   //Build checkbox
 
@@ -180,23 +232,33 @@ void MainWindow::createGridGroupBox()
   QGridLayout *layout = new QGridLayout;
 
   //First column
-  layout->addWidget(numrunsLabel, 0, 0);
-  layout->addWidget(numrunsLine, 0, 1);
-  layout->addWidget(distLabel, 1, 0);
-  layout->addWidget(distBox, 1, 1); 
-  layout->addWidget(numnodesLabel, 2, 0);
-  layout->addWidget(numnodesLine, 2, 1);
-  layout->addWidget(reuseCheckBox,3,0);
+  layout->addWidget(netsourceLabel, 0, 0);
+  layout->addWidget(netsourceBox, 0, 1);
+  //fields for imported net
+  layout->addWidget(netfileLabel, 2, 0);
+  layout->addWidget(netfileLine, 2, 1);
+  layout->addWidget(clearnetButton, 3, 0);
+
+  //fields for generated net
+  layout->addWidget(numnodesLabel, 1, 0);
+  layout->addWidget(numnodesLine, 1, 1);
+  layout->addWidget(distLabel, 2, 0);
+  layout->addWidget(distBox, 2, 1); 
+  layout->addWidget(param1Label, 3, 0);
+  layout->addWidget(param1Line, 3, 1);
+  layout->addWidget(param2Label, 4, 0);
+  layout->addWidget(param2Line, 4, 1);
 
   //Second column
-  layout->addWidget(rzeroLabel, 0, 3);
-  layout->addWidget(rzeroLine, 0, 4);
-  layout->addWidget(pzeroLabel, 1, 3);
-  layout->addWidget(pzeroLine, 1, 4);
-  layout->addWidget(param1Label, 2, 3);
-  layout->addWidget(param1Line, 2, 4);
-  layout->addWidget(param2Label, 3, 3);
-  layout->addWidget(param2Line, 3, 4);
+  layout->addWidget(simLabel, 0, 3);
+  layout->addWidget(simBox, 0, 4);
+  layout->addWidget(numrunsLabel, 1, 3);
+  layout->addWidget(numrunsLine, 1, 4);
+  layout->addWidget(rzeroLabel, 2, 3);
+  layout->addWidget(rzeroLine, 2, 4);
+  layout->addWidget(pzeroLabel, 3, 3);
+  layout->addWidget(pzeroLine, 3, 4);
+  layout->addWidget(reuseCheckBox,4,3);
   
   gridGroupBox->setLayout(layout);
 
@@ -231,7 +293,7 @@ MainWindow::MainWindow()
   centralWidget->setLayout(mainLayout);
   setCentralWidget(centralWidget);
 
-  setWindowTitle(tr("EpiFire GUI"));
+  setWindowTitle(tr("EpiFire"));
 
 }
 
