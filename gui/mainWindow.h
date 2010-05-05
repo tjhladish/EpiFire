@@ -1,14 +1,14 @@
-#ifndef DIALOG_H
-#define DIALOG_H
+#ifndef MAINWINDOW_H
+#define MAINWINDOW_H
 
 #include <QtGui>
 #include <QMainWindow>
-#include <QDialog>
+#include <QMainWindow>
 #include <iostream>
-#include "gui_sim.h"
+#include "guiSim.h"
 //#include "main_histexample.h"
 #include <math.h>
-#include "plotarea.h"
+#include "plotArea.h"
 
 //Temporary includes for making the histogram
 #include <stdlib.h>
@@ -18,7 +18,7 @@
 #include <qwt_plot_grid.h>
 #include <qwt_plot_marker.h>
 #include <qwt_interval_data.h>
-#include "histogram_item.h"
+#include "histogram.h"
 
 //Set default values that are not related to distribution
 
@@ -30,7 +30,7 @@ const QString default_P0="1";
 // Forward definitions of classes
 class QMainWindow;
 class QAction;
-class QDialogButtonBox;
+class QMainWindowButtonBox;
 class QGroupBox;
 class QLabel;
 class QLineEdit;
@@ -42,15 +42,16 @@ class QComboBox;
 class QCheckBox;
 class PlotArea;
 
-//Define public and private functions and slots for 'Dialog' class
-class Dialog : public QMainWindow
+//Define public and private functions and slots for 'MainWindow' class
+class MainWindow : public QMainWindow
 {
      Q_OBJECT
 
  public:
-  Dialog();
+  MainWindow();
   void appendOutput(QString); 
    
+  Network   *network;
   QTextEdit *bigEditor;
 
   public slots:
@@ -79,7 +80,7 @@ class Dialog : public QMainWindow
   QComboBox *distBox;
   QCheckBox *reuseCheckBox;
   QPushButton *buttons[4];
-  QDialogButtonBox *buttonBox;
+  QMainWindowButtonBox *buttonBox;
 
   // Define textboxes and other main menu items
 

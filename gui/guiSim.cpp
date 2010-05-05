@@ -1,4 +1,4 @@
-#include <gui_sim.h>
+#include <guiSim.h>
 
 /*
 int j_max; // number of different networks or (repetitions on same network) to iterate through
@@ -88,7 +88,7 @@ vector< vector<int> > simulate_main(int j_max, bool reuse_net, int n, double R_z
         //plotArea->addData(epi_curve);
 	//QString simOutput;
 
-	//Use pointer to report epidemic size back to Dialog class
+	//Use pointer to report epidemic size back to MainWindow class
 	*dist_size_loc=sim->epidemic_size();
 	dist_size_loc++;
 

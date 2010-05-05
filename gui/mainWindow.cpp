@@ -1,6 +1,6 @@
-#include "dialog.h"
+#include "mainWindow.h"
 
-void Dialog::createMenu()
+void MainWindow::createMenu()
 //Creates 'File' menu at the top
 {
   menuBar = new QMenuBar;
@@ -16,9 +16,11 @@ void Dialog::createMenu()
   connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
   connect(openAction, SIGNAL(triggered()), this, SLOT(readEdgeList()));
   connect(simulateAction, SIGNAL(triggered()), this, SLOT(percolationSim()));
+
+  network = new Network("mynetwork",false);
 }
 
-void Dialog::readEdgeList() {
+void MainWindow::readEdgeList() {
 
     QString startdir = ".";
     QStringList filelist = QFileDialog::getOpenFileNames(
@@ -27,17 +29,17 @@ void Dialog::readEdgeList() {
     if (filelist.size() == 0) return;
     QString fileName = filelist[0];
 
-    Network net("mynetwork",false);
-    net.read_edgelist(fileName.toStdString());
+    network->clear_nodes();
+    network->read_edgelist(fileName.toStdString());
 }
 
-void Dialog::appendOutput(QString teststring)
+void MainWindow::appendOutput(QString teststring)
 // Used to append output to the main textbox
 {
   bigEditor->append(teststring);
 }
 
-void Dialog::defaultSettings()
+void MainWindow::defaultSettings()
 //Resets GUI to its default settings (as specified in .h file)
 {
   distBox->setCurrentIndex(0); 
@@ -49,7 +51,7 @@ void Dialog::defaultSettings()
  
 }
 
-void Dialog::createHorizontalGroupBox()
+void MainWindow::createHorizontalGroupBox()
   //Creates the horizontal control box at the bottom of the interface
 
 {
@@ -74,7 +76,7 @@ void Dialog::createHorizontalGroupBox()
 }
 
 
-void Dialog::changeParameterLabels(int dist_type)
+void MainWindow::changeParameterLabels(int dist_type)
 //Changes the labels for the parameter boxes, and grays them out as appropriate
 {
   
@@ -126,7 +128,7 @@ void Dialog::changeParameterLabels(int dist_type)
 
 }
 
-void Dialog::createGridGroupBox()
+void MainWindow::createGridGroupBox()
 // Creates the main input forms and their labels
 {
 
@@ -202,7 +204,7 @@ void Dialog::createGridGroupBox()
 
 }
 
-Dialog::Dialog()
+MainWindow::MainWindow()
 // Constructor for the main interface
 {
   
@@ -234,7 +236,7 @@ Dialog::Dialog()
 }
 
 
-void Dialog::makeHistogram(int* data_series, int num_runs, int pop_size)
+void MainWindow::makeHistogram(int* data_series, int num_runs, int pop_size)
 {
 
    QwtPlot *plot= new QwtPlot(this);
@@ -297,7 +299,7 @@ void Dialog::makeHistogram(int* data_series, int num_runs, int pop_size)
     */ 
 }
 
-void Dialog::percolationSim()
+void MainWindow::percolationSim()
 //Connects the GUI information to the percolation simulator
 {
   
@@ -313,23 +315,23 @@ void Dialog::percolationSim()
   int index_current_dist=distBox->currentIndex();
   string RunID="1"; // This needs to be updated
 
-  Dialog::appendOutput("-----------------------------------");
-  Dialog::appendOutput("Simulation running...");
+  MainWindow::appendOutput("-----------------------------------");
+  MainWindow::appendOutput("Simulation running...");
 
   int dist_size_array[j_max]; //Initiate array that will contain distribution sizes
   int* dist_size_point=dist_size_array;
 
 
-  //vector< vector<int> > epi_curves = simulate_main(network, j_max, r_zero, p_zero, RunID, dist_size_point);
-     vector< vector<int> > epi_curves = simulate_main(j_max, reuse_net,n, r_zero, DistType(index_current_dist), param1, param2, p_zero, RunID, dist_size_point);
-  Dialog::appendOutput("\tDone\n");
+    //vector< vector<int> > epi_curves = simulate_main(network, j_max, r_zero, p_zero, RunID, dist_size_point);
+   vector< vector<int> > epi_curves = simulate_main(j_max, reuse_net,n, r_zero, DistType(index_current_dist), param1, param2, p_zero, RunID, dist_size_point);
+  MainWindow::appendOutput("\tDone\n");
   for (unsigned int i =0; i<epi_curves.size(); i++) {
-        Dialog::plotArea->addData(epi_curves[i]);
+        MainWindow::plotArea->addData(epi_curves[i]);
         QString start_of_line="Epidemic size from run ";
         QString epi_size=QString::number(i+1,10).append(":   ").append(QString::number(dist_size_array[i],10));
       
-        Dialog::appendOutput(start_of_line.append(epi_size));
+        MainWindow::appendOutput(start_of_line.append(epi_size));
   }
   makeHistogram(dist_size_point,j_max,n);
-  Dialog::plotArea->replot();
+  MainWindow::plotArea->replot();
 }

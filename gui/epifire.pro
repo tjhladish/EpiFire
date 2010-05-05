@@ -1,19 +1,19 @@
 #include( ./epifire.pri )
 CONFIG += qt thread warn_off debug 
 
-HEADERS     = dialog.h \
-   gui_sim.h \
-   histogram_item.h \
-   plotarea.h \
-   plot_axes.h
+HEADERS     = mainWindow.h \
+   guiSim.h \
+   histogram.h \
+   plotArea.h \
+   plotAxes.h
 
- SOURCES     = dialog.cpp \
-               gui_sim.cpp \
+ SOURCES     = mainWindow.cpp \
+               guiSim.cpp \
                ../src/*.cpp \
                main.cpp \
-               histogram_item.cpp \
-               plotarea.cpp \
-               plot_axes.cpp
+               histogram.cpp \
+               plotArea.cpp \
+               plotAxes.cpp
 
 INCLUDEPATH += /usr/include/qwt-qt4
 LIBS += -lqwt-qt4

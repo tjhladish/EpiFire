@@ -1,5 +1,5 @@
-#include "plotarea.h"
-#include "plot_axes.h"
+#include "plotArea.h"
+#include "plotAxes.h"
 #include "../src/Utility.h"
 
 PlotArea::PlotArea(QWidget*) { 

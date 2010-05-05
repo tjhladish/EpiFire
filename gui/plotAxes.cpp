@@ -1,4 +1,4 @@
-#include "plot_axes.h"
+#include "plotAxes.h"
 
 Axes::Axes( int type, float min, float max, int nticks) {
     this->type = type;
