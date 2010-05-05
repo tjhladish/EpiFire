@@ -2,6 +2,7 @@
 #define DIALOG_H
 
 #include <QtGui>
+#include <QMainWindow>
 #include <QDialog>
 #include <iostream>
 #include "gui_sim.h"
@@ -27,6 +28,7 @@ const QString default_network_size="10000";
 const QString default_P0="1";
 
 // Forward definitions of classes
+class QMainWindow;
 class QAction;
 class QDialogButtonBox;
 class QGroupBox;
@@ -41,7 +43,7 @@ class QCheckBox;
 class PlotArea;
 
 //Define public and private functions and slots for 'Dialog' class
-class Dialog : public QWidget
+class Dialog : public QMainWindow
 {
      Q_OBJECT
 
@@ -56,6 +58,7 @@ class Dialog : public QWidget
   void percolationSim();
   void changeParameterLabels(int dist_type);
   void defaultSettings();
+  void readEdgeList();
 
  private:
   
@@ -91,6 +94,8 @@ class Dialog : public QWidget
   
   QMenu *fileMenu;
   QAction *exitAction;
+  QAction *openAction;
 };
 
  #endif
+

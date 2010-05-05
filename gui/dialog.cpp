@@ -7,9 +7,28 @@ void Dialog::createMenu()
 
   fileMenu = new QMenu(tr("&File"), this);
   exitAction = fileMenu->addAction(tr("E&xit"));
+  openAction = fileMenu->addAction(tr("&Open"));
+  QAction* simulateAction = fileMenu->addAction("Simulate");
+  simulateAction->setShortcut(Qt::Key_Enter);
+
   menuBar->addMenu(fileMenu);
 
   connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
+  connect(openAction, SIGNAL(triggered()), this, SLOT(readEdgeList()));
+  connect(simulateAction, SIGNAL(triggered()), this, SLOT(percolationSim()));
+}
+
+void Dialog::readEdgeList() {
+
+    QString startdir = ".";
+    QStringList filelist = QFileDialog::getOpenFileNames(
+           this, "Select edge list file to load:", startdir, "All Files(*.*)");
+
+    if (filelist.size() == 0) return;
+    QString fileName = filelist[0];
+
+    Network net("mynetwork",false);
+    net.read_edgelist(fileName.toStdString());
 }
 
 void Dialog::appendOutput(QString teststring)
@@ -37,8 +56,9 @@ void Dialog::createHorizontalGroupBox()
   horizontalGroupBox = new QGroupBox(tr("Control"));
   QHBoxLayout *layout = new QHBoxLayout;
 
-  buttons[0] = new QPushButton("Simulate");
+  buttons[0] = new QPushButton("&Simulate");
   connect(buttons[0], SIGNAL(clicked()), this, SLOT(percolationSim()));
+  //buttons[0]->setDefault(true);
 
   buttons[1] = new QPushButton("Default Settings");
   connect(buttons[1], SIGNAL(clicked()), this, SLOT(defaultSettings()));
@@ -189,6 +209,8 @@ Dialog::Dialog()
   createMenu();
   createHorizontalGroupBox();
   createGridGroupBox();
+    
+  QWidget* centralWidget = new QWidget(this);
 
 
   bigEditor = new QTextEdit();
@@ -203,7 +225,9 @@ Dialog::Dialog()
   mainLayout->addWidget(plotArea);
   mainLayout->addWidget(bigEditor);
   mainLayout->addWidget(horizontalGroupBox);
-  setLayout(mainLayout);
+
+  centralWidget->setLayout(mainLayout);
+  setCentralWidget(centralWidget);
 
   setWindowTitle(tr("EpiFire GUI"));
 
@@ -296,7 +320,8 @@ void Dialog::percolationSim()
   int* dist_size_point=dist_size_array;
 
 
-  vector< vector<int> > epi_curves = simulate_main(j_max, reuse_net,n, r_zero, DistType(index_current_dist), param1, param2, p_zero, RunID, dist_size_point);
+  //vector< vector<int> > epi_curves = simulate_main(network, j_max, r_zero, p_zero, RunID, dist_size_point);
+     vector< vector<int> > epi_curves = simulate_main(j_max, reuse_net,n, r_zero, DistType(index_current_dist), param1, param2, p_zero, RunID, dist_size_point);
   Dialog::appendOutput("\tDone\n");
   for (unsigned int i =0; i<epi_curves.size(); i++) {
         Dialog::plotArea->addData(epi_curves[i]);
