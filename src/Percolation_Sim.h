@@ -54,11 +54,11 @@ class Percolation_Sim: public Simulator
                 step_simulation();
             }
         }
-       
+
         int count_infected() {
             return infected.size();
         }
-        
+
         int epidemic_size() {
             return recovered.size();
         }
@@ -68,7 +68,7 @@ class Percolation_Sim: public Simulator
 
             set_these_nodes_to_state(infected, S);
             infected.clear();
-            
+
             set_these_nodes_to_state(recovered, S);
             recovered.clear();
         }
@@ -80,5 +80,4 @@ class Percolation_Sim: public Simulator
 
         }
 };
-
 #endif

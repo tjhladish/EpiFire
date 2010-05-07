@@ -6,23 +6,21 @@
 #include <QPainter>
 #include <math.h>
 
-
 class Axes : public QGraphicsItem
 {
-public:
-    Axes( int type, float min, float max, int nticks);
-	~Axes();
-	
-protected:
-    QRectF boundingRect() const;
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-    
-private:
-   int type;
-   float min;
-   float max;
-   int nticks;
+    public:
+        Axes( int type, float min, float max, int nticks);
+        ~Axes();
+
+    protected:
+        QRectF boundingRect() const;
+        void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+    private:
+        int type;
+        float min;
+        float max;
+        int nticks;
 
 };
-
 #endif

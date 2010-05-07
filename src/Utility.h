@@ -9,7 +9,6 @@
 #include <iomanip>
 #include "MersenneTwister.h"
 
-
 using namespace std;
 
 template <typename T> inline T sum(vector<T> list) { T sum=0; for (unsigned int i=0; i<list.size(); i++) sum += list[i]; return sum;}
@@ -37,6 +36,7 @@ inline std::string to_string (const T& t) {
     return ss.str();
 }
 
+
 template <typename T>
 double stdev(vector<T> & numbers) {
     double x = mean(numbers);
@@ -46,6 +46,7 @@ double stdev(vector<T> & numbers) {
     double sd = sqrt(var_num/(N-1));
     return sd;
 }
+
 
 template <typename T>
 inline int sign(const T& _a) { return (int)((_a)<0 ? (-1) : (1)); }
@@ -66,23 +67,24 @@ inline void delete_element(vector<T> & my_vector, T element) {
     }
 }
 
+
 inline vector<int> tabulate_vector( vector<int> my_vector ) {
     vector<int> tabulated(max_element(my_vector));
     for (unsigned int i = 0; i<my_vector.size(); i++) tabulated[my_vector[i]]++;
     return tabulated;
 }
 
+
 template <typename T>
 inline void cerr_vector(vector<T> & my_vector) {
-    for (int i = 0; i < my_vector.size(); i++ ) cerr << my_vector[i] << " "; 
+    for (int i = 0; i < my_vector.size(); i++ ) cerr << my_vector[i] << " ";
     cerr << endl;
 }
+
 
 template <typename T>
 inline void shuffle(vector<T> & my_vector, MTRand* mtrand) {
     int max = my_vector.size() - 1;
     for (int i = max; i >= 0; i-- ) swap(my_vector[i], my_vector[ mtrand->randInt(i) ]);
 }
-
-
 #endif

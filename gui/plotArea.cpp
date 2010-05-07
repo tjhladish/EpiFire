@@ -2,7 +2,7 @@
 #include "plotAxes.h"
 #include "../src/Utility.h"
 
-PlotArea::PlotArea(QWidget*) { 
+PlotArea::PlotArea(QWidget*) {
     setScene(new QGraphicsScene(this));
     setObjectName("PlotArea");
     setMinimumSize(200,300);
@@ -12,6 +12,7 @@ PlotArea::PlotArea(QWidget*) {
 void PlotArea::replot() {
     drawPlot();
 }
+
 
 int find_max_val(vector< vector <int> > data) {
     int maxY = 0;
@@ -26,6 +27,7 @@ int find_max_val(vector< vector <int> > data) {
     return maxY;
 }
 
+
 int find_max_idx(vector< vector <int> > data) {
     int maxX = 0;
     for( unsigned int i=0; i < data.size(); i++ ) {
@@ -37,18 +39,19 @@ int find_max_idx(vector< vector <int> > data) {
     return maxX;
 }
 
+
 void PlotArea::drawPlot() {
 
     // debugging data
-/*    data.clear();
-    vector<int> dummy;
-    data.push_back(dummy);
-    for (int i = 0; i < 10; i++) {
-        data[0].push_back(i);
-    }*/
+    /*    data.clear();
+        vector<int> dummy;
+        data.push_back(dummy);
+        for (int i = 0; i < 10; i++) {
+            data[0].push_back(i);
+        }*/
 
     if (data.size() == 0 ) return;
-    
+
     scene()->clear();
     int plotW = width() - 50;
     int plotH = height() - 50;
@@ -57,9 +60,11 @@ void PlotArea::drawPlot() {
     int alpha;
     if (data.size() < 2) {
         alpha = 255;
-    } else if (data.size() > 25) {
+    }
+    else if (data.size() > 25) {
         alpha = 10;
-    } else {
+    }
+    else {
         alpha = 255 / data.size();
     }
     QColor color(0,0,0,alpha);
@@ -69,80 +74,81 @@ void PlotArea::drawPlot() {
     //QColor recent_color(255,0,0,255);
     QColor recent_color = Qt::red;
 
-
     //debugging rectangles
-/*    int S = 50;
-    QColor tc(0,0,0,50);
-    QBrush tb(tc);
-    QPen   tp(Qt::black);
-    scene()->addRect(0,0,S,S,tp,tb);
-    scene()->addRect(0,plotH-S,S,S,tp,tb);
-    scene()->addRect(plotW-S,0,S,S,tp,tb);
-    scene()->addRect(plotW-S,plotH-S,S,S,tp,tb);*/
-    
+    /*    int S = 50;
+        QColor tc(0,0,0,50);
+        QBrush tb(tc);
+        QPen   tp(Qt::black);
+        scene()->addRect(0,0,S,S,tp,tb);
+        scene()->addRect(0,plotH-S,S,S,tp,tb);
+        scene()->addRect(plotW-S,0,S,S,tp,tb);
+        scene()->addRect(plotW-S,plotH-S,S,S,tp,tb);*/
+
     float axis_multiplier = 1.1; // how much longer should axes be
     float max_val = (float) find_max_val(data) * axis_multiplier;
     int   max_idx = find_max_idx(data) * axis_multiplier;
-    float r = 4; // radius of data points
+    float r = 4;                 // radius of data points
     //int h_padding = 3;
     int margin = 35;
     for( unsigned int i=0; i < data.size(); i++ ) {
-        if (i == data.size() - 1) { // make the most recent dataset a different color if it was a single run
+                                 // make the most recent dataset a different color if it was a single run
+        if (i == data.size() - 1) {
             brush.setColor(recent_color);
             pen.setColor(recent_color);
         }
         for( unsigned int j=0; j<data[i].size(); j++ ) {
             float val = data[i][j];
-        
+
             float x  = -r + ((float) j/max_idx * (plotW - margin)) + margin;
-            float y  = plotH; // flip coordinate system, since (0,0) is in upper-left
-                  y -= plotH * val/max_val + r;
+            float y  = plotH;    // flip coordinate system, since (0,0) is in upper-left
+            y -= plotH * val/max_val + r;
             scene()->addEllipse(x,y,2*r,2*r,pen,brush);
             //qDebug() << data[i][j];
         }
     }
-                      
-    Axes* x = new Axes(0,0,max_idx*axis_multiplier,9); // args = 0 or 1 for x or y,  min, max, ticks
+
+                                 // args = 0 or 1 for x or y,  min, max, ticks
+    Axes* x = new Axes(0,0,max_idx*axis_multiplier,9);
     scene()->addItem(x);
-    
+
     Axes* y = new Axes(1,0,max_val*axis_multiplier,9);
     scene()->addItem(y);
-    
+
     qDebug() << scene()->width() << " " << scene()->height() << endl;
     //see QGraphicsScene
-    
+
     scene()->update();
-    
+
 }
 
 
 void PlotArea::resizeEvent ( QResizeEvent * event ) {
-    replot();	 
+    replot();
 }
+
 
 void PlotArea::saveData() {
-  QString startdir = ".";
-  QString file = QFileDialog::getOpenFileName(
+    QString startdir = ".";
+    QString file = QFileDialog::getOpenFileName(
         this, "Select file to save to", startdir, "CSV Files(*.csv)");
-
 
 }
 
+
 void PlotArea::savePicture() {
-  QString startdir = ".";
-  QString file = QFileDialog::getOpenFileName(
+    QString startdir = ".";
+    QString file = QFileDialog::getOpenFileName(
         this, "Select file to save to", startdir, "PNG Image Files(*.png)");
 
+    QPixmap image(scene()->width(),scene()->height());
+    image.fill(Qt::white);
 
-  QPixmap image(scene()->width(),scene()->height());
-  image.fill(Qt::white);
+    QPainter painter(&image);
+    render(&painter);
 
-  QPainter painter(&image);
-  render(&painter);
+    /*clipboard*/
+    //QApplication::clipboard()->setPixmap(image);
 
-  /*clipboard*/
-  //QApplication::clipboard()->setPixmap(image);
-
-  image.save(file,"PNG");
+    image.save(file,"PNG");
 
 }

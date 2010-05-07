@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-
 //Set default values that are not related to distribution
 
 const QString default_R0="1.5";
@@ -49,80 +48,76 @@ class PlotArea;
 //Define public and private functions and slots for 'MainWindow' class
 class MainWindow : public QMainWindow
 {
-     Q_OBJECT
+    Q_OBJECT
 
- public:
-  MainWindow();
-  void appendOutput(QString); 
-   
-  Network   *network;
-  Simulator *simulator;
-  QTextEdit *bigEditor;
+        public:
+        MainWindow();
+        void appendOutput(QString);
 
-  enum DistType  { POI, EXP, POW, URB, CON};
+        Network   *network;
+        Simulator *simulator;
+        QTextEdit *bigEditor;
 
-  public slots:
+        enum DistType  { POI, EXP, POW, URB, CON};
 
-  void simulate();
-  void changeParameterLabels(int dist_type);
-  void changeNetSource(int source);
-  void changeSimType(int type);
-  void defaultSettings();
-  void readEdgeList();
-  void clear_network();
-  void generate_network();
-  void connect_network (Network* net, DistType dist, double param1, double param2);
-  void saveEdgeList();
+    public slots:
 
- private:
-  
-  void createMenu();
-  void createHorizontalGroupBox();
-  void createGridGroupBox();
-  void createFormGroupBox();
-  vector< vector<int> > simulate_main(int j_max, double R_zero, int patient_zero_ct, string RunID, int* dist_size_loc);
+        void simulate();
+        void changeParameterLabels(int dist_type);
+        void changeNetSource(int source);
+        void changeSimType(int type);
+        void defaultSettings();
+        void readEdgeList();
+        void clear_network();
+        void generate_network();
+        void connect_network (Network* net, DistType dist, double param1, double param2);
+        void saveEdgeList();
 
-  void makeHistogram(int* data_series, int num_runs, int pop_size);
+    private:
 
-  QLabel *distLabel; 
-  QLabel *param1Label;
-  QLabel *param2Label;
-  QLabel *netsourceLabel;
-  QLabel *netfileLabel;
-  QLabel *simLabel;
+        void createMenu();
+        void createHorizontalGroupBox();
+        void createGridGroupBox();
+        void createFormGroupBox();
+        vector< vector<int> > simulate_main(int j_max, double R_zero, int patient_zero_ct, string RunID, int* dist_size_loc);
 
+        void makeHistogram(int* data_series, int num_runs, int pop_size);
 
-  QMenuBar *menuBar;
-  QGroupBox *horizontalGroupBox;
-  QGroupBox *gridGroupBox;
-  QComboBox *distBox;
-  QComboBox *netsourceBox;
-  QComboBox *simBox;
+        QLabel *distLabel;
+        QLabel *param1Label;
+        QLabel *param2Label;
+        QLabel *netsourceLabel;
+        QLabel *netfileLabel;
+        QLabel *simLabel;
 
-  QPushButton *buttons[4];
-  QPushButton* clearnetButton;
-  QPushButton* loadnetButton;
-  QPushButton* generatenetButton;
+        QMenuBar *menuBar;
+        QGroupBox *horizontalGroupBox;
+        QGroupBox *gridGroupBox;
+        QComboBox *distBox;
+        QComboBox *netsourceBox;
+        QComboBox *simBox;
 
-  QMainWindowButtonBox *buttonBox;
+        QPushButton *buttons[4];
+        QPushButton* clearnetButton;
+        QPushButton* loadnetButton;
+        QPushButton* generatenetButton;
 
-  // Define textboxes and other main menu items
+        QMainWindowButtonBox *buttonBox;
 
-  QLineEdit *numrunsLine;
-  QLineEdit *numnodesLine;
-  QLineEdit *param1Line;
-  QLineEdit *param2Line;
-  QLineEdit *pzeroLine;
-  QLineEdit *rzeroLine;
-  QLineEdit *netfileLine;
+        // Define textboxes and other main menu items
 
-  
-  PlotArea* plotArea;
-  
-  QMenu *fileMenu;
-  QAction *exitAction;
-  QAction *openAction;
+        QLineEdit *numrunsLine;
+        QLineEdit *numnodesLine;
+        QLineEdit *param1Line;
+        QLineEdit *param2Line;
+        QLineEdit *pzeroLine;
+        QLineEdit *rzeroLine;
+        QLineEdit *netfileLine;
+
+        PlotArea* plotArea;
+
+        QMenu *fileMenu;
+        QAction *exitAction;
+        QAction *openAction;
 };
-
- #endif
-
+#endif

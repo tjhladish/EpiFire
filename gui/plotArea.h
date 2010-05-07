@@ -10,22 +10,20 @@ using namespace std;
 class PlotArea : public QGraphicsView
 {
     Q_OBJECT
-    public:
+        public:
         PlotArea(QWidget* mw);
-        
-    public slots: 
+
+    public slots:
         void replot();
-        void addData(vector<int> X ) { data.push_back(X); } 
+        void addData(vector<int> X ) { data.push_back(X); }
         void clearData() { data.clear(); }
         void saveData();
         void savePicture();
-        
+
     protected:
         void drawPlot();
         void resizeEvent ( QResizeEvent *event );
     private:
         vector< vector<int> > data;
 };
-
 #endif
-

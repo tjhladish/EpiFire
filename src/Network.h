@@ -38,65 +38,81 @@ typedef int stateType;
  *
  * If you want to automate construction:
  *      my_network.populate(10,000);        // Add 10^4 nodes to the network.
- *      my_network.rand_connect_poisson(4); // Connect the nodes using a 
+ *      my_network.rand_connect_poisson(4); // Connect the nodes using a
  *                                          // Poisson(4) degree distribution
  *                                          // and get rid of self-loops and
  *                                          // multi-edges (done automatically).
  *
- */      
+ */
 
 /***************************************************************************
- * 
- * BEGIN NETWORK CLASS 
+ *
+ * BEGIN NETWORK CLASS
  *
  **************************************************************************/
 
 class Network
 {
-    static int id_counter;      //remains in memory until end of the program
-    static MTRand mtrand;       //pointer to a radom number generator
+    static int id_counter;       //remains in memory until end of the program
+    static MTRand mtrand;        //pointer to a radom number generator
     friend class Node;
     friend class Edge;
 
     public:
 
-    /***************************************************************************
-     * Network Constructor and Destructor
-     **************************************************************************/
+        /***************************************************************************
+         * Network Constructor and Destructor
+         **************************************************************************/
         Network( string name, bool directed );
         Network( const Network& net);
         ~Network();
 
-        Network* duplicate(); // Return a copy, identical except for the network ID
-    
-    /***************************************************************************
-     * Network operators
-     **************************************************************************/
-        bool operator==( const Network& n2 ); // Test whether two networks are
-                                              // actually the same object
+        Network* duplicate();    // Return a copy, identical except for the network ID
 
+        /***************************************************************************
+         * Network operators
+         **************************************************************************/
+                                 // Test whether two networks are
+        bool operator==( const Network& n2 );
+                                 // actually the same object
 
-    /***************************************************************************
-     * Network Accessor Functions (Simple)
-     **************************************************************************/
+        /***************************************************************************
+         * Network Accessor Functions (Simple)
+         **************************************************************************/
         inline int              get_id() { return id; }
         inline string           get_name() { return name; }
-        inline int              size() { return node_list.size(); } // # of nodes in the network
-        inline bool             has_unit_edges() { return unit_edges; } // do all edges have same length or cost
+                                 // # of nodes in the network
+        inline int              size() {
+            return node_list.size();
+        }
+                                 // do all edges have same length or cost
+        inline bool             has_unit_edges() {
+            return unit_edges;
+        }
         inline bool             is_directed() {return directed; }
-	    inline MTRand*          get_rng() { return &mtrand; } // get a pointer to the random number generator
+                                 // get a pointer to the random number generator
+        inline MTRand*          get_rng() {
+            return &mtrand;
+        }
 
+        /***************************************************************************
+         * Network Accessor Functions
+         **************************************************************************/
+                                 // get all nodes
+        inline vector<Node*> get_nodes() {
+            return node_list;
+        }
+                                 // get a particular node
+        Node*                get_node(int node_id);
+                                 // get a random node
+        Node*                get_rand_node();
+                                 // get all edges
+        vector<Edge*>        get_edges();
+                                 // get a particular edge
+        Edge*                get_edge(int id);
 
-    /***************************************************************************
-     * Network Accessor Functions
-     **************************************************************************/
-        inline vector<Node*> get_nodes() { return node_list; } // get all nodes
-        Node*                get_node(int node_id); // get a particular node
-        Node*                get_rand_node(); // get a random node
-        vector<Edge*>        get_edges(); // get all edges
-        Edge*                get_edge(int id); // get a particular edge
-
-        vector<stateType>    get_node_states(); // get states of all nodes
+                                 // get states of all nodes
+        vector<stateType>    get_node_states();
 
         // get edges that loop back to the same node, or result in
         // redundant connections between all nodes A and B.  NB: To use
@@ -108,16 +124,17 @@ class Network
         vector<Node*> get_major_component();
         // vector< vector<Node*> > get_components(){};
 
-
-    /***************************************************************************
-     * Network Modifier Functions
-     **************************************************************************/
+        /***************************************************************************
+         * Network Modifier Functions
+         **************************************************************************/
         Node* add_new_node();    //creates new node and adds it to the network
         void populate(int n);    //add "n" new nodes to the network
-        void add_node( Node* node ); // add an existing node to the network
-        void delete_node( Node* node); // delete a specified node (deleting associated edges)
+                                 // add an existing node to the network
+        void add_node( Node* node );
+                                 // delete a specified node (deleting associated edges)
+        void delete_node( Node* node);
 
-        // erdos_renyi() and rand_connect_poisson() (should) produce equivalent 
+        // erdos_renyi() and rand_connect_poisson() (should) produce equivalent
         // networks, although the former will always allow degree 0 nodes, while
         // the later can be modified to use a left-truncated distribution.
         //
@@ -126,7 +143,8 @@ class Network
         // algorithm, and therefore can take any discrete, non-negative distribution.
         void erdos_renyi(double lambda);
         void ring_lattice(int k);
-        void square_lattice(int R, int C, bool diag); // RxC lattice, including diagonals if diag
+                                 // RxC lattice, including diagonals if diag
+        void square_lattice(int R, int C, bool diag);
         void small_world(double p);
         void rand_connect_poisson(double lambda);
         void rand_connect_powerlaw(double alpha, double kappa);
@@ -134,7 +152,7 @@ class Network
         //void rand_connect_user(map<int,double>); not implemented
 
         // User provides arbitrary (normalized!) distribution.  normalize_dist(my_dist)
-        // in Utility.h can be used for that.  Each value should be the probability 
+        // in Utility.h can be used for that.  Each value should be the probability
         // of the index (index = degree), i.e. if the contents of the vector are
         // (0, 0.13, 0.2, 0.04, 0.63), then the probability of drawing a deviate (=degree)
         // of 0 is 0, of 1 is 13%, of 2 is 20%, and so on.
@@ -146,57 +164,66 @@ class Network
 
         // You probably don't want this, unless you are manually creating stubs for
         // each node.  It is likely easier for you to call one of the other
-        // rand_connect* functions that takes either a distribution or 
+        // rand_connect* functions that takes either a distribution or
         // distribution parameters.
         void rand_connect_stubs(vector<Edge*> stubs);
 
         // Gets rid of self-loops and multi-edges.  This is called automatically
-        // by erdos_renyi() and all of the rand_connect* functions.  You only 
+        // by erdos_renyi() and all of the rand_connect* functions.  You only
         // need it if you are using your own algorithm to connect nodes.
         void lose_loops();
 
         // Unpopulate the network.
-        void clear_nodes();// { for (int i = 0; i < size(); i++) delete node_list[i]; }
+        void clear_nodes();      // { for (int i = 0; i < size(); i++) delete node_list[i]; }
 
         // Completely disconnect network.  Degree of every node goes to zero, but things like
         // the node's id, name, state stay the same.
         void clear_edges();
 
         // Disconnect network, but don't delete edges--leave them as stubs (edges
-        // with starting nodes but no ending nodes).  You'll probably want to 
+        // with starting nodes but no ending nodes).  You'll probably want to
         // follow a call to disconnect_edges() with rand_connect_stubs() to
         // reconnect those edges in a new, randomized way.
         void disconnect_edges();
 
         void set_node_states(vector<stateType> &states);
 
-    /***************************************************************************
-     * Network Input/Output (including visualization)
-     **************************************************************************/
-        void read_edgelist(string filename); // read network structure from file
-        void write_edgelist(string filename);// write network to file
-        void graphviz(string filename); // output a graphviz file
-        void dumper(); // print the network object contents in the terminal
+        /***************************************************************************
+         * Network Input/Output (including visualization)
+         **************************************************************************/
+                                 // read network structure from file
+        void read_edgelist(string filename);
+                                 // write network to file
+        void write_edgelist(string filename);
+                                 // output a graphviz file
+        void graphviz(string filename);
+        void dumper();           // print the network object contents in the terminal
         bool validate();
-        
-        vector<int> get_deg_series ();      // list of degrees, one for each node
-        vector<int> get_deg_dist ();     // counts of 0 deg nodes, 1 deg nodes, ...
-        vector<double> get_gen_deg_dist (); // dist to sample to draw new degrees (frequencies)
-        double mean_deg();  // calculated mean of the degree series
-        double transitivity(vector<Node*> node_set);  // measure of clustering of nodes in node_set;
-                                                      // if node_set is empty, use all nodes
-        double mean_dist();   // mean distANCE between all nodes A and B
-        vector< vector<double> > all_distances(); // 2D matrix of distances
-        
+
+                                 // list of degrees, one for each node
+        vector<int> get_deg_series ();
+                                 // counts of 0 deg nodes, 1 deg nodes, ...
+        vector<int> get_deg_dist ();
+                                 // dist to sample to draw new degrees (frequencies)
+        vector<double> get_gen_deg_dist ();
+        double mean_deg();       // calculated mean of the degree series
+                                 // measure of clustering of nodes in node_set;
+        double transitivity(vector<Node*> node_set);
+                                 // if node_set is empty, use all nodes
+        double mean_dist();      // mean distANCE between all nodes A and B
+                                 // 2D matrix of distances
+        vector< vector<double> > all_distances();
+
         inline bool topology_altered() { return _topology_altered; }
         inline void set_topology_altered(bool flag) { _topology_altered = flag; }
 
-    /***************************************************************************
-     * Network Properties
-     **************************************************************************/
-    void gen_deg_series(vector<int> &deg_series);
-    vector<int> get_states(); // get the states of all nodes
-    vector< vector<int> > get_states_by_degree(); // get the state sequences, indexed by degree
+        /***************************************************************************
+         * Network Properties
+         **************************************************************************/
+        void gen_deg_series(vector<int> &deg_series);
+        vector<int> get_states();// get the states of all nodes
+                                 // get the state sequences, indexed by degree
+        vector< vector<int> > get_states_by_degree();
 
     private:
         int id;                  //unique id for the node
@@ -204,19 +231,19 @@ class Network
         vector<Node*> node_list;
         bool unit_edges;
         bool directed;
-        vector<double> gen_deg_dist;  // the generating distribution
-                                      // used to draw random degrees
+                                 // the generating distribution
+        vector<double> gen_deg_dist;
+                                 // used to draw random degrees
 
-        bool _topology_altered;      //has the network topology changed?
+        bool _topology_altered;  //has the network topology changed?
         int node_id_counter;
         int edge_id_counter;
         void _assign_deg_series();
 
-        
         // The network has no stubs, but gen_deg_dist (a normalized degree distribution
         // to draw deviates from) has already been stored.
         void _rand_connect();
- 
+
 };
 
 class Node
@@ -225,21 +252,21 @@ class Node
     friend class Edge;
 
     public:
-    
-    /***************************************************************************
-     * Constructor and Destructor
-     **************************************************************************/
+
+        /***************************************************************************
+         * Constructor and Destructor
+         **************************************************************************/
         //Use Network::add_new_node() to add nodes
         void delete_node();
-        
+
         void set_network( Network* network );
 
         inline int get_id() { return id; }
         inline string get_name() {  return name; }
         inline Network* get_network() { return network; }
         inline vector<Edge*> get_edges_in() { return edges_in; }
-        inline vector<Edge*> get_edges_out() { return edges_out; } 
-        inline vector<double> get_loc() { return loc; } 
+        inline vector<Edge*> get_edges_out() { return edges_out; }
+        inline vector<double> get_loc() { return loc; }
         inline stateType get_state()   { return state; }
 
         inline void set_loc(const vector<double>& newloc) { this->loc = newloc; }
@@ -247,13 +274,14 @@ class Node
 
         double mean_min_path();
         vector<double> min_paths();
-        
+
         void add_stubs(int deg);
 
-        Edge* get_rand_edge(); // get a random outbound edge
+        Edge* get_rand_edge();   // get a random outbound edge
         vector<Node*> get_neighbors ();
         bool is_neighbor(Node* node2);
-        void connect_to (Node* end); // a->connect_to(b) == b->connect_to(a) for undirected networks
+                                 // a->connect_to(b) == b->connect_to(a) for undirected networks
+        void connect_to (Node* end);
         bool operator==( const Node& n2 );
         friend ostream& operator<< (ostream &out, Node* node);
         void dumper();
@@ -263,7 +291,7 @@ class Node
         Edge* add_stub_out();
         string get_name_or_id();
         int deg();
-        
+
     private:
         Node();
         Node(Network* network, string name, stateType state);
@@ -286,13 +314,13 @@ class Edge
     friend class Node;
 
     public:
-    /***************************************************************************
-     * Constructor and Destructor
-     **************************************************************************/
+        /***************************************************************************
+         * Constructor and Destructor
+         **************************************************************************/
         ~Edge();
-        void delete_edge(); //destroys edge (A to B), leaves complement (B to A)
+        void delete_edge();      //destroys edge (A to B), leaves complement (B to A)
         void disconnect_nodes(); //destroys edge & its complement
-        
+
         inline int get_id() { return id; };
         inline int get_cost() { return cost; };
         inline Node* get_start() { return start; };
@@ -300,7 +328,7 @@ class Edge
         inline Network* get_network() {return network; };
 
         void set_cost(int c);
-        
+
         Edge* get_complement();
         void swap_ends (Edge* other_edge);
         void break_end ();
@@ -321,4 +349,3 @@ class Edge
 
 };
 #endif
-
