@@ -28,6 +28,7 @@ double rand_exp (double lambda, MTRand* mtrand);
 void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
 
 void split(const string& s, char c, vector<string>& v);
+string strip (string const& str, char const* sepSet);
 
 template <typename T>
 inline std::string to_string (const T& t) {

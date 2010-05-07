@@ -182,6 +182,14 @@ int max_element(vector<int> list) {
 }
 
 
+std::string strip ( std::string const& str, char const* sepSet) {
+    std::string::size_type const first = str.find_first_not_of(sepSet);
+    return ( first==std::string::npos )
+        ? std::string()
+        : str.substr(first, str.find_last_not_of(sepSet)-first+1);
+}
+
+
 void split(const string& s, char c, vector<string>& v) {
     string::size_type i = 0;
     string::size_type j = s.find(c);

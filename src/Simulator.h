@@ -65,6 +65,10 @@ class Simulator
         //these functions must be derived in child class
         virtual void step_simulation() {};
         virtual void run_simulation() {};
+        virtual void rand_infect(int n) {};
+        virtual int epidemic_size() = 0; // cumulative infected
+        virtual int count_infected() {return 0;};// current infected
+        virtual void reset() {};
 
 };
 

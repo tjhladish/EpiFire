@@ -5,14 +5,14 @@
 
 class ChainBinomial_Sim: public Simulator
 {
+    protected:
+        list<Node*> infected;
+        vector<Node*> new_infected;
+        vector<Node*> recovered;
 
     public:
         double T;                 // transmissibiltiy per time step
         int infectious_period;
-
-        list<Node*> infected;
-        vector<Node*> new_infected;
-        vector<Node*> recovered;
 
         ChainBinomial_Sim() { this->time = 0; };
         ChainBinomial_Sim(Network* net, int infectious_period, double T):Simulator(net) { this->infectious_period=infectious_period; this->T=T; };
@@ -49,7 +49,7 @@ class ChainBinomial_Sim: public Simulator
                 }
                 inode->set_state( inode->get_state()+1 );
             }
-            while (infected.size() > 0 & infected.front()->get_state() > infectious_period) { 
+            while (infected.size() > 0 && infected.front()->get_state() > infectious_period) { 
                 Node* first = infected.front();
                 first->set_state(-1);
                 recovered.push_back( first );
@@ -61,7 +61,7 @@ class ChainBinomial_Sim: public Simulator
         }
 
         void run_simulation() {
-            assert(infectious_period > 0 & T >= 0 & T <= 1);
+            assert(infectious_period > 0 && T >= 0 && T <= 1);
             vector<Node*> nodes = net->get_nodes();
             for (int i = 0; i<nodes.size(); i++) { // verify that this is right
                 nodes[i]->set_state(0);            //
@@ -70,7 +70,11 @@ class ChainBinomial_Sim: public Simulator
                 step_simulation();
             }
         }
-        
+       
+        int count_infected() {
+            return infected.size();
+        }
+
         int epidemic_size() {
             return recovered.size();
         }

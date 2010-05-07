@@ -669,40 +669,39 @@ void Network::read_edgelist(string filename) {
     ifstream myfile(filename.c_str());
     std::stringstream ss;
     map<string,Node*> idmap;
-    vector<string>fields;
     
     if (myfile.is_open()) { 
         string line;
         while ( getline(myfile,line) ) {
             //split string based on "," and store results into vector
-            fields.clear();
+            vector<string>fields;
             split(line,',', fields);  
-            
+
             //format check
             if (fields.size() != 2 ) { 
                 cerr << "problem with line " << line << endl;
                 continue;
             }
 
-            string name1 = fields[0];
-            string name2 = fields[1];
+            const char whitespace[] = " \n\t\r";
+            string name1 = strip(fields[0],whitespace);
+            string name2 = strip(fields[1],whitespace);
+
+            cerr << line << endl;
+            if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
+            if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
+            cerr << "---" << endl;
 
             if(idmap.count(name1)==0) { //new node;
-                Node* node = new Node();     //allocate memory for new node
-                node->id = node_id_counter++;
+                Node* node = this->add_new_node();     //allocate memory for new node
                 node->name = name1;
-                node->set_network(this);     //set the network
-                node_list.push_back(node);
-                idmap[name1]=node;
+                idmap[name1] = node;
              }
 
             if(idmap.count(name2)==0) { //new node;
-                Node* node = new Node();     //allocate memory for new node
-                node->id = node_id_counter++;
+                Node* node = this->add_new_node();     //allocate memory for new node
                 node->name = name2;
-                node->set_network(this);     //set the network
-                node_list.push_back(node);
-               idmap[name2]=node;
+                idmap[name2]=node;
              }
 
             Node *n1 = idmap[name1];
@@ -716,8 +715,7 @@ void Network::read_edgelist(string filename) {
 void Network::write_edgelist(string filename) {
     if (filename == "") filename = "edgelist.out";
 
-    //ofstream pipe(filename, ios::out);
-    ofstream pipe("./edgelist.out", ios::out);
+    ofstream pipe(filename.c_str(), ios::out);
     vector<Edge*> edges = get_edges();
     for (unsigned int i = 0; i < edges.size(); i++) {
         int start_id = edges[i]->start->id;
@@ -734,9 +732,9 @@ void Network::graphviz (string filename) {
         cerr << "Network is too large (> 200 edges) to reasonably output with graphviz/DOT\n";
         return;
     }*/
-//    if (filename == "") filename = "tmp.png";
+    if (filename == "") filename = "tmp.dot";
 
-    ofstream pipe("./tmp.dot", ios::out);
+    ofstream pipe(filename.c_str(), ios::out);
 
     string graph_type = directed ? "digraph" : "graph";
 
