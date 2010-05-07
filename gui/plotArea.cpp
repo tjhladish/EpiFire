@@ -119,3 +119,30 @@ void PlotArea::drawPlot() {
 void PlotArea::resizeEvent ( QResizeEvent * event ) {
     replot();	 
 }
+
+void PlotArea::saveData() {
+  QString startdir = ".";
+  QString file = QFileDialog::getOpenFileName(
+        this, "Select file to save to", startdir, "CSV Files(*.csv)");
+
+
+}
+
+void PlotArea::savePicture() {
+  QString startdir = ".";
+  QString file = QFileDialog::getOpenFileName(
+        this, "Select file to save to", startdir, "PNG Image Files(*.png)");
+
+
+  QPixmap image(scene()->width(),scene()->height());
+  image.fill(Qt::white);
+
+  QPainter painter(&image);
+  render(&painter);
+
+  /*clipboard*/
+  //QApplication::clipboard()->setPixmap(image);
+
+  image.save(file,"PNG");
+
+}

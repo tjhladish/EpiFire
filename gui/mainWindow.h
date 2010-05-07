@@ -2,23 +2,27 @@
 #define MAINWINDOW_H
 
 #include <QtGui>
+#include <QApplication>
 #include <QMainWindow>
-#include <QMainWindow>
-#include <iostream>
-#include "guiSim.h"
-//#include "main_histexample.h"
-#include <math.h>
-#include "plotArea.h"
 
 //Temporary includes for making the histogram
-#include <stdlib.h>
-#include <qapplication.h>
-#include <qpen.h>
 #include <qwt_plot.h>
 #include <qwt_plot_grid.h>
 #include <qwt_plot_marker.h>
 #include <qwt_interval_data.h>
 #include "histogram.h"
+
+#include "plotArea.h"
+#include "../src/Network.h"
+#include "../src/Simulator.h";
+#include "../src/Percolation_Sim.h"
+#include "../src/ChainBinomial_Sim.h"
+
+#include <math.h>
+#include <time.h>
+#include <stdlib.h>
+#include <iostream>
+
 
 //Set default values that are not related to distribution
 
@@ -52,16 +56,23 @@ class MainWindow : public QMainWindow
   void appendOutput(QString); 
    
   Network   *network;
+  Simulator *simulator;
   QTextEdit *bigEditor;
+
+  enum DistType  { POI, EXP, POW, URB, CON};
 
   public slots:
 
-  void percolationSim();
+  void simulate();
   void changeParameterLabels(int dist_type);
   void changeNetSource(int source);
   void changeSimType(int type);
   void defaultSettings();
   void readEdgeList();
+  void clear_network();
+  void generate_network();
+  void connect_network (Network* net, DistType dist, double param1, double param2);
+  void saveEdgeList();
 
  private:
   
@@ -69,6 +80,7 @@ class MainWindow : public QMainWindow
   void createHorizontalGroupBox();
   void createGridGroupBox();
   void createFormGroupBox();
+  vector< vector<int> > simulate_main(int j_max, double R_zero, int patient_zero_ct, string RunID, int* dist_size_loc);
 
   void makeHistogram(int* data_series, int num_runs, int pop_size);
 
@@ -84,13 +96,13 @@ class MainWindow : public QMainWindow
   QGroupBox *horizontalGroupBox;
   QGroupBox *gridGroupBox;
   QComboBox *distBox;
-  QCheckBox *reuseCheckBox;
   QComboBox *netsourceBox;
   QComboBox *simBox;
 
   QPushButton *buttons[4];
   QPushButton* clearnetButton;
-  QPushButton* loadNetButton;
+  QPushButton* loadnetButton;
+  QPushButton* generatenetButton;
 
   QMainWindowButtonBox *buttonBox;
 

@@ -2,13 +2,11 @@
 CONFIG += qt thread warn_off debug 
 
 HEADERS     = mainWindow.h \
-   guiSim.h \
-   histogram.h \
-   plotArea.h \
-   plotAxes.h
+              histogram.h \
+             plotArea.h \
+             plotAxes.h
 
  SOURCES     = mainWindow.cpp \
-               guiSim.cpp \
                ../src/*.cpp \
                main.cpp \
                histogram.cpp \

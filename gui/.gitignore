@@ -1,0 +1,5 @@
+*.o
+*.a
+moc*
+epifire
+Makefile

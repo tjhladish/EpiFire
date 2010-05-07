@@ -17,6 +17,8 @@ class PlotArea : public QGraphicsView
         void replot();
         void addData(vector<int> X ) { data.push_back(X); } 
         void clearData() { data.clear(); }
+        void saveData();
+        void savePicture();
         
     protected:
         void drawPlot();
