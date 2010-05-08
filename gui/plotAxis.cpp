@@ -1,6 +1,6 @@
-#include "plotAxes.h"
+#include "plotAxis.h"
 
-Axes::Axes( int type, float min, float max, int nticks) {
+Axis::Axis( int type, float min, float max, int nticks) {
     this->type = type;
     this->min = min;
     this->max = max;
@@ -8,9 +8,9 @@ Axes::Axes( int type, float min, float max, int nticks) {
 }
 
 
-Axes::~Axes() { }
+Axis::~Axis() { }
 
-QRectF Axes::boundingRect() const
+QRectF Axis::boundingRect() const
 {
 
     return(QRectF(0,0,scene()->width()+10,scene()->height()+10));
@@ -18,7 +18,7 @@ QRectF Axes::boundingRect() const
 }
 
 
-void Axes::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
+void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
     QPen pen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     painter->setPen(pen);
 

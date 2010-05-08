@@ -1,5 +1,5 @@
 #include "plotArea.h"
-#include "plotAxes.h"
+#include "plotAxis.h"
 #include "../src/Utility.h"
 
 PlotArea::PlotArea(QWidget*) {
@@ -10,7 +10,7 @@ PlotArea::PlotArea(QWidget*) {
 
 
 void PlotArea::replot() {
-    drawPlot();
+    drawEpiCurvePlot();
 }
 
 
@@ -40,15 +40,30 @@ int find_max_idx(vector< vector <int> > data) {
 }
 
 
-void PlotArea::drawPlot() {
-
+void PlotArea::debugger() { // makes it easier to see what's going on with coordinates & plot area
     // debugging data
-    /*    data.clear();
+        data.clear();
         vector<int> dummy;
         data.push_back(dummy);
         for (int i = 0; i < 10; i++) {
             data[0].push_back(i);
-        }*/
+        }
+
+    int plotW = width();
+    int plotH = height();
+
+    //debugging rectangles
+        int S = 50;
+        QColor tc(0,0,0,50);
+        QBrush tb(tc);
+        QPen   tp(Qt::black);
+        scene()->addRect(0,0,S,S,tp,tb);
+        scene()->addRect(0,plotH-S,S,S,tp,tb);
+        scene()->addRect(plotW-S,0,S,S,tp,tb);
+        scene()->addRect(plotW-S,plotH-S,S,S,tp,tb);
+}
+
+void PlotArea::drawEpiCurvePlot() {
 
     if (data.size() == 0 ) return;
 
@@ -56,7 +71,6 @@ void PlotArea::drawPlot() {
     int plotW = width() - 50;
     int plotH = height() - 50;
     scene()->setSceneRect(0,0,plotW,plotH);
-    //QBrush brush(Qt::red);
     int alpha;
     if (data.size() < 2) {
         alpha = 255;
@@ -71,18 +85,7 @@ void PlotArea::drawPlot() {
     QBrush brush(color);
     QPen   pen(color);
 
-    //QColor recent_color(255,0,0,255);
     QColor recent_color = Qt::red;
-
-    //debugging rectangles
-    /*    int S = 50;
-        QColor tc(0,0,0,50);
-        QBrush tb(tc);
-        QPen   tp(Qt::black);
-        scene()->addRect(0,0,S,S,tp,tb);
-        scene()->addRect(0,plotH-S,S,S,tp,tb);
-        scene()->addRect(plotW-S,0,S,S,tp,tb);
-        scene()->addRect(plotW-S,plotH-S,S,S,tp,tb);*/
 
     float axis_multiplier = 1.1; // how much longer should axes be
     float max_val = (float) find_max_val(data) * axis_multiplier;
@@ -108,17 +111,15 @@ void PlotArea::drawPlot() {
     }
 
                                  // args = 0 or 1 for x or y,  min, max, ticks
-    Axes* x = new Axes(0,0,max_idx*axis_multiplier,9);
+    Axis* x = new Axis(0,0,max_idx*axis_multiplier,9);
     scene()->addItem(x);
 
-    Axes* y = new Axes(1,0,max_val*axis_multiplier,9);
+    Axis* y = new Axis(1,0,max_val*axis_multiplier,9);
     scene()->addItem(y);
 
     qDebug() << scene()->width() << " " << scene()->height() << endl;
-    //see QGraphicsScene
 
     scene()->update();
-
 }
 
 

@@ -10,8 +10,9 @@ using namespace std;
 class PlotArea : public QGraphicsView
 {
     Q_OBJECT
-        public:
+    public:
         PlotArea(QWidget* mw);
+        void debugger();
 
     public slots:
         void replot();
@@ -21,7 +22,7 @@ class PlotArea : public QGraphicsView
         void savePicture();
 
     protected:
-        void drawPlot();
+        void drawEpiCurvePlot();
         void resizeEvent ( QResizeEvent *event );
     private:
         vector< vector<int> > data;

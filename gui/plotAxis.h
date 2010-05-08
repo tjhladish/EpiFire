@@ -6,11 +6,11 @@
 #include <QPainter>
 #include <math.h>
 
-class Axes : public QGraphicsItem
+class Axis : public QGraphicsItem
 {
     public:
-        Axes( int type, float min, float max, int nticks);
-        ~Axes();
+        Axis( int type, float min, float max, int nticks);
+        ~Axis();
 
     protected:
         QRectF boundingRect() const;

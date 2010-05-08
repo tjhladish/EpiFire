@@ -60,6 +60,7 @@ void MainWindow::readEdgeList() {
     network->dumper();
     netfileLine->setText(fileName);
     numnodesLine->setText(QString::number(network->size()));
+    updateRZero();
 }
 
 
@@ -74,7 +75,7 @@ void MainWindow::defaultSettings() {
     distBox->setCurrentIndex(0);
     numrunsLine->setText(default_num_runs);
     numnodesLine->setText(default_network_size);
-    rzeroLine->setText(default_R0);
+    transLine->setText(default_T);
     pzeroLine->setText(default_P0);
 
 }
@@ -105,7 +106,16 @@ void MainWindow::createHorizontalGroupBox() {
 
 
 void MainWindow::changeSimType(int type) {
-
+    if (type == 0) { // Chain Binomial
+        infectiousPeriodLabel->show();
+        infectiousPeriodLine->show();
+        updateRZero();
+    
+    } else { // Percolation
+        infectiousPeriodLabel->hide();
+        infectiousPeriodLine->hide();
+        updateRZero();
+    }
 }
 
 
@@ -113,6 +123,7 @@ void MainWindow::changeNetSource(int source) {
     if(source == 1 ) {           // load net from file
         netfileLabel->show();
         netfileLine->show();
+        netfileLine->setReadOnly(true);
         clearnetButton->show();
         loadnetButton->show();
         generatenetButton->hide();
@@ -129,6 +140,7 @@ void MainWindow::changeNetSource(int source) {
 
         distBox->show();
         distLabel->show();
+        numnodesLine->setText(default_network_size);
 
         param1Label->show();
         param2Label->show();
@@ -179,23 +191,60 @@ void MainWindow::changeParameterLabels(int dist_type) {
 
 }
 
+void MainWindow::updateRZero() {
+    cerr << "Update R0\n";
+    if (!network || network->size() == 0) {
+        rzeroLine->setText( "Undefined" );
+        return;
+    }
+
+    double T = (transLine->text()).toDouble();
+    int d = (infectiousPeriodLine->text()).toInt();
+    if ( simBox->currentText() == "Chain Binomial") {
+        cerr << "CBT: " << T << endl;
+        T = 1.0 - pow(1.0 - T, d);
+        cerr << "T: " << T << endl;
+    }
+
+    //Calculate critical transmissibility for this network
+    vector<double> dist = network->get_gen_deg_dist();
+    double numerator = 0;// mean degree, (= <k>)
+    // mean sq(deg) - mean deg (= <k^2> - <k>)
+    double denominator = 0;
+    for (unsigned int k=1; k < dist.size(); k++) {
+        numerator += k * dist[k];
+        denominator += k * (k-1) * dist[k];
+    }
+    double T_crit =  numerator/denominator;
+
+    double R0 = T / T_crit; 
+    rzeroLine->setText( QString::number(R0));
+    cerr << "Done updating\n";
+}
 
 void MainWindow::createGridGroupBox() {
 // Creates the main input forms and their labels
 
     // Define text boxes
-    numrunsLine = new QLineEdit();
-    numrunsLine->setAlignment(Qt::AlignRight);
     numnodesLine = new QLineEdit();
     numnodesLine->setAlignment(Qt::AlignRight);
     param1Line = new QLineEdit();
     param1Line->setAlignment(Qt::AlignRight);
     param2Line = new QLineEdit();
     param2Line->setAlignment(Qt::AlignRight);
+    
+    numrunsLine = new QLineEdit();
+    numrunsLine->setAlignment(Qt::AlignRight);
+    rzeroLine = new QLineEdit();
+    rzeroLine->setReadOnly(true);
+    rzeroLine->setAlignment(Qt::AlignRight);
+    transLine = new QLineEdit();
+    transLine->setAlignment(Qt::AlignRight);
+//    transLine->setValidator(probValidator);
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
-    rzeroLine = new QLineEdit();
-    rzeroLine->setAlignment(Qt::AlignRight);
+    infectiousPeriodLine = new QLineEdit();
+    infectiousPeriodLine->setAlignment(Qt::AlignRight);
 
     netsourceLabel = new QLabel(tr("Select Network Source"));
     netfileLabel = new QLabel(tr("Filename"));
@@ -204,7 +253,7 @@ void MainWindow::createGridGroupBox() {
     generatenetButton = new QPushButton("Generate Network");
     loadnetButton     = new QPushButton("Load Network");
 
-    simLabel = new QLabel("Simulation Type");
+    simLabel = new QLabel("Simulation type");
 
     simBox  =  new QComboBox(this);
     simBox->addItem("Chain Binomial");
@@ -212,7 +261,7 @@ void MainWindow::createGridGroupBox() {
 
     netsourceBox= new QComboBox(this);
     netsourceBox->addItem("Generate");
-    netsourceBox->addItem("Load From File");
+    netsourceBox->addItem("Load from file");
 
     // Define all of the labels, in order of appearance
 
@@ -222,12 +271,12 @@ void MainWindow::createGridGroupBox() {
     param1Label = new QLabel(tr("Parameter 1 value:"));
     param2Label = new QLabel(tr("Parameter 2 value:"));
     QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
-    QLabel *rzeroLabel = new QLabel(tr("Basic reproductive ratio:"));
+    QLabel *rzeroLabel = new QLabel(tr("Expected R-zero:"));
+    QLabel *transLabel = new QLabel(tr("Transmissibility:"));
+    infectiousPeriodLabel = new QLabel(tr("Infectious period:"));
 
-    // Build dropdown box
-
+    // Build degree distribution dropdown box
     distBox = new QComboBox;
-
     distBox->addItem("Poisson");
     distBox->addItem("Exponential");
     distBox->addItem("Power law");
@@ -245,14 +294,18 @@ void MainWindow::createGridGroupBox() {
     connect(loadnetButton,     SIGNAL(clicked()), this, SLOT(readEdgeList()));
     connect(generatenetButton, SIGNAL(clicked()), this, SLOT(generate_network()));
 
+    changeSimType(0); 
+    connect(simBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeSimType(int)));
+    connect(transLine,         SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
+
     //Build checkbox
+    retainDataCheckBox = new QCheckBox(tr("Retain data between runs"));
 
     // Put everything together
-
     gridGroupBox = new QGroupBox(tr("Simulation parameters"));
     QGridLayout *layout = new QGridLayout;
 
-    //First column
+    //FIRST COLUMN -- Network stuff
     layout->addWidget(netsourceLabel, 0, 0);
     layout->addWidget(netsourceBox, 0, 1);
     //fields for imported net
@@ -272,15 +325,20 @@ void MainWindow::createGridGroupBox() {
     layout->addWidget(param2Line, 4, 1);
     layout->addWidget(generatenetButton, 5,0);
 
-    //Second column
+    //SECOND COLUMN -- Simulation stuff
     layout->addWidget(simLabel, 0, 3);
     layout->addWidget(simBox, 0, 4);
-    layout->addWidget(numrunsLabel, 1, 3);
-    layout->addWidget(numrunsLine, 1, 4);
-    layout->addWidget(rzeroLabel, 2, 3);
-    layout->addWidget(rzeroLine, 2, 4);
-    layout->addWidget(pzeroLabel, 3, 3);
-    layout->addWidget(pzeroLine, 3, 4);
+    layout->addWidget(infectiousPeriodLabel, 1, 3);
+    layout->addWidget(infectiousPeriodLine, 1, 4);
+    layout->addWidget(transLabel, 2, 3);
+    layout->addWidget(transLine, 2, 4);
+    layout->addWidget(rzeroLabel, 3, 3);
+    layout->addWidget(rzeroLine, 3, 4);
+    layout->addWidget(pzeroLabel, 4, 3);
+    layout->addWidget(pzeroLine, 4, 4);
+    layout->addWidget(numrunsLabel, 5, 3);
+    layout->addWidget(numrunsLine, 5, 4);
+    layout->addWidget(retainDataCheckBox,6,3);
 
     gridGroupBox->setLayout(layout);
 
@@ -299,7 +357,7 @@ MainWindow::MainWindow() {
     QWidget* centralWidget = new QWidget(this);
 
     bigEditor = new QTextEdit();
-    bigEditor->setReadOnly (1);
+    bigEditor->setReadOnly(true);
     bigEditor->setPlainText(tr("No output yet"));
 
     QVBoxLayout *mainLayout = new QVBoxLayout;
@@ -314,7 +372,7 @@ MainWindow::MainWindow() {
     setCentralWidget(centralWidget);
 
     setWindowTitle(tr("EpiFire"));
-
+    probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
 
 
@@ -392,11 +450,13 @@ void MainWindow::generate_network() {
     network->populate(n);
                                  // connect network using the parameters above
     connect_network(network, dist_type, param1, param2);
+    updateRZero();
 }
 
 
 void MainWindow::clear_network() {
     if(network) network->clear_nodes();
+    updateRZero();
 }
 
 
@@ -406,7 +466,7 @@ void MainWindow::simulate() {
 
     // Get values from textboxes
     int j_max = (numrunsLine->text()).toInt();
-    double R_zero = (rzeroLine->text()).toDouble();
+    double T = (transLine->text()).toDouble();
     int p_zero = (pzeroLine->text()).toInt();
     string RunID="1";            // This needs to be updated
     int dist_size_array[j_max];  //Initiate array that will contain distribution sizes
@@ -417,17 +477,15 @@ void MainWindow::simulate() {
 
     if ( simBox->currentText() == "Chain Binomial") {
         int infectious_pd = 10;
-        double CB_T = 0.05;
-        simulator = new ChainBinomial_Sim(network, infectious_pd, CB_T);
+        simulator = new ChainBinomial_Sim(network, infectious_pd, T);
     }
     else {
         simulator = new Percolation_Sim(network);
-        double T = R_zero * simulator->calc_critical_transmissibility();
         ((Percolation_Sim*) simulator)->set_transmissibility(T);
     }
 
     //RUN SIMULATION
-    vector< vector<int> > epi_curves = simulate_main(j_max, R_zero, p_zero, RunID, dist_size_point);
+    vector< vector<int> > epi_curves = simulate_main(j_max, p_zero, RunID, dist_size_point);
 
     //MAKE PLOTS
     MainWindow::appendOutput("\tDone\n");
@@ -468,7 +526,7 @@ void MainWindow::connect_network (Network* net, DistType dist, double param1, do
 }
 
 
-vector< vector<int> > MainWindow::simulate_main(int j_max, double R_zero, int patient_zero_ct, string RunID, int* dist_size_loc) {
+vector< vector<int> > MainWindow::simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc) {
     // Header line
     //cout << "# RunID Network Season Epi_size P0_size R0\n";
 
@@ -484,13 +542,10 @@ vector< vector<int> > MainWindow::simulate_main(int j_max, double R_zero, int pa
     MainWindow::appendOutput("Simulation running...");
 
     for ( int j = 0; j < j_max; j++) {
-        //the following line isn't compiling in OSX for some reason
-        //patients_zero = sim->rand_infect(patient_zero_ct);
         simulator->rand_infect(patient_zero_ct);
 
         vector<int> epi_curve;
         epi_curve.push_back(simulator->count_infected());
-        //sim->run_simulation();
         while (simulator->count_infected() > 0) {
             simulator->step_simulation();
             epi_curve.push_back(simulator->count_infected());
@@ -498,7 +553,6 @@ vector< vector<int> > MainWindow::simulate_main(int j_max, double R_zero, int pa
 
         for(unsigned int k=0; k < epi_curve.size(); k++ ) cerr << epi_curve[k]<<endl;
 
-        //cout << RunID << " " << j << " " << sim->epidemic_size() << " " << patients_zero.size() << " ";
         cout << "Rep: " << j << "    Total: " << simulator->epidemic_size() << "\n\n";
         epi_curves[j] = epi_curve;
 
@@ -509,7 +563,6 @@ vector< vector<int> > MainWindow::simulate_main(int j_max, double R_zero, int pa
         *dist_size_loc=simulator->epidemic_size();
         dist_size_loc++;
 
-        //cout << RunID << " " << j << " " << sim->epidemic_size() << " " << patients_zero.size() << " ";
         cout << RunID << " " << j << " " << simulator->epidemic_size() << " ";
 
         //sim.summary();

@@ -29,6 +29,7 @@ const QString default_R0="1.5";
 const QString default_num_runs="1";
 const QString default_network_size="10000";
 const QString default_P0="1";
+const QString default_T ="0.2";
 
 // Forward definitions of classes
 class QMainWindow;
@@ -66,6 +67,7 @@ class MainWindow : public QMainWindow
         void changeParameterLabels(int dist_type);
         void changeNetSource(int source);
         void changeSimType(int type);
+        void updateRZero();
         void defaultSettings();
         void readEdgeList();
         void clear_network();
@@ -79,7 +81,7 @@ class MainWindow : public QMainWindow
         void createHorizontalGroupBox();
         void createGridGroupBox();
         void createFormGroupBox();
-        vector< vector<int> > simulate_main(int j_max, double R_zero, int patient_zero_ct, string RunID, int* dist_size_loc);
+        vector< vector<int> > simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc);
 
         void makeHistogram(int* data_series, int num_runs, int pop_size);
 
@@ -89,6 +91,7 @@ class MainWindow : public QMainWindow
         QLabel *netsourceLabel;
         QLabel *netfileLabel;
         QLabel *simLabel;
+        QLabel *infectiousPeriodLabel;
 
         QMenuBar *menuBar;
         QGroupBox *horizontalGroupBox;
@@ -96,6 +99,8 @@ class MainWindow : public QMainWindow
         QComboBox *distBox;
         QComboBox *netsourceBox;
         QComboBox *simBox;
+
+        QCheckBox *retainDataCheckBox;
 
         QPushButton *buttons[4];
         QPushButton* clearnetButton;
@@ -111,11 +116,14 @@ class MainWindow : public QMainWindow
         QLineEdit *param1Line;
         QLineEdit *param2Line;
         QLineEdit *pzeroLine;
+        QLineEdit *transLine;
         QLineEdit *rzeroLine;
+        QLineEdit *infectiousPeriodLine;
         QLineEdit *netfileLine;
 
         PlotArea* plotArea;
 
+        QDoubleValidator *probValidator;
         QMenu *fileMenu;
         QAction *exitAction;
         QAction *openAction;
