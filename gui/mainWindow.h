@@ -30,6 +30,7 @@ const QString default_num_runs="1";
 const QString default_network_size="10000";
 const QString default_P0="1";
 const QString default_T ="0.2";
+const QString default_infectious_pd ="5";
 
 // Forward definitions of classes
 class QMainWindow;

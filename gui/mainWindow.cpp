@@ -109,6 +109,7 @@ void MainWindow::changeSimType(int type) {
     if (type == 0) { // Chain Binomial
         infectiousPeriodLabel->show();
         infectiousPeriodLine->show();
+        infectiousPeriodLine->setText(default_infectious_pd);
         updateRZero();
     
     } else { // Percolation
@@ -476,7 +477,7 @@ void MainWindow::simulate() {
     if(simulator) { delete(simulator); simulator=NULL; }
 
     if ( simBox->currentText() == "Chain Binomial") {
-        int infectious_pd = 10;
+        int infectious_pd = (infectiousPeriodLine->text()).toInt();
         simulator = new ChainBinomial_Sim(network, infectious_pd, T);
     }
     else {
