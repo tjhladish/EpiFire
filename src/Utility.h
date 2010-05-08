@@ -21,6 +21,7 @@ vector<double> gen_trunc_poisson (double lambda, int min, int max);
 vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
 vector<double> normalize_dist (vector<double> dist, double sum);
+vector<double> normalize_dist (vector<int> dist, int sum);
 int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
 double rand_exp (double lambda, MTRand* mtrand);
 

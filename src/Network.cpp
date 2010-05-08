@@ -470,7 +470,13 @@ vector<int> Network::get_deg_dist () {
 
 
 vector<double> Network::get_gen_deg_dist () {
-    return gen_deg_dist;         // generated (idealized) degree distribution, I think
+    // generating (idealized) degree distribution, if one exists
+    if (gen_deg_dist.size() == 0) {
+        vector<int> deg_dist = get_deg_dist();
+        int Sum = sum(deg_dist);
+        gen_deg_dist = normalize_dist(deg_dist, Sum);
+    }
+    return gen_deg_dist;
 }
 
 
