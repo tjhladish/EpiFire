@@ -107,10 +107,9 @@ void PlotArea::drawEpiCurvePlot() {
         }
         for( unsigned int j=0; j<data[i].size(); j++ ) {
             float val = data[i][j];
-
-            float x  = -r + ((float) j/max_idx * (plotW - margin)) + margin;
+            float x  = -r + ((float) (plotW - margin) * j/(max_idx * axis_multiplier) ) + margin;
             float y  = plotH;    // flip coordinate system, since (0,0) is in upper-left
-            y -= plotH * val/max_val + r;
+            y -= plotH * val/(max_val*axis_multiplier) + r;
             QGraphicsEllipseItem* dot = scene()->addEllipse(x,y,2*r,2*r,Qt::NoPen,brush);
             dot->setZValue(zval);
             //qDebug() << data[i][j];
