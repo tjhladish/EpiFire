@@ -67,6 +67,7 @@ Network* Network::duplicate() {
 
 
 Network::~Network() {
+cerr << node_list.size() << endl;
     for (unsigned int i = 0; i < node_list.size(); i++) {
         delete node_list[i];
     }
@@ -166,8 +167,23 @@ void Network::square_lattice(int R, int C, bool diag) {
 // generates a poisson network vi the Erdos & Renyi algorithm
 void Network::erdos_renyi(double lambda) {
     int n = size();
-    double p = lambda / n;
-    double sd = sqrt(n*n*p*(1-p));
+    double p = lambda / (n-1);
+    vector<Node*> nodes = get_nodes();
+    for (unsigned int a = 0; a < nodes.size() - 1; a++) {
+        for (unsigned int b = a; b < nodes.size(); b++) {
+            if ( mtrand.rand() < p) {
+                nodes[a]->connect_to(nodes[b]);
+            }
+        }
+    }
+}
+
+
+// generates a poisson network.  Faster than Erdos-Renyi for sparse graphs
+void Network::sparse_random_graph(double lambda) {
+    int n = size();
+    double p = lambda / (n-1);
+    double sd = sqrt(n*(n-1)*p*(1-p));
                                  // randNorm(mean, variance)
     double edge_ct = mtrand.randNorm(lambda * n, sd);
                                  // we're increasing the degree of 2 nodes!
@@ -180,6 +196,7 @@ void Network::erdos_renyi(double lambda) {
     }
     lose_loops();
 }
+
 
 
 void Network::rand_connect_poisson(double lambda) {
@@ -594,6 +611,7 @@ Node* Network::get_rand_node() {
 // Unpopulate the network.
 void Network::clear_nodes() {
     for (int i = 0; i < size(); i++) delete node_list[i];
+    node_list.clear();
     set_topology_altered(true);
 }
 
@@ -861,6 +879,7 @@ Node::Node() {                   //empty constructor
 Node::~Node() {                  //destructor
     //cerr << "~Node() " << id << endl;
     for(unsigned int i=0; i< edges_out.size(); i++ ) delete edges_out[i];
+    edges_out.clear();
 }
 
 
@@ -1085,7 +1104,7 @@ Edge::Edge(Node* start, Node* end) {
 }
 
 
-Edge::~Edge() { /* cerr << "removing edge " << id << endl;*/ }
+Edge::~Edge() {  /*cerr << "removing edge " << id << endl;*/ }
 
 void Edge::delete_edge() {
     vector<Edge*>::iterator itr;

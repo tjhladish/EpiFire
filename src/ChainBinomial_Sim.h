@@ -34,7 +34,7 @@ class ChainBinomial_Sim: public Simulator
         void step_simulation () {
             assert(infected.size() > 0);
             time++;
-            cerr << "\t" << infected.size() << endl;
+            //cerr << "\t" << infected.size() << endl;
             new_infected.clear();
             list<Node*>::iterator it;
             for (it=infected.begin(); it!=infected.end(); it++) {

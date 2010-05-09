@@ -142,6 +142,7 @@ class Network
         // all the rand_connect* functions use an adaptation of the Molloy-Reed
         // algorithm, and therefore can take any discrete, non-negative distribution.
         void erdos_renyi(double lambda);
+        void sparse_random_graph(double lambda);
         void ring_lattice(int k);
                                  // RxC lattice, including diagonals if diag
         void square_lattice(int R, int C, bool diag);
