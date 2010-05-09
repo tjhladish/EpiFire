@@ -57,15 +57,15 @@ class MainWindow : public QMainWindow
         void appendOutput(QString);
         void appendOutputLine(QString);
 
-        Network   *network;
-        Simulator *simulator;
-        QTextEdit *bigEditor;
+        Network  * network;
+        Simulator* simulator;
+        QTextEdit* bigEditor;
 
         enum DistType  { POI, EXP, POW, URB, CON};
 
     public slots:
 
-        void simulate();
+        void simulatorWrapper();
         void changeParameterLabels(int dist_type);
         void changeNetSource(int source);
         void changeSimType(int type);
@@ -81,37 +81,43 @@ class MainWindow : public QMainWindow
     private:
 
         void createMenu();
-        void createHorizontalGroupBox();
-        void createGridGroupBox();
-        void createFormGroupBox();
-        void simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc);
+        void createSettingsBox();
+        void createNetworkSettingsBox();
+        void createSimulatorSettingsBox();
+        void createControlButtonsBox();
+        //void createGridGroupBox();
+        //void createFormGroupBox();
+        void runSimulation(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc);
 
         void makeHistogram(int* data_series, int num_runs, int pop_size);
         void makeReadonly(QLineEdit* lineEdit);
 
-        QLabel *distLabel;
-        QLabel *param1Label;
-        QLabel *param2Label;
-        QLabel *netsourceLabel;
-        QLabel *netfileLabel;
-        QLabel *simLabel;
-        QLabel *infectiousPeriodLabel;
+        QLabel* distLabel;
+        QLabel* param1Label;
+        QLabel* param2Label;
+        QLabel* netsourceLabel;
+        QLabel* netfileLabel;
+        QLabel* simLabel;
+        QLabel* infectiousPeriodLabel;
 
-        QMenuBar *menuBar;
-        QGroupBox *horizontalGroupBox;
-        QGroupBox *gridGroupBox;
-        QComboBox *distBox;
-        QComboBox *netsourceBox;
-        QComboBox *simBox;
+        QMenuBar* menuBar;
+        QGroupBox* settingsGroupBox;
+        QGroupBox* networkSettingsGroupBox;
+        QGroupBox* simulatorSettingsGroupBox;
+        QGroupBox* controlButtonsGroupBox;
 
-        QCheckBox *retainDataCheckBox;
+        QComboBox* distBox;
+        QComboBox* netsourceBox;
+        QComboBox* simBox;
 
-        QPushButton *buttons[4];
+        QCheckBox* retainDataCheckBox;
+
+        QPushButton* buttons[3];
         QPushButton* clearnetButton;
         QPushButton* loadnetButton;
         QPushButton* generatenetButton;
 
-        QMainWindowButtonBox *buttonBox;
+        QMainWindowButtonBox* buttonBox;
 
         double calculate_T_crit();
         double convertR0toT(double R0);
@@ -122,21 +128,21 @@ class MainWindow : public QMainWindow
 
         // Define textboxes and other main menu items
 
-        QLineEdit *numrunsLine;
-        QLineEdit *numnodesLine;
-        QLineEdit *param1Line;
-        QLineEdit *param2Line;
-        QLineEdit *pzeroLine;
-        QLineEdit *transLine;
-        QLineEdit *rzeroLine;
-        QLineEdit *infectiousPeriodLine;
-        QLineEdit *netfileLine;
+        QLineEdit* numrunsLine;
+        QLineEdit* numnodesLine;
+        QLineEdit* param1Line;
+        QLineEdit* param2Line;
+        QLineEdit* pzeroLine;
+        QLineEdit* transLine;
+        QLineEdit* rzeroLine;
+        QLineEdit* infectiousPeriodLine;
+        QLineEdit* netfileLine;
 
         PlotArea* plotArea;
 
-        QDoubleValidator *probValidator;
-        QMenu *fileMenu;
-        QAction *exitAction;
-        QAction *openAction;
+        QDoubleValidator* probValidator;
+        QMenu* fileMenu;
+        QAction* exitAction;
+        QAction* openAction;
 };
 #endif
