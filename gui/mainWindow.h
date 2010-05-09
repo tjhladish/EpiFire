@@ -55,6 +55,7 @@ class MainWindow : public QMainWindow
         public:
         MainWindow();
         void appendOutput(QString);
+        void appendOutputLine(QString);
 
         Network   *network;
         Simulator *simulator;
@@ -72,6 +73,7 @@ class MainWindow : public QMainWindow
         void defaultSettings();
         void readEdgeList();
         void clear_network();
+        void clear_data();
         void generate_network();
         void connect_network (Network* net, DistType dist, double param1, double param2);
         void saveEdgeList();
@@ -82,9 +84,10 @@ class MainWindow : public QMainWindow
         void createHorizontalGroupBox();
         void createGridGroupBox();
         void createFormGroupBox();
-        vector< vector<int> > simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc);
+        void simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc);
 
         void makeHistogram(int* data_series, int num_runs, int pop_size);
+        void makeReadonly(QLineEdit* lineEdit);
 
         QLabel *distLabel;
         QLabel *param1Label;
@@ -109,6 +112,13 @@ class MainWindow : public QMainWindow
         QPushButton* generatenetButton;
 
         QMainWindowButtonBox *buttonBox;
+
+        double calculate_T_crit();
+        double convertR0toT(double R0);
+        double convertTtoR0(double T);
+        double convertTtoTCB (double T, int d);
+        double convertTCBtoT (double TCB, int d);
+
 
         // Define textboxes and other main menu items
 

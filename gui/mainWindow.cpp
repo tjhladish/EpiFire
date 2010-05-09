@@ -10,9 +10,9 @@ void MainWindow::createMenu() {
     QAction* simulateAction = fileMenu->addAction("Simulate");
     simulateAction->setShortcut(Qt::Key_Enter);
 
-    QAction* saveNetwork = fileMenu->addAction("Save Network To File");
-    QAction* saveDataAction  = fileMenu->addAction("Save Simulation Data to File");
-    QAction* savePictureAction = fileMenu->addAction("Save Plot to File");
+    QAction* saveNetwork = fileMenu->addAction("Save network as edgelist");
+    QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
+    QAction* savePictureAction = fileMenu->addAction("Save epidemic curve plot");
 
     plotArea = new PlotArea(this);
 
@@ -32,7 +32,7 @@ void MainWindow::createMenu() {
 
 void MainWindow::saveEdgeList() {
 
-    if(!network || network->size() == 0) { appendOutput("No network to save.");   return;}
+    if(!network || network->size() == 0) { appendOutputLine("No network to save.");   return;}
 
     QString startdir = ".";
     QString filename = QFileDialog::getSaveFileName(
@@ -66,20 +66,39 @@ void MainWindow::readEdgeList() {
 
 void MainWindow::appendOutput(QString teststring) {
 // Used to append output to the main textbox
+    bigEditor->moveCursor( QTextCursor::End) ;
+    bigEditor->insertPlainText(teststring);
+}
+
+
+void MainWindow::appendOutputLine(QString teststring) {
+// Used to append new 'paragraph' to the main textbox
     bigEditor->append(teststring);
 }
 
 
 void MainWindow::defaultSettings() {
 //Resets GUI to its default settings (as specified in .h file)
+    netsourceBox->setCurrentIndex(0);
     distBox->setCurrentIndex(0);
-    numrunsLine->setText(default_num_runs);
+    changeParameterLabels(0);
     numnodesLine->setText(default_network_size);
-    transLine->setText(default_T);
-    pzeroLine->setText(default_P0);
 
+    simBox->setCurrentIndex(0);
+    changeSimType(0);
+    infectiousPeriodLine->setText(default_infectious_pd);
+    transLine->setText(default_T);
+    numrunsLine->setText(default_num_runs);
+    pzeroLine->setText(default_P0);
+    retainDataCheckBox->setChecked(true);
 }
 
+void MainWindow::makeReadonly(QLineEdit* lineEdit) {
+    lineEdit->setReadOnly(true);
+    QPalette pal = lineEdit->palette();
+    pal.setColor(lineEdit->backgroundRole(), Qt::transparent);
+    lineEdit->setPalette(pal);
+}
 
 void MainWindow::createHorizontalGroupBox() {
 //Creates the horizontal control box at the bottom of the interface
@@ -87,18 +106,22 @@ void MainWindow::createHorizontalGroupBox() {
     horizontalGroupBox = new QGroupBox(tr("Control"));
     QHBoxLayout *layout = new QHBoxLayout;
 
-    buttons[0] = new QPushButton("&Simulate");
-    connect(buttons[0], SIGNAL(clicked()), this, SLOT(simulate()));
-    //buttons[0]->setDefault(true);
+    buttons[0] = new QPushButton("Clear data");
+    connect(buttons[0], SIGNAL(clicked()), this, SLOT(clear_data()));
+
 
     buttons[1] = new QPushButton("Default Settings");
     connect(buttons[1], SIGNAL(clicked()), this, SLOT(defaultSettings()));
 
-    buttons[2] = new QPushButton("Help");
-    buttons[3] = new QPushButton("Exit");
-    connect(buttons[3], SIGNAL(clicked()), this, SLOT(close()));
+    //buttons[2] = new QPushButton("Help");
+    //buttons[3] = new QPushButton("Exit");
+    //connect(buttons[3], SIGNAL(clicked()), this, SLOT(close()));
+    
+    buttons[2] = new QPushButton("Run &Simulation");
+    connect(buttons[2], SIGNAL(clicked()), this, SLOT(simulate()));
+    //buttons[0]->setDefault(true);
 
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < 3; ++i) {
         layout->addWidget(buttons[i]);
     }
     horizontalGroupBox->setLayout(layout);
@@ -106,16 +129,23 @@ void MainWindow::createHorizontalGroupBox() {
 
 
 void MainWindow::changeSimType(int type) {
+    plotArea->clearData();
+    plotArea->replot();
     if (type == 0) { // Chain Binomial
+        double T = (transLine->text()).toDouble();
+        int d = (infectiousPeriodLine->text()).toInt();
+        transLine->setText( QString::number( convertTtoTCB(T, d) ) );
         infectiousPeriodLabel->show();
         infectiousPeriodLine->show();
-        infectiousPeriodLine->setText(default_infectious_pd);
-        updateRZero();
+        //updateRZero();
     
     } else { // Percolation
+        double TCB = (transLine->text()).toDouble();
+        int d = (infectiousPeriodLine->text()).toInt();
+        transLine->setText( QString::number( convertTCBtoT(TCB, d) ) );
         infectiousPeriodLabel->hide();
         infectiousPeriodLine->hide();
-        updateRZero();
+        //updateRZero();
     }
 }
 
@@ -124,7 +154,8 @@ void MainWindow::changeNetSource(int source) {
     if(source == 1 ) {           // load net from file
         netfileLabel->show();
         netfileLine->show();
-        netfileLine->setReadOnly(true);
+        makeReadonly(netfileLine);
+        //netfileLine->setReadOnly(true);
         clearnetButton->show();
         loadnetButton->show();
         generatenetButton->hide();
@@ -192,22 +223,8 @@ void MainWindow::changeParameterLabels(int dist_type) {
 
 }
 
-void MainWindow::updateRZero() {
-    cerr << "Update R0\n";
-    if (!network || network->size() == 0) {
-        rzeroLine->setText( "Undefined" );
-        return;
-    }
 
-    double T = (transLine->text()).toDouble();
-    int d = (infectiousPeriodLine->text()).toInt();
-    if ( simBox->currentText() == "Chain Binomial") {
-        cerr << "CBT: " << T << endl;
-        T = 1.0 - pow(1.0 - T, d);
-        cerr << "T: " << T << endl;
-    }
-
-    //Calculate critical transmissibility for this network
+double MainWindow::calculate_T_crit() {
     vector<double> dist = network->get_gen_deg_dist();
     double numerator = 0;// mean degree, (= <k>)
     // mean sq(deg) - mean deg (= <k^2> - <k>)
@@ -216,11 +233,36 @@ void MainWindow::updateRZero() {
         numerator += k * dist[k];
         denominator += k * (k-1) * dist[k];
     }
-    double T_crit =  numerator/denominator;
+    return  numerator/denominator;
+}
 
-    double R0 = T / T_crit; 
+
+double MainWindow::convertR0toT(double R0) { return R0 * calculate_T_crit(); }
+
+
+double MainWindow::convertTtoR0(double T) { return T / calculate_T_crit(); }
+
+
+double MainWindow::convertTtoTCB (double T, int d) { return 1.0 - pow(1.0 - T, 1.0/(double) d); }
+
+
+double MainWindow::convertTCBtoT (double TCB, int d) { return 1.0 - pow(1.0 - TCB, d); }
+
+
+void MainWindow::updateRZero() {
+    if (!network || network->size() == 0) {
+        rzeroLine->setText( "Undefined" );
+        return;
+    }
+
+    double T = (transLine->text()).toDouble();
+    int d = (infectiousPeriodLine->text()).toInt();
+    if ( simBox->currentText() == "Chain Binomial") {
+        T = convertTCBtoT(T, d); // convert to perc's transmissibility
+    }
+
+    double R0 = convertTtoR0(T); 
     rzeroLine->setText( QString::number(R0));
-    cerr << "Done updating\n";
 }
 
 void MainWindow::createGridGroupBox() {
@@ -237,7 +279,7 @@ void MainWindow::createGridGroupBox() {
     numrunsLine = new QLineEdit();
     numrunsLine->setAlignment(Qt::AlignRight);
     rzeroLine = new QLineEdit();
-    rzeroLine->setReadOnly(true);
+    makeReadonly(rzeroLine);
     rzeroLine->setAlignment(Qt::AlignRight);
     transLine = new QLineEdit();
     transLine->setAlignment(Qt::AlignRight);
@@ -297,7 +339,8 @@ void MainWindow::createGridGroupBox() {
 
     changeSimType(0); 
     connect(simBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeSimType(int)));
-    connect(transLine,         SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
+    connect(transLine,            SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
+    connect(infectiousPeriodLine, SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
 
     //Build checkbox
     retainDataCheckBox = new QCheckBox(tr("Retain data between runs"));
@@ -325,7 +368,12 @@ void MainWindow::createGridGroupBox() {
     layout->addWidget(param2Label, 4, 0);
     layout->addWidget(param2Line, 4, 1);
     layout->addWidget(generatenetButton, 5,0);
-
+/*
+QFrame * f = new QFrame(m_parent);
+f->setFrameShape(QFrame::VLine);
+f->setFrameShadow(QFrame::Sunken);
+layout->addWidget(f, 
+*/
     //SECOND COLUMN -- Simulation stuff
     layout->addWidget(simLabel, 0, 3);
     layout->addWidget(simBox, 0, 4);
@@ -439,7 +487,7 @@ void MainWindow::makeHistogram(int* data_series, int num_runs, int pop_size) {
 
 
 void MainWindow::generate_network() {
-
+    appendOutputLine("Generating network . . . ");
     int n = (numnodesLine->text()).toInt();
     DistType dist_type = (DistType) distBox->currentIndex();
     double param1 = (param1Line->text()).toDouble();
@@ -452,18 +500,27 @@ void MainWindow::generate_network() {
                                  // connect network using the parameters above
     connect_network(network, dist_type, param1, param2);
     updateRZero();
+    appendOutput("Done.");
+}
+
+
+void MainWindow::clear_data() {
+    plotArea->clearData();
+    plotArea->replot();
+    appendOutputLine("Epidemic data deleted");
 }
 
 
 void MainWindow::clear_network() {
     if(network) network->clear_nodes();
     updateRZero();
+    appendOutputLine("Network deleted");
 }
 
 
 void MainWindow::simulate() {
 //Connects the GUI information to the percolation simulator
-    if (!network || network->size() == 0 ) { appendOutput("Network must be generated first."); return; }
+    if (!network || network->size() == 0 ) { appendOutputLine("Network must be generated first."); return; }
 
     // Get values from textboxes
     int j_max = (numrunsLine->text()).toInt();
@@ -485,17 +542,17 @@ void MainWindow::simulate() {
         ((Percolation_Sim*) simulator)->set_transmissibility(T);
     }
 
+    bool retain_data = retainDataCheckBox->isChecked();
+    if (! retain_data) {
+        plotArea->clearData();
+    }
+
     //RUN SIMULATION
-    vector< vector<int> > epi_curves = simulate_main(j_max, p_zero, RunID, dist_size_point);
+    simulate_main(j_max, p_zero, RunID, dist_size_point);
 
     //MAKE PLOTS
-    MainWindow::appendOutput("\tDone\n");
-    for (unsigned int i =0; i<epi_curves.size(); i++) {
-        MainWindow::plotArea->addData(epi_curves[i]);
-        QString start_of_line="Epidemic size from run ";
-        QString epi_size=QString::number(i+1,10).append(":   ").append(QString::number(dist_size_array[i],10));
-        MainWindow::appendOutput(start_of_line.append(epi_size));
-    }
+    
+    MainWindow::appendOutputLine("Done\n");
     makeHistogram(dist_size_point,j_max,network->size());
     MainWindow::plotArea->replot();
 
@@ -527,20 +584,13 @@ void MainWindow::connect_network (Network* net, DistType dist, double param1, do
 }
 
 
-vector< vector<int> > MainWindow::simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc) {
-    // Header line
-    //cout << "# RunID Network Season Epi_size P0_size R0\n";
-
-    vector<Node*> patients_zero;
-    vector< vector<int> > epi_curves (j_max);
-
+void MainWindow::simulate_main(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc) {
     if(simulator == NULL || network == NULL ) {
         cerr << "ERROR: simulate_main() called with undefined sim and net parameters";
-        return epi_curves;
+        return;
     }
 
-    MainWindow::appendOutput("-----------------------------------");
-    MainWindow::appendOutput("Simulation running...");
+    appendOutputLine("Simulation running . . . ");
 
     for ( int j = 0; j < j_max; j++) {
         simulator->rand_infect(patient_zero_ct);
@@ -552,16 +602,19 @@ vector< vector<int> > MainWindow::simulate_main(int j_max, int patient_zero_ct, 
             epi_curve.push_back(simulator->count_infected());
         }
 
-        for(unsigned int k=0; k < epi_curve.size(); k++ ) cerr << epi_curve[k]<<endl;
+        int epi_size = simulator->epidemic_size();
 
-        cout << "Rep: " << j << "    Total: " << simulator->epidemic_size() << "\n\n";
-        epi_curves[j] = epi_curve;
+        QString status_line="Rep: ";
+        status_line.append(QString::number(j+1, 10));
+        status_line.append(", Total infected: ");
+        status_line.append(QString::number(epi_size,10));
+        appendOutputLine(status_line);
+        cout << "Rep: " << j << "    Total: " << epi_size << "\n\n";
 
-        //plotArea->addData(epi_curve);
-        //QString simOutput;
+        plotArea->addData(epi_curve);
 
         //Use pointer to report epidemic size back to MainWindow class
-        *dist_size_loc=simulator->epidemic_size();
+        *dist_size_loc = epi_size;
         dist_size_loc++;
 
         cout << RunID << " " << j << " " << simulator->epidemic_size() << " ";
@@ -569,5 +622,5 @@ vector< vector<int> > MainWindow::simulate_main(int j_max, int patient_zero_ct, 
         //sim.summary();
         simulator->reset();
     }
-    return epi_curves;
+    return;
 }

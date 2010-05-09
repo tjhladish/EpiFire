@@ -19,6 +19,10 @@ QRectF Axis::boundingRect() const
 
 
 void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
+    //QFlags<QPainter::RenderHints> savedHints( painter->renderHints() );
+    //QPainter::RenderHints savedHints( painter->renderHints() );
+    painter->setRenderHint(QPainter::Antialiasing, false);
+
     QPen pen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     painter->setPen(pen);
 
@@ -76,4 +80,5 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
             painter->drawLine(offset+x0-5,y0+iy*i,x1,y0+iy*i);
     }
     //painter->drawText(posX-10,posY-3,QString( eics[i]->sampleName.c_str() ));
+    //painter->setRenderHint((QPainter::RenderHints) savedHints);
 }

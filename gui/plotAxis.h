@@ -4,6 +4,7 @@
 #include <QGraphicsItem>
 #include <QGraphicsScene>
 #include <QPainter>
+#include <QFlags>
 #include <math.h>
 
 class Axis : public QGraphicsItem

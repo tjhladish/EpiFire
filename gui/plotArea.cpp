@@ -64,8 +64,12 @@ void PlotArea::debugger() { // makes it easier to see what's going on with coord
 }
 
 void PlotArea::drawEpiCurvePlot() {
-
-    if (data.size() == 0 ) return;
+    setRenderHint(QPainter::Antialiasing); // smooth data points
+    if (data.size() == 0 ) {
+        scene()->clear();
+        scene()->update();
+        return;
+    }
 
     scene()->clear();
     int plotW = width() - 50;
@@ -83,7 +87,7 @@ void PlotArea::drawEpiCurvePlot() {
     }
     QColor color(0,0,0,alpha);
     QBrush brush(color);
-    QPen   pen(color);
+    //QPen   pen(color);
 
     QColor recent_color = Qt::red;
 
@@ -93,11 +97,13 @@ void PlotArea::drawEpiCurvePlot() {
     float r = 4;                 // radius of data points
     //int h_padding = 3;
     int margin = 35;
+    qreal zval = 0;
     for( unsigned int i=0; i < data.size(); i++ ) {
                                  // make the most recent dataset a different color if it was a single run
         if (i == data.size() - 1) {
             brush.setColor(recent_color);
-            pen.setColor(recent_color);
+            zval = 1;
+      //      pen.setColor(recent_color);
         }
         for( unsigned int j=0; j<data[i].size(); j++ ) {
             float val = data[i][j];
@@ -105,7 +111,8 @@ void PlotArea::drawEpiCurvePlot() {
             float x  = -r + ((float) j/max_idx * (plotW - margin)) + margin;
             float y  = plotH;    // flip coordinate system, since (0,0) is in upper-left
             y -= plotH * val/max_val + r;
-            scene()->addEllipse(x,y,2*r,2*r,pen,brush);
+            QGraphicsEllipseItem* dot = scene()->addEllipse(x,y,2*r,2*r,Qt::NoPen,brush);
+            dot->setZValue(zval);
             //qDebug() << data[i][j];
         }
     }
