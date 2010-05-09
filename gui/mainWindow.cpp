@@ -363,6 +363,7 @@ void MainWindow::changeParameterLabels(int dist_type) {
     if (dist_type == 0) {
         param1Line->setVisible(1);
         param1Label->setText("Lambda:");
+	param1Label->show();
         param1Line->setText("3.0");
         param2Label->hide();
         param2Line->hide();
@@ -370,12 +371,14 @@ void MainWindow::changeParameterLabels(int dist_type) {
     else if (dist_type == 1) {
         param1Line->setVisible(1);
         param1Label->setText("Beta:");
-        param1Line->setText("0.3");
+        param1Label->show();
+	param1Line->setText("0.3");
         param2Label->hide();
         param2Line->hide();
     }
     else if (dist_type == 2) {
         param1Line->show();
+	param1Label->show();
         param1Line->setText("1.0");
         param1Label->setText("Alpha:");
         param2Line->show();
@@ -392,6 +395,7 @@ void MainWindow::changeParameterLabels(int dist_type) {
     else if (dist_type == 4) {
         param1Line->setVisible(1);
         param1Line->setText("3");
+	param1Label->show();
         param1Label->setText("Fixed degree:");
         param2Line->hide();
         param2Label->hide();
