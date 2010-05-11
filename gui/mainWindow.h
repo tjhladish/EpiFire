@@ -6,11 +6,11 @@
 #include <QMainWindow>
 
 //Temporary includes for making the histogram
-#include <qwt_plot.h>
-#include <qwt_plot_grid.h>
-#include <qwt_plot_marker.h>
-#include <qwt_interval_data.h>
-#include "histogram.h"
+//#include <qwt_plot.h>
+//#include <qwt_plot_grid.h>
+//#include <qwt_plot_marker.h>
+//#include <qwt_interval_data.h>
+//#include "histogram.h"
 
 #include "plotArea.h"
 #include "../src/Network.h"
@@ -138,7 +138,12 @@ class MainWindow : public QMainWindow
         QLineEdit* infectiousPeriodLine;
         QLineEdit* netfileLine;
 
+
         PlotArea* plotArea;
+        PlotArea* statePlot;
+
+        QDockWidget* dockWidget1;
+        QDockWidget* dockWidget2;
 
         QDoubleValidator* probValidator;
         QMenu* fileMenu;

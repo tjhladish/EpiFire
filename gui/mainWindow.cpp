@@ -10,28 +10,55 @@
 MainWindow::MainWindow() {
 // Constructor for the main interface
 
-    createMenu();
-    createControlButtonsBox();
-    createSettingsBox();
-
     QWidget* centralWidget = new QWidget(this);
+
+    network = new Network("mynetwork",false);
+    simulator = NULL;
 
     bigEditor = new QTextEdit();
     bigEditor->setReadOnly(true);
     bigEditor->setPlainText(tr("No output yet"));
 
-    QVBoxLayout *mainLayout = new QVBoxLayout;
-    mainLayout->setMenuBar(menuBar);
+    plotArea = new PlotArea(this);
+    plotArea->setPlotType(PlotArea::EPICURVE);
 
+    statePlot = new PlotArea(this);
+    statePlot->setPlotType(PlotArea::STATEPLOT);
+    
+    QVBoxLayout *mainLayout = new QVBoxLayout;
+
+    createControlButtonsBox();
+    createSettingsBox();
     mainLayout->addWidget(settingsGroupBox, Qt::AlignCenter);
-    mainLayout->addWidget(plotArea);
     mainLayout->addWidget(bigEditor);
     mainLayout->addWidget(controlButtonsGroupBox);
-
     centralWidget->setLayout(mainLayout);
     setCentralWidget(centralWidget);
 
+    dockWidget1 = new QDockWidget("Network Plot", this, Qt::Widget);
+    dockWidget1->setWidget(statePlot);
+    dockWidget1->setFloating(false);
+    dockWidget1->setMinimumSize(600,300);
+    dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+    dockWidget2 = new QDockWidget("Epicure Plot", this, Qt::Widget);
+    dockWidget2->setWidget(plotArea);
+    dockWidget2->setFloating(false);
+    dockWidget2->setMinimumSize(600,300);
+    dockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
+
+    addDockWidget(Qt::RightDockWidgetArea,dockWidget1);
+    addDockWidget(Qt::RightDockWidgetArea,dockWidget2);
+
+    dockWidget1->show();
+    dockWidget2->show();
+
     setWindowTitle(tr("EpiFire"));
+
+    createMenu();
+    mainLayout->setMenuBar(menuBar);
+
+
     probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
 
@@ -40,8 +67,11 @@ void MainWindow::createMenu() {
     menuBar = new QMenuBar;
 
     fileMenu = new QMenu(tr("&File"), this);
+    QMenu* plotMenu = new QMenu(tr("&Plots"), this);
+
     exitAction = fileMenu->addAction(tr("E&xit"));
     openAction = fileMenu->addAction(tr("&Open"));
+
     QAction* simulateAction = fileMenu->addAction("Simulate");
     simulateAction->setShortcut(Qt::Key_Enter);
 
@@ -49,9 +79,11 @@ void MainWindow::createMenu() {
     QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
     QAction* savePictureAction = fileMenu->addAction("Save epidemic curve plot");
 
-    plotArea = new PlotArea(this);
+    QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
+    QAction* showStatePlot = plotMenu->addAction("Show state plot");
 
     menuBar->addMenu(fileMenu);
+    menuBar->addMenu(plotMenu);
 
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
     connect(openAction, SIGNAL(triggered()), this, SLOT(readEdgeList()));
@@ -59,9 +91,8 @@ void MainWindow::createMenu() {
     connect(saveNetwork, SIGNAL(triggered()), this, SLOT(saveEdgeList()));
     connect(saveDataAction, SIGNAL(triggered()), plotArea, SLOT(saveData()));
     connect(savePictureAction, SIGNAL(triggered()), plotArea, SLOT(savePicture()));
-
-    network = new Network("mynetwork",false);
-    simulator = NULL;
+    connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
+    connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
 }
 
 void MainWindow::createSettingsBox() {
@@ -560,6 +591,12 @@ void MainWindow::simulatorWrapper() {
     MainWindow::appendOutputLine("Done\n");
     makeHistogram(dist_size_point,j_max,network->size());
     MainWindow::plotArea->replot();
+
+    statePlot->clearData();
+    vector<int>data; data.push_back(10);
+    statePlot->addData(data);
+    statePlot->replot();
+
 
 }
 

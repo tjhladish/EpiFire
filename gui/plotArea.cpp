@@ -10,7 +10,12 @@ PlotArea::PlotArea(QWidget*) {
 
 
 void PlotArea::replot() {
-    drawEpiCurvePlot();
+
+    if ( plotType == EPICURVE ) {
+        drawEpiCurvePlot();
+    } else if (plotType == STATEPLOT ) { 
+        drawNodeStatePlot();
+    }
 }
 
 
@@ -128,6 +133,36 @@ void PlotArea::drawEpiCurvePlot() {
     scene()->update();
 }
 
+void PlotArea::drawNodeStatePlot() { 
+    if (data.size() == 0 ) {
+        scene()->clear();
+        scene()->update();
+        return;
+    }
+    
+    QRgb value;
+    if (scene()->width() == 0 || scene()->height() == 0) {
+        scene()->setSceneRect(0,0,300,300);
+    }
+
+    QImage image(scene()->width(),scene()->height(),QImage::Format_ARGB32);
+    image.fill(Qt::white);
+
+    value = qRgb(200, 0, 0); // 0xffbd9527
+    for( int i=0; i < scene()->width(); i++ ) {
+        image.setPixel(i, 1, value);
+        image.setPixel(i, 5, value);
+        image.setPixel(i, 10, value);
+    }
+    QPixmap pixmap =QPixmap::fromImage(image,Qt::AutoColor);
+    scene()->addPixmap(pixmap);
+}
+/*
+QInotifyFileSystemWatcherEngine::addPaths: inotify_add_watch failed: No such file or directory
+QFileSystemWatcher: failed to add paths: /home/tjhladish/.config/ibus/bus
+Bus::open: Can not get ibus-daemon's address. 
+IBusInputContext::createInputContext: no connection to ibus-daemon 
+*/
 
 void PlotArea::resizeEvent ( QResizeEvent * event ) {
     replot();

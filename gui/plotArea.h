@@ -11,6 +11,11 @@ class PlotArea : public QGraphicsView
 {
     Q_OBJECT
     public:
+
+        enum PlotType { STATEPLOT, EPICURVE, DEGPLOT, HISTPLOT };
+        void setPlotType(PlotType x) { plotType = x; }
+        PlotType getPlotType() { return plotType; }
+
         PlotArea(QWidget* mw);
         void debugger();
 
@@ -23,8 +28,10 @@ class PlotArea : public QGraphicsView
 
     protected:
         void drawEpiCurvePlot();
+        void drawNodeStatePlot();
         void resizeEvent ( QResizeEvent *event );
     private:
+        PlotType plotType;
         vector< vector<int> > data;
 };
 #endif
