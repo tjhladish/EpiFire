@@ -15,12 +15,12 @@ MainWindow::MainWindow() {
     network = new Network("mynetwork",false);
     simulator = NULL;
 
-    bigEditor = new QTextEdit();
-    bigEditor->setReadOnly(true);
-    bigEditor->setPlainText(tr("No output yet"));
+    logEditor = new QTextEdit();
+    logEditor->setReadOnly(true);
+    logEditor->setPlainText(tr("No output yet"));
 
-    plotArea = new PlotArea(this);
-    plotArea->setPlotType(PlotArea::EPICURVE);
+    epiCurvePlot = new PlotArea(this);
+    epiCurvePlot->setPlotType(PlotArea::EPICURVE);
 
     statePlot = new PlotArea(this);
     statePlot->setPlotType(PlotArea::STATEPLOT);
@@ -30,19 +30,19 @@ MainWindow::MainWindow() {
     createControlButtonsBox();
     createSettingsBox();
     mainLayout->addWidget(settingsGroupBox, Qt::AlignCenter);
-    mainLayout->addWidget(bigEditor);
+    mainLayout->addWidget(logEditor);
     mainLayout->addWidget(controlButtonsGroupBox);
     centralWidget->setLayout(mainLayout);
     setCentralWidget(centralWidget);
 
-    dockWidget1 = new QDockWidget("Network Plot", this, Qt::Widget);
+    dockWidget1 = new QDockWidget("Node State Plot", this, Qt::Widget);
     dockWidget1->setWidget(statePlot);
     dockWidget1->setFloating(false);
     dockWidget1->setMinimumSize(600,300);
     dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-    dockWidget2 = new QDockWidget("Epicure Plot", this, Qt::Widget);
-    dockWidget2->setWidget(plotArea);
+    dockWidget2 = new QDockWidget("Epidemic Curve Plot", this, Qt::Widget);
+    dockWidget2->setWidget(epiCurvePlot);
     dockWidget2->setFloating(false);
     dockWidget2->setMinimumSize(600,300);
     dockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
@@ -63,11 +63,10 @@ MainWindow::MainWindow() {
 }
 
 void MainWindow::createMenu() {
-//Creates 'File' menu at the top
+    //Create 'File' menu
     menuBar = new QMenuBar;
 
     fileMenu = new QMenu(tr("&File"), this);
-    QMenu* plotMenu = new QMenu(tr("&Plots"), this);
 
     exitAction = fileMenu->addAction(tr("E&xit"));
     openAction = fileMenu->addAction(tr("&Open"));
@@ -79,20 +78,23 @@ void MainWindow::createMenu() {
     QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
     QAction* savePictureAction = fileMenu->addAction("Save epidemic curve plot");
 
-    QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
-    QAction* showStatePlot = plotMenu->addAction("Show state plot");
-
-    menuBar->addMenu(fileMenu);
-    menuBar->addMenu(plotMenu);
-
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
     connect(openAction, SIGNAL(triggered()), this, SLOT(readEdgeList()));
     connect(simulateAction, SIGNAL(triggered()), this, SLOT(simulatorWrapper()));
     connect(saveNetwork, SIGNAL(triggered()), this, SLOT(saveEdgeList()));
-    connect(saveDataAction, SIGNAL(triggered()), plotArea, SLOT(saveData()));
-    connect(savePictureAction, SIGNAL(triggered()), plotArea, SLOT(savePicture()));
+    connect(saveDataAction, SIGNAL(triggered()), epiCurvePlot, SLOT(saveData()));
+    connect(savePictureAction, SIGNAL(triggered()), epiCurvePlot, SLOT(savePicture()));
+ 
+    //Create 'Plot' menu
+    QMenu* plotMenu = new QMenu(tr("&Plot"), this);
+    QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
+    QAction* showStatePlot = plotMenu->addAction("Show state plot");
+
     connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
     connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
+    
+    menuBar->addMenu(fileMenu);
+    menuBar->addMenu(plotMenu);
 }
 
 void MainWindow::createSettingsBox() {
@@ -121,7 +123,7 @@ void MainWindow::createNetworkSettingsBox() {
     param2Line = new QLineEdit();
     param2Line->setAlignment(Qt::AlignRight);
     
-    netsourceLabel = new QLabel(tr("Select Network Source"));
+    netsourceLabel = new QLabel(tr("Network source:"));
     netfileLabel = new QLabel(tr("Filename"));
     netfileLine = new QLineEdit();
     clearnetButton = new QPushButton("Clear Network");
@@ -316,13 +318,13 @@ void MainWindow::readEdgeList() {
 
 void MainWindow::appendOutput(QString s) {
 // Used to append output to the main textbox
-    bigEditor->moveCursor( QTextCursor::End) ;
-    bigEditor->insertPlainText(s);
+    logEditor->moveCursor( QTextCursor::End) ;
+    logEditor->insertPlainText(s);
 }
 
 
 // Used to append new 'paragraph' to the main textbox
-void MainWindow::appendOutputLine(QString s) { bigEditor->append(s); }
+void MainWindow::appendOutputLine(QString s) { logEditor->append(s); }
 
 
 void MainWindow::makeReadonly(QLineEdit* lineEdit) {
@@ -436,8 +438,8 @@ void MainWindow::changeParameterLabels(int dist_type) {
 
 
 void MainWindow::changeSimType(int type) {
-    plotArea->clearData();
-    plotArea->replot();
+    epiCurvePlot->clearData();
+    epiCurvePlot->replot();
     if (type == 0) { // Chain Binomial
         double T = (transLine->text()).toDouble();
         int d = (infectiousPeriodLine->text()).toInt();
@@ -458,8 +460,12 @@ void MainWindow::changeSimType(int type) {
 
 
 void MainWindow::clear_data() {
-    plotArea->clearData();
-    plotArea->replot();
+    epiCurvePlot->clearData();
+    epiCurvePlot->replot();
+
+    statePlot->clearData();
+    statePlot->replot();
+    
     appendOutputLine("Epidemic data deleted");
 }
 
@@ -488,7 +494,7 @@ void MainWindow::updateRZero() {
 }
 
 void MainWindow::makeHistogram(int* data_series, int num_runs, int pop_size) {
-/*  // to be relocated as a new plotArea method
+/*  // to be relocated as a new epiCurvePlot method
     QwtPlot *plot= new QwtPlot(this);
 
     plot->setCanvasBackground(QColor(Qt::white));
@@ -581,8 +587,9 @@ void MainWindow::simulatorWrapper() {
 
     bool retain_data = retainDataCheckBox->isChecked();
     if (! retain_data) {
-        plotArea->clearData();
+        epiCurvePlot->clearData();
     }
+    statePlot->clearData();
 
     //RUN SIMULATION
     runSimulation(j_max, p_zero, RunID, dist_size_point);
@@ -590,14 +597,21 @@ void MainWindow::simulatorWrapper() {
     //MAKE PLOTS
     MainWindow::appendOutputLine("Done\n");
     makeHistogram(dist_size_point,j_max,network->size());
-    MainWindow::plotArea->replot();
+    MainWindow::epiCurvePlot->replot();
 
-    statePlot->clearData();
-    vector<int>data; data.push_back(10);
-    statePlot->addData(data);
     statePlot->replot();
 
 
+}
+
+
+void MainWindow::addStateData() {
+    vector<int> node_states(100);
+    for (int i = 0; i < network->size() && i < node_states.size(); i++) {
+        node_states[i] = (int) network->get_node(i)->get_state();
+    }
+
+    statePlot->addData(node_states);
 }
 
 
@@ -614,9 +628,18 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID, int
 
         vector<int> epi_curve;
         epi_curve.push_back(simulator->count_infected());
+
+        //vector<int> cache(0,1000);
+        if (j == j_max - 1) {
+            statePlot->clearData();
+            statePlot->replot(); // draws a white background when data is cleared
+            addStateData();
+        }
+             
         while (simulator->count_infected() > 0) {
             simulator->step_simulation();
             epi_curve.push_back(simulator->count_infected());
+            if (j == j_max - 1) addStateData();
         }
 
         int epi_size = simulator->epidemic_size();
@@ -628,7 +651,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID, int
         appendOutputLine(status_line);
         cout << "Rep: " << j << "    Total: " << epi_size << "\n\n";
 
-        plotArea->addData(epi_curve);
+        epiCurvePlot->addData(epi_curve);
 
         //Use pointer to report epidemic size back to MainWindow class
         *dist_size_loc = epi_size;

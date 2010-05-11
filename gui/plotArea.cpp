@@ -133,7 +133,9 @@ void PlotArea::drawEpiCurvePlot() {
     scene()->update();
 }
 
-void PlotArea::drawNodeStatePlot() { 
+void PlotArea::drawNodeStatePlot() {
+    QRgb colors[3] = { qRgb(0, 0, 254), qRgb(254, 254, 0), qRgb(0, 254, 0) };
+
     if (data.size() == 0 ) {
         scene()->clear();
         scene()->update();
@@ -141,28 +143,41 @@ void PlotArea::drawNodeStatePlot() {
     }
     
     QRgb value;
-    if (scene()->width() == 0 || scene()->height() == 0) {
-        scene()->setSceneRect(0,0,300,300);
-    }
-
-    QImage image(scene()->width(),scene()->height(),QImage::Format_ARGB32);
+    //cerr << "1width: " << (int) width() << " height: " << (int) height() << endl;
+    //cerr << "scene w: " << scene()->width() << " scene h: " << scene()->height() << endl;
+    setSceneRect(0,0,width()-20,height()-20); //set scene to parent widget width x height
+    //cerr << "scene w: " << scene()->width() << " scene h: " << scene()->height() << endl;
+    //QImage image(scene()->width(),scene()->height(),QImage::Format_ARGB32);
+    QImage image(data.size(),data[0].size(),QImage::Format_ARGB32);
     image.fill(Qt::white);
+    int w = width();
 
-    value = qRgb(200, 0, 0); // 0xffbd9527
-    for( int i=0; i < scene()->width(); i++ ) {
-        image.setPixel(i, 1, value);
-        image.setPixel(i, 5, value);
-        image.setPixel(i, 10, value);
+    cerr << "HM" << data.size() << endl;
+
+    for( unsigned int r=0; r < data.size(); r++) {
+        for( unsigned int c=0; c < data[r].size(); c++ ) {
+        //for( unsigned int c=0; c < data[r].size()/2 && c < width; c++ ) {
+             int val = data[r][c];
+             
+             if (val == 0) {}
+             else if (val == -1) { val = 2; }
+             else { val = 1;}
+
+             //cerr << "HMM" << w << " " <<r << " " << c << " " << val << endl;
+             if (val > 2) cerr << "Node " << c << " has nonsense state " << val << endl;
+             value = colors[ val % 3 ];
+             image.setPixel(r, c, value);
+             //cerr << val;
+        }
+        //cerr << endl;
     }
-    QPixmap pixmap =QPixmap::fromImage(image,Qt::AutoColor);
+    
+    image = image.scaled(width()-20, height()-20);
+    //cerr << "2width: " << (int) width() << " height: " << (int) height() << endl;
+    QPixmap pixmap = QPixmap::fromImage(image,Qt::AutoColor);
     scene()->addPixmap(pixmap);
 }
-/*
-QInotifyFileSystemWatcherEngine::addPaths: inotify_add_watch failed: No such file or directory
-QFileSystemWatcher: failed to add paths: /home/tjhladish/.config/ibus/bus
-Bus::open: Can not get ibus-daemon's address. 
-IBusInputContext::createInputContext: no connection to ibus-daemon 
-*/
+
 
 void PlotArea::resizeEvent ( QResizeEvent * event ) {
     replot();

@@ -25,11 +25,10 @@
 
 //Set default values that are not related to distribution
 
-const QString default_R0="1.5";
 const QString default_num_runs="1";
 const QString default_network_size="10000";
-const QString default_P0="1";
-const QString default_T ="0.2";
+const QString default_P0="10";
+const QString default_T ="0.1";
 const QString default_infectious_pd ="5";
 
 // Forward definitions of classes
@@ -59,7 +58,7 @@ class MainWindow : public QMainWindow
 
         Network  * network;
         Simulator* simulator;
-        QTextEdit* bigEditor;
+        QTextEdit* logEditor;
 
         enum DistType  { POI, EXP, POW, URB, CON};
 
@@ -91,6 +90,7 @@ class MainWindow : public QMainWindow
 
         void makeHistogram(int* data_series, int num_runs, int pop_size);
         void makeReadonly(QLineEdit* lineEdit);
+        void addStateData();
 
         QLabel* distLabel;
         QLabel* param1Label;
@@ -139,7 +139,7 @@ class MainWindow : public QMainWindow
         QLineEdit* netfileLine;
 
 
-        PlotArea* plotArea;
+        PlotArea* epiCurvePlot;
         PlotArea* statePlot;
 
         QDockWidget* dockWidget1;
@@ -147,6 +147,7 @@ class MainWindow : public QMainWindow
 
         QDoubleValidator* probValidator;
         QMenu* fileMenu;
+        QMenu* plotMenu;
         QAction* exitAction;
         QAction* openAction;
 };
