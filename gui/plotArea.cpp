@@ -9,7 +9,7 @@ PlotArea::PlotArea(QWidget*) {
     //setMinimumSize(300,200);
     PlotScene* myscene = new PlotScene(this);
     setScene(myscene);
-    scene()->setSceneRect(0,0,300,200);
+    scene()->setSceneRect(0,0,200,200);
     xAxis = NULL;
     yAxis = NULL;
 
@@ -209,10 +209,12 @@ void PlotArea::drawNodeStatePlot() {
     }
     
     QRgb value;
+    int W = width();
+    int H = height();
+
     //cerr << "1width: " << (int) width() << " height: " << (int) height() << endl;
-    //cerr << "scene w: " << scene()->width() << " scene h: " << scene()->height() << endl;
-    setSceneRect(0,0,width()-20,height()-20); //set scene to parent widget width x height
-    //cerr << "scene w: " << scene()->width() << " scene h: " << scene()->height() << endl;
+    scene()->setSceneRect(0,0,W-20,H-20); //set scene to parent widget width x height
+
     //QImage image(scene()->width(),scene()->height(),QImage::Format_ARGB32);
     QImage image(data.size(),data[0].size(),QImage::Format_ARGB32);
     image.fill(Qt::white);
@@ -239,7 +241,6 @@ void PlotArea::drawNodeStatePlot() {
     }
     
     image = image.scaled(width()-20, height()-20);
-    //cerr << "2width: " << (int) width() << " height: " << (int) height() << endl;
     QPixmap pixmap = QPixmap::fromImage(image,Qt::AutoColor);
     scene()->addPixmap(pixmap);
 }

@@ -38,13 +38,13 @@ MainWindow::MainWindow() {
     dockWidget1 = new QDockWidget("Node State Plot", this, Qt::Widget);
     dockWidget1->setWidget(statePlot);
     dockWidget1->setFloating(false);
-    dockWidget1->setMinimumSize(600,300);
+    //dockWidget1->setMinimumSize(600,300);
     dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
 
     dockWidget2 = new QDockWidget("Epidemic Curve Plot", this, Qt::Widget);
     dockWidget2->setWidget(epiCurvePlot);
     dockWidget2->setFloating(false);
-    dockWidget2->setMinimumSize(600,300);
+    //dockWidget2->setMinimumSize(600,300);
     dockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
 
     addDockWidget(Qt::RightDockWidgetArea,dockWidget1);
