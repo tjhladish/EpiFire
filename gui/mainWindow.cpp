@@ -11,6 +11,8 @@ MainWindow::MainWindow() {
 // Constructor for the main interface
 
     centralWidget = new QWidget(this);
+    leftBox       = new QGroupBox(this);
+    rightBox      = new QGroupBox(this);
 
     network = new Network("mynetwork",false);
     simulator = NULL;
@@ -25,44 +27,57 @@ MainWindow::MainWindow() {
     statePlot = new PlotArea(this);
     statePlot->setPlotType(PlotArea::STATEPLOT);
     
-    QVBoxLayout *mainLayout = new QVBoxLayout;
+    QHBoxLayout *mainLayout = new QHBoxLayout;
+    QVBoxLayout *leftLayout = new QVBoxLayout;
+    QVBoxLayout *rightLayout = new QVBoxLayout;
 
     createControlButtonsBox();
     createSettingsBox();
-    mainLayout->addWidget(settingsGroupBox, Qt::AlignCenter);
-    mainLayout->addWidget(logEditor);
-    mainLayout->addWidget(controlButtonsGroupBox);
-    mainLayout->setSizeConstraint(QLayout::SetMinimumSize);
-    centralWidget->setLayout(mainLayout);
+    leftLayout->addWidget(settingsGroupBox, Qt::AlignCenter);
+    leftLayout->addWidget(logEditor);
+    leftLayout->addWidget(controlButtonsGroupBox);
+    leftBox->setLayout(leftLayout);
 
     //centralWidget->setMaximumHeight(700);
-    centralWidget->setMaximumWidth(500);
-    
+    //centralWidget->setMaximumWidth(500);
+    //QSizePolicy* sizePolicy = new QSizePolicy();
 
-    setCentralWidget(centralWidget);
 
-    dockWidget1 = new QDockWidget("Node State Plot", this, Qt::Widget);
-    dockWidget1->setWidget(statePlot);
-    dockWidget1->setFloating(false);
+    //dockWidget1 = new QWidget("Node State Plot", this, Qt::Widget);
+    //dockWidget1->setWidget(statePlot);
+    //dockWidget1->setFloating(true);
     //dockWidget1->setMinimumSize(600,228);
-    dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
+    //dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-    dockWidget2 = new QDockWidget("Epidemic Curve Plot", this, Qt::Widget);
-    dockWidget2->setWidget(epiCurvePlot);
-    dockWidget2->setFloating(false);
+    //dockWidget2 = new QWidget("Epidemic Curve Plot", this, Qt::Widget);
+    //dockWidget2->setWidget(epiCurvePlot);
+    //dockWidget2->setFloating(true);
     //dockWidget2->setMinimumSize(600,300);
-    dockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
+    //dockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
 
-    addDockWidget(Qt::RightDockWidgetArea,dockWidget1);
-    addDockWidget(Qt::RightDockWidgetArea,dockWidget2);
 
-    dockWidget1->show();
-    dockWidget2->show();
+    //addDockWidget(Qt::RightDockWidgetArea,dockWidget1);
+    //addDockWidget(Qt::RightDockWidgetArea,dockWidget2);
+
+    //dockWidget1->show();
+    //dockWidget2->show();
+
+    rightLayout->addWidget(statePlot);
+    rightLayout->addWidget(epiCurvePlot);
+    rightBox->setLayout(rightLayout);     
 
     setWindowTitle(tr("EpiFire"));
 
     createMenu();
     mainLayout->setMenuBar(menuBar);
+    mainLayout->addWidget(leftBox);
+    mainLayout->addWidget(rightBox);
+    centralWidget->setLayout(mainLayout);
+
+    setCentralWidget(centralWidget);
+    //leftBox->sizePolicy().setHorizontalPolicy(QSizePolicy::Fixed);
+    //rightBox->sizePolicy().setHorizontalPolicy(QSizePolicy::Ignored);
+   // dockWidget2->sizePolicy().setHorizontalPolicy(QSizePolicy::Ignored);
 
 
     probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
@@ -96,8 +111,8 @@ void MainWindow::createMenu() {
     QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
     QAction* showStatePlot = plotMenu->addAction("Show state plot");
 
-    connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
-    connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
+    //connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
+    //connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
     
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(plotMenu);
@@ -731,13 +746,14 @@ double MainWindow::calculate_T_crit() {
 }
 
 void MainWindow::resizeEvent ( QResizeEvent *event ) {
+    if (leftBox->width() > 100) leftBox->setMaximumWidth(leftBox->width());
     return;
 
     QSize old = event->oldSize();   //-1,-1
     QSize size = event->size();     //770,720
     qDebug() << size << " " << old;
 
-/*
+
     QSize cSize = centralWidget->size();    //
     //centralWidget->setMaximumSize(700,centralWidget->height());
     dockWidget1->setMaximumSize( size.width()-cSize.width(), dockWidget1->height()-10 );
@@ -746,7 +762,7 @@ void MainWindow::resizeEvent ( QResizeEvent *event ) {
     //dockWidget2->setMinimumSize( size.width()-cSize.width()-10, dockWidget2->height()-10 );
     dockWidget1->setMinimumSize( 200, dockWidget1->height()-10 );
     dockWidget2->setMinimumSize( 200, dockWidget2->height()-10 );
-    */
+    
 }
 
 /*

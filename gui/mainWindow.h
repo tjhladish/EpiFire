@@ -4,6 +4,7 @@
 #include <QtGui>
 #include <QApplication>
 #include <QMainWindow>
+#include <QSizePolicy>
 
 //Temporary includes for making the histogram
 //#include <qwt_plot.h>
@@ -105,6 +106,10 @@ class MainWindow : public QMainWindow
         QLabel* simLabel;
         QLabel* infectiousPeriodLabel;
 
+        QGroupBox* mainBox;
+        QGroupBox* leftBox;
+        QGroupBox* rightBox;
+
         QMenuBar* menuBar;
         QGroupBox* settingsGroupBox;
         QGroupBox* networkSettingsGroupBox;
@@ -147,8 +152,8 @@ class MainWindow : public QMainWindow
         PlotArea* epiCurvePlot;
         PlotArea* statePlot;
 
-        QDockWidget* dockWidget1;
-        QDockWidget* dockWidget2;
+        QWidget* dockWidget1;
+        QWidget* dockWidget2;
 
         QDoubleValidator* probValidator;
         QMenu* fileMenu;
