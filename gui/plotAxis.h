@@ -16,7 +16,7 @@ class Axis : public QGraphicsItem
         void setXLabel(QString t) { xlabel = t; }
         void setYLabel(QString t) { ylabel = t; }
         void setTitle(QString  t) { title =  t; }
-        void setNumbTicks(int x)  { nticks = x; }
+        void setNumTicks(int x)  { nticks = x; }
 
     protected:
         QRectF boundingRect() const;

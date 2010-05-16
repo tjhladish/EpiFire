@@ -28,6 +28,21 @@ void PlotArea::replot() {
 }
 
 
+int find_min_val(vector< vector <int> > data) {
+    int minY = INT_MAX;
+    for( unsigned int i=0; i < data.size(); i++ ) {
+        for( unsigned int j=0; j < data[i].size(); j++ ) {
+            int test_min = data[i][j];
+            if (test_min < minY) {
+                minY = test_min;
+            }
+        }
+    }
+    return minY;
+}
+
+
+
 int find_max_val(vector< vector <int> > data) {
     int maxY = 0;
     for( unsigned int i=0; i < data.size(); i++ ) {
@@ -91,12 +106,23 @@ void PlotArea::clearPlot() {
 }
 void PlotArea::drawHistogram() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
+    clearPlot();
     if (data.size() == 0 ) {
-        clearPlot();
         scene()->update();
         return;
     }
-
+/*    clearData();
+    vector<int> fake;
+    fake.push_back(3);
+    fake.push_back(3);
+    fake.push_back(4);
+    fake.push_back(7);
+    fake.push_back(3);
+    fake.push_back(6);
+    fake.push_back(6);
+    fake.push_back(4);
+    data.push_back(fake);    
+*/
     PlotScene* myscene = (PlotScene*) scene();
 
     //scene()->clear();
@@ -106,17 +132,23 @@ void PlotArea::drawHistogram() {
 
     float axis_multiplier = 1.1; // how much longer should axes be
 
-    //int n = 0;
-    //for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
+    int n = 0;
+    for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
     int nbins = 10; 
 
     float max_val = (float) find_max_val(data);
+    float min_val = (float) find_min_val(data);
 
-    vector<int> density(nbins,0);
-
-    for (unsigned int i = 0; i<data.size(); i++) {
-        for (unsigned int j = 0; j<data[i].size(); j++) {
-            density[fmod(data[i][j] ,((double) max_val/nbins)) ]++;
+    vector<int> density(nbins+1,0);
+    
+    if (max_val == min_val) {
+        density[0] = n;
+    } else {
+        for (unsigned int i = 0; i<data.size(); i++) {
+            for (unsigned int j = 0; j<data[i].size(); j++) {
+                int bin = (data[i][j]-min_val) / (max_val-min_val)*nbins;
+                density[ bin ]++;
+            }
         }
     }
 
@@ -129,26 +161,30 @@ void PlotArea::drawHistogram() {
     myscene->setXrange(0,nbins);
     myscene->setYrange(0,max_ct);
 
-    xAxis->setRange(0,nbins);
+    xAxis->setRange(min_val,max_val);
+    xAxis->setNumTicks(nbins+1);
     xAxis->show(); 
     yAxis->setRange(0,max_ct);   
     yAxis->show(); 
 
     QPen pen(Qt::NoPen);
     QBrush brush(Qt::red);
-
+    cerr << "scenew: " << myscene->width() << endl;
     float w = (float) myscene->width()/nbins;
     for (unsigned int r = 0; r < density.size(); r++) {
         float x = myscene->toPlotX(r);
-        float h = myscene->toPlotY(density[r]);
-        float y = myscene->toPlotY(0);
-        myscene->addRect((qreal) x*w,(qreal) y,(qreal) w,(qreal) h,pen,brush);
+        float y = myscene->toPlotY(density[r]);
+        float h = myscene->toPlotY(0) - y;
+        cerr << "coords: " << x << " " << y << " " << w << " " << h << endl;
+        myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
     }
 }
     
  
 void PlotArea::drawEpiCurvePlot() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
+clearData();
+cerr << "Data cleared for epi curve plot\n";
     if (data.size() == 0 ) {
         clearPlot();
         scene()->update();
@@ -180,40 +216,6 @@ void PlotArea::drawEpiCurvePlot() {
     int margin = 35;
     qreal zval = 0;
     
-    /*
-    myscene->setXrange(0,10);
-    myscene->setYrange(0,30);
-    if(xAxis) { xAxis->setRange(0,10);  xAxis->show(); } 
-    if(yAxis) { yAxis->setRange(0,30);   yAxis->show(); }
-    
-    Point*  p1 = new Point(0,0,10);
-    Point*  p2 = new Point(5,15,10);
-    Point*  p3 = new Point(10,30,10);
-
-    p1->setBrush(Qt::red);
-    p2->setBrush(Qt::blue);
-    p3->setBrush(Qt::green);
-
-    myscene->addItem(p3);
-    myscene->addItem(p1);
-    myscene->addItem(p2);
-
-    p1->updatePosition();
-    p2->updatePosition();
-    p3->updatePosition();
-
-    cerr << "WxH=" << scene()->width()  << " " << scene()->height() << endl;
-    cerr << myscene->toPlotX(0) << " " << myscene->toPlotY(0) << endl;
-    cerr << myscene->toPlotX(5) << " " << myscene->toPlotY(15) << endl;
-    cerr << myscene->toPlotX(10) << " " << myscene->toPlotY(30) << endl;
-
-    //PlotScene* myplot = (PlotScene*) scene();
-    //setPos( myplot->toPlotX(x), myplot->toPlotY(y));
-    
-    return;
-    */
-
-
     int alpha;
     int alpha_threshold[2] = {2, 25};
     if (data.size() < alpha_threshold[0]) {
