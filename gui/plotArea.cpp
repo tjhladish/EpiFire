@@ -22,6 +22,8 @@ void PlotArea::replot() {
         drawEpiCurvePlot();
     } else if (plotType == STATEPLOT ) { 
         drawNodeStatePlot();
+    } else if (plotType == HISTPLOT ) { 
+        drawHistogram();
     }
 }
 
@@ -87,7 +89,64 @@ void PlotArea::clearPlot() {
     yAxis->hide();
 
 }
+void PlotArea::drawHistogram() {
+    setRenderHint(QPainter::Antialiasing); // smooth data points
+    if (data.size() == 0 ) {
+        clearPlot();
+        scene()->update();
+        return;
+    }
 
+    PlotScene* myscene = (PlotScene*) scene();
+
+    //scene()->clear();
+    int plotW = width() - 80;   //width of the view
+    int plotH = height() - 50;  //height of the view
+    myscene->setSceneRect(0,0,plotW,plotH);
+
+    float axis_multiplier = 1.1; // how much longer should axes be
+
+    //int n = 0;
+    //for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
+    int nbins = 10; 
+
+    float max_val = (float) find_max_val(data);
+
+    vector<int> density(nbins,0);
+
+    for (unsigned int i = 0; i<data.size(); i++) {
+        for (unsigned int j = 0; j<data[i].size(); j++) {
+            density[fmod(data[i][j] ,((double) max_val/nbins)) ]++;
+        }
+    }
+
+    for (unsigned int i = 0; i<density.size(); i++) {
+        cerr << i << " " << density[i] << endl;
+     }
+
+    int   max_ct = max_element(density);
+
+    myscene->setXrange(0,nbins);
+    myscene->setYrange(0,max_ct);
+
+    xAxis->setRange(0,nbins);
+    xAxis->show(); 
+    yAxis->setRange(0,max_ct);   
+    yAxis->show(); 
+
+    QPen pen(Qt::NoPen);
+    QBrush brush(Qt::red);
+
+    float w = (float) myscene->width()/nbins;
+    for (unsigned int r = 0; r < density.size(); r++) {
+        float x = myscene->toPlotX(r);
+        float h = myscene->toPlotY(density[r]);
+        float y = myscene->toPlotY(0);
+        myscene->addRect((qreal) x*w,(qreal) y,(qreal) w,(qreal) h,pen,brush);
+    }
+}
+    
+ 
 void PlotArea::drawEpiCurvePlot() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
     if (data.size() == 0 ) {

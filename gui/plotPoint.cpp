@@ -8,10 +8,8 @@ QRectF Point::boundingRect() const
 
 
 void Point::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
-    painter->setRenderHint(QPainter::Antialiasing, false);
+    //painter->setRenderHint(QPainter::Antialiasing, false);
 
-    //QPen pen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    //painter->setPen(pen);
     painter->setBrush(brush);
     painter->setPen(Qt::NoPen);
     painter->drawEllipse(-r,-r,2*r,2*r);

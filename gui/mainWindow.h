@@ -6,13 +6,6 @@
 #include <QMainWindow>
 #include <QSizePolicy>
 
-//Temporary includes for making the histogram
-//#include <qwt_plot.h>
-//#include <qwt_plot_grid.h>
-//#include <qwt_plot_marker.h>
-//#include <qwt_interval_data.h>
-//#include "histogram.h"
-
 #include "plotArea.h"
 #include "../src/Network.h"
 #include "../src/Simulator.h";
@@ -90,9 +83,8 @@ class MainWindow : public QMainWindow
         void createControlButtonsBox();
         //void createGridGroupBox();
         //void createFormGroupBox();
-        void runSimulation(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc);
+        void runSimulation(int j_max, int patient_zero_ct, string RunID);
 
-        void makeHistogram(int* data_series, int num_runs, int pop_size);
         void makeReadonly(QLineEdit* lineEdit);
         void addStateData();
 
@@ -151,6 +143,7 @@ class MainWindow : public QMainWindow
 
         PlotArea* epiCurvePlot;
         PlotArea* statePlot;
+        PlotArea* histPlot;
 
         QWidget* dockWidget1;
         QWidget* dockWidget2;

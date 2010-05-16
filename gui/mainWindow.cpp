@@ -26,6 +26,9 @@ MainWindow::MainWindow() {
 
     statePlot = new PlotArea(this);
     statePlot->setPlotType(PlotArea::STATEPLOT);
+
+    histPlot = new PlotArea(this);
+    histPlot->setPlotType(PlotArea::HISTPLOT);
     
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *leftLayout = new QVBoxLayout;
@@ -64,6 +67,7 @@ MainWindow::MainWindow() {
 
     rightLayout->addWidget(statePlot);
     rightLayout->addWidget(epiCurvePlot);
+    rightLayout->addWidget(histPlot);
     rightBox->setLayout(rightLayout);     
 
     setWindowTitle(tr("EpiFire"));
@@ -517,66 +521,6 @@ void MainWindow::updateRZero() {
     rzeroLine->setText( QString::number(R0));
 }
 
-void MainWindow::makeHistogram(int* data_series, int num_runs, int pop_size) {
-/*  // to be relocated as a new epiCurvePlot method
-    QwtPlot *plot= new QwtPlot(this);
-
-    plot->setCanvasBackground(QColor(Qt::white));
-    plot->setTitle("Histogram");
-
-    QwtPlotGrid *grid = new QwtPlotGrid;
-    grid->enableXMin(true);
-    grid->enableYMin(true);
-    grid->setMajPen(QPen(Qt::black, 0, Qt::DotLine));
-    grid->setMinPen(QPen(Qt::gray, 0 , Qt::DotLine));
-    grid->attach(plot);
-
-    //HistogramItem *histogram = new HistogramItem();
-    //histogram->setColor(Qt::blue);
-
-    const int numValues = 20;    //Number of bins
-
-    //Perform the actual binning
-
-    int histogramValues[numValues]={0};
-    int bin;
-
-    for (int i=0; i<num_runs; i++) {
-        bin=floor((((float)*data_series)/((float)pop_size))*numValues);
-        histogramValues[bin]++;
-        data_series++;
-    }
-
-    QwtArray<QwtDoubleInterval> intervals(numValues);
-    QwtArray<double> values(numValues);
-
-    double pos = 0.0;
-    for ( int i = 0; i < (int)intervals.size(); i++ ) {
-        const double width = 100.0/(float)numValues;
-
-        intervals[i] = QwtDoubleInterval(pos, pos + double(width));
-        values[i] = histogramValues[i];
-
-        pos += width;
-    }
-
-    /*histogram->setData(QwtIntervalData(intervals, values));
-    histogram->attach(plot);
-
-    plot->setAxisScale(QwtPlot::yLeft, 0.0, num_runs);
-    plot->setAxisScale(QwtPlot::xBottom, 0.0, 100.0);
-    plot->replot();
-
-    plot->resize(400,300);
-
-    plot->setWindowFlags(Qt::Drawer);
-    plot->setEnabled(1);
-    plot->show();
-    plot->activateWindow();
-    plot->raise();
-    */
-}
-
 
 /*#############################################################################
 #
@@ -616,15 +560,13 @@ void MainWindow::simulatorWrapper() {
     statePlot->clearData();
 
     //RUN SIMULATION
-    runSimulation(j_max, p_zero, RunID, dist_size_point);
+    runSimulation(j_max, p_zero, RunID);
 
     //MAKE PLOTS
-    MainWindow::appendOutputLine("Done\n");
-    makeHistogram(dist_size_point,j_max,network->size());
-    MainWindow::epiCurvePlot->replot();
-
+    appendOutputLine("Done\n");
+    epiCurvePlot->replot();
     statePlot->replot();
-
+    histPlot->replot();
 
 }
 
@@ -639,7 +581,7 @@ void MainWindow::addStateData() {
 }
 
 
-void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID, int* dist_size_loc) {
+void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     if(simulator == NULL || network == NULL ) {
         cerr << "ERROR: runSimulation() called with undefined sim and net parameters";
         return;
@@ -647,6 +589,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID, int
 
     appendOutputLine("Simulation running . . . ");
 
+    vector<int> epi_sizes (j_max);
     for ( int j = 0; j < j_max; j++) {
         simulator->rand_infect(patient_zero_ct);
 
@@ -678,14 +621,14 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID, int
         epiCurvePlot->addData(epi_curve);
 
         //Use pointer to report epidemic size back to MainWindow class
-        *dist_size_loc = epi_size;
-        dist_size_loc++;
+        epi_sizes[j] = epi_size;
 
         cout << RunID << " " << j << " " << simulator->epidemic_size() << " ";
 
         //sim.summary();
         simulator->reset();
     }
+    histPlot->addData(epi_sizes);
     return;
 }
 

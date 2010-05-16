@@ -33,6 +33,7 @@ class PlotArea : public QGraphicsView
 
     protected:
         void drawEpiCurvePlot();
+        void drawHistogram();
         void drawNodeStatePlot();
         void resizeEvent ( QResizeEvent *event );
 
