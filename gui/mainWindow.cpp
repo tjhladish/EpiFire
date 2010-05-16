@@ -163,6 +163,7 @@ void MainWindow::createNetworkSettingsBox() {
     // Put everything together
     networkSettingsGroupBox = new QGroupBox(tr("Step 1: Build a network"));
     QGridLayout *layout = new QGridLayout;
+    //layout->setVerticalSpacing(0);
 
     //FIRST COLUMN -- Network stuff
     layout->addWidget(netsourceLabel, 0, 0);
@@ -224,6 +225,7 @@ void MainWindow::createSimulatorSettingsBox() {
     // Put everything together
     simulatorSettingsGroupBox = new QGroupBox(tr("Step 2: Design a simulation"));
     QGridLayout *layout = new QGridLayout;
+    //layout->setVerticalSpacing(0);
 
     //SECOND COLUMN -- Simulation stuff
     layout->addWidget(simLabel, 0, 1);

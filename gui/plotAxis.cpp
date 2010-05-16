@@ -36,14 +36,14 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     int x1 = scene()->width();
     int y1 = 0;
     int offset = 8;
-    int ao = 10;                 // axis offset, so axes don't touch
-    int margin = 35;
-
+    //int ao = 10;                 // axis offset, so axes don't touch
+    //int margin = 35;
+/*
     if ( type == 0) {            // shift x-axis down and to the right
         x0 += margin;
         y0 += ao;
     }
-
+*/
     float range = (max-min);
     float expbase = pow(10,floor( log(range/nticks)/log(10) ) );
     float b;

@@ -2,16 +2,17 @@
 CONFIG += qt thread warn_off debug 
 
 HEADERS     = mainWindow.h \
-#              histogram.h \
              plotArea.h \
-             plotAxis.h
+             plotAxis.h \
+             plotPoint.h \
+             plotScene.h 
 
  SOURCES     = mainWindow.cpp \
                ../src/*.cpp \
                main.cpp \
-#               histogram.cpp \
                plotArea.cpp \
-               plotAxis.cpp
+               plotAxis.cpp \
+               plotPoint.cpp 
 
 INCLUDEPATH += /usr/include/qwt-qt4
 #LIBS += -lqwt-qt4
