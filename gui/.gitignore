@@ -1,4 +1,5 @@
 dolphin.csv
+read_edgelist_test.cpp
 *.o
 *.a
 moc*

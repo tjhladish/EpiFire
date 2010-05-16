@@ -77,6 +77,9 @@ class MainWindow : public QMainWindow
         void connect_network (Network* net, DistType dist, double param1, double param2);
         void saveEdgeList();
 
+    protected:
+        void resizeEvent ( QResizeEvent *event );
+
     private:
 
         void createMenu();
@@ -91,6 +94,8 @@ class MainWindow : public QMainWindow
         void makeHistogram(int* data_series, int num_runs, int pop_size);
         void makeReadonly(QLineEdit* lineEdit);
         void addStateData();
+
+        QWidget* centralWidget;
 
         QLabel* distLabel;
         QLabel* param1Label;

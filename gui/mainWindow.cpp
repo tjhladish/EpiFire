@@ -10,7 +10,7 @@
 MainWindow::MainWindow() {
 // Constructor for the main interface
 
-    QWidget* centralWidget = new QWidget(this);
+    centralWidget = new QWidget(this);
 
     network = new Network("mynetwork",false);
     simulator = NULL;
@@ -32,13 +32,19 @@ MainWindow::MainWindow() {
     mainLayout->addWidget(settingsGroupBox, Qt::AlignCenter);
     mainLayout->addWidget(logEditor);
     mainLayout->addWidget(controlButtonsGroupBox);
+    mainLayout->setSizeConstraint(QLayout::SetMinimumSize);
     centralWidget->setLayout(mainLayout);
+
+    //centralWidget->setMaximumHeight(700);
+    centralWidget->setMaximumWidth(500);
+    
+
     setCentralWidget(centralWidget);
 
     dockWidget1 = new QDockWidget("Node State Plot", this, Qt::Widget);
     dockWidget1->setWidget(statePlot);
     dockWidget1->setFloating(false);
-    //dockWidget1->setMinimumSize(600,300);
+    //dockWidget1->setMinimumSize(600,228);
     dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
 
     dockWidget2 = new QDockWidget("Epidemic Curve Plot", this, Qt::Widget);
@@ -103,11 +109,12 @@ void MainWindow::createSettingsBox() {
     
     settingsGroupBox = new QGroupBox;
     settingsGroupBox->setFlat(true);
-    QHBoxLayout* settingsLayout = new QHBoxLayout;
+    QVBoxLayout* settingsLayout = new QVBoxLayout;
     settingsLayout->addWidget(networkSettingsGroupBox);    
     settingsLayout->addWidget(simulatorSettingsGroupBox);    
 
     settingsGroupBox->setLayout(settingsLayout);
+    settingsGroupBox->setMaximumHeight(500);
 
     defaultSettings();
 };
@@ -163,7 +170,7 @@ void MainWindow::createNetworkSettingsBox() {
     // Put everything together
     networkSettingsGroupBox = new QGroupBox(tr("Step 1: Build a network"));
     QGridLayout *layout = new QGridLayout;
-    //layout->setVerticalSpacing(0);
+    layout->setVerticalSpacing(1);
 
     //FIRST COLUMN -- Network stuff
     layout->addWidget(netsourceLabel, 0, 0);
@@ -186,8 +193,8 @@ void MainWindow::createNetworkSettingsBox() {
     layout->addWidget(param2Line, 4, 1);
     layout->addWidget(generatenetButton, 5,1);
     
-    networkSettingsGroupBox->setLayout(layout);
-cerr << "net row spacing: " << layout->verticalSpacing() << endl;
+        networkSettingsGroupBox->setLayout(layout);
+    cerr << "net row spacing: " << layout->verticalSpacing() << endl;
 }
 
 void MainWindow::createSimulatorSettingsBox() {
@@ -225,7 +232,7 @@ void MainWindow::createSimulatorSettingsBox() {
     // Put everything together
     simulatorSettingsGroupBox = new QGroupBox(tr("Step 2: Design a simulation"));
     QGridLayout *layout = new QGridLayout;
-    //layout->setVerticalSpacing(0);
+    layout->setVerticalSpacing(1);
 
     //SECOND COLUMN -- Simulation stuff
     layout->addWidget(simLabel, 0, 1);
@@ -722,6 +729,38 @@ double MainWindow::calculate_T_crit() {
     }
     return  numerator/denominator;
 }
+
+void MainWindow::resizeEvent ( QResizeEvent *event ) {
+    return;
+
+    QSize old = event->oldSize();   //-1,-1
+    QSize size = event->size();     //770,720
+    qDebug() << size << " " << old;
+
+/*
+    QSize cSize = centralWidget->size();    //
+    //centralWidget->setMaximumSize(700,centralWidget->height());
+    dockWidget1->setMaximumSize( size.width()-cSize.width(), dockWidget1->height()-10 );
+    dockWidget2->setMaximumSize( size.width()-cSize.width(), dockWidget2->height()-10 );
+    //dockWidget1->setMinimumSize( size.width()-cSize.width()-10, dockWidget1->height()-10 );
+    //dockWidget2->setMinimumSize( size.width()-cSize.width()-10, dockWidget2->height()-10 );
+    dockWidget1->setMinimumSize( 200, dockWidget1->height()-10 );
+    dockWidget2->setMinimumSize( 200, dockWidget2->height()-10 );
+    */
+}
+
+/*
+QSize(770, 720)   QSize(-1, -1) 
+QSize(771, 721)   QSize(770, 720) 
+QSize(774, 725)   QSize(771, 721) 
+QSize(774, 726)   QSize(774, 725) 
+QSize(774, 727)   QSize(774, 726) 
+QSize(774, 731)   QSize(774, 727) 
+QSize(781, 752)   QSize(774, 731) 
+QSize(782, 761)   QSize(781, 752) 
+QSize(791, 782)   QSize(782, 761) 
+QSize(793, 783)   QSize(791, 782) 
+*/
 
 
 double MainWindow::convertR0toT(double R0) { return R0 * calculate_T_crit(); }

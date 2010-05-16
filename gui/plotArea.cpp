@@ -9,7 +9,7 @@ PlotArea::PlotArea(QWidget*) {
     //setMinimumSize(300,200);
     PlotScene* myscene = new PlotScene(this);
     setScene(myscene);
-    scene()->setSceneRect(0,0,200,200);
+    scene()->setSceneRect(0,0,300,100);
     xAxis = NULL;
     yAxis = NULL;
 
