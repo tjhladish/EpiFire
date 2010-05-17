@@ -36,29 +36,33 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     int x1 = scene()->width();
     int y1 = 0;
     int offset = 8;
-    //int ao = 10;                 // axis offset, so axes don't touch
-    //int margin = 35;
-/*
-    if ( type == 0) {            // shift x-axis down and to the right
-        x0 += margin;
-        y0 += ao;
-    }
-*/
+    
+    
+    /*
     float range = (max-min);
     float expbase = pow(10,floor( log(range/nticks)/log(10) ) );
     float b;
     for(int i=0; i<10; i+=1) { b=i*expbase; if (b>range/nticks) break; }
 
     float ticks = range/b;
+    */
+   
+    int range = (max-min) > (int) (max-min) ? max-min + 1 : max-min;
+    int bin_width = (int) range/nticks;
+    int ticks = (range % nticks == 0) ? nticks : nticks + 1;
+    //int ix = bin_width;
+    //int iy = bin_width;
+
+
     float ix = (x1-x0)/ticks;
     float iy = (y1-y0)/ticks;
 
-    if ( b == 0 ) return;
+    //if ( b == 0 ) return;
 
     if ( type == 0) {            // for x-axis
         painter->drawLine(x0, y0, x1, y0);
         for (int i=0; i <= ticks; i++ ) painter->drawLine(x0+ix*i,y0-5,x0+ix*i,y0+5);
-        for (int i=0; i <= ticks; i++ ) painter->drawText(x0+ix*i,y0+10,QString::number(min+b*i,'f',2));
+        for (int i=0; i <= ticks; i++ ) painter->drawText(x0+ix*i,y0+10,QString::number(min+bin_width*i,'f',0));
     }                            // for y-axis
     else if ( type == 1 ) {
         painter->drawLine(x0+offset,y0,x0+offset,y1);
@@ -68,8 +72,9 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
         }
 
         for (int i=0; i <= ticks; i++ ) {
-            QString value = QString::number(min+b*i,'g',2);
-            if ( max < 10000 ) { value = QString::number(min+b*i,'f',1); }
+            double num_val = min + bin_width*i;
+            QString value = QString::number(num_val,'g',2);
+            if ( max < 10000 && max > 10) { value = QString::number(num_val,'f',0); }
             painter->drawText(offset+x0+5,y0+iy*i,value);
         }
 

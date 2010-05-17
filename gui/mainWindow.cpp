@@ -40,6 +40,7 @@ MainWindow::MainWindow() {
     leftLayout->addWidget(logEditor);
     leftLayout->addWidget(controlButtonsGroupBox);
     leftBox->setLayout(leftLayout);
+    leftBox->setFlat(true);
 
     //centralWidget->setMaximumHeight(700);
     //centralWidget->setMaximumWidth(500);
@@ -152,9 +153,6 @@ void MainWindow::createNetworkSettingsBox() {
     netsourceLabel = new QLabel(tr("Network source:"));
     netfileLabel = new QLabel(tr("Filename"));
     netfileLine = new QLineEdit();
-    clearnetButton = new QPushButton("Clear Network");
-    generatenetButton = new QPushButton("Generate Network");
-    loadnetButton     = new QPushButton("Import Edge List");
 
     netsourceBox= new QComboBox(this);
     netsourceBox->addItem("Generate");
@@ -182,24 +180,19 @@ void MainWindow::createNetworkSettingsBox() {
     changeNetSource(0);
     connect(netsourceBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeNetSource(int)));
 
-    connect(clearnetButton,    SIGNAL(clicked()), this, SLOT(clear_network()));
-    connect(loadnetButton,     SIGNAL(clicked()), this, SLOT(readEdgeList()));
-    connect(generatenetButton, SIGNAL(clicked()), this, SLOT(generate_network()));
 
     // Put everything together
-    networkSettingsGroupBox = new QGroupBox(tr("Step 1: Build a network"));
+    networkSettingsGroupBox = new QGroupBox(tr("Step 1: Choose a network"));
     QGridLayout *layout = new QGridLayout;
     layout->setVerticalSpacing(1);
 
     //FIRST COLUMN -- Network stuff
     layout->addWidget(netsourceLabel, 0, 0);
     layout->addWidget(netsourceBox, 0, 1);
-    layout->addWidget(clearnetButton, 5, 0);
     
     //fields for imported net
     layout->addWidget(netfileLabel, 2, 0);
     layout->addWidget(netfileLine, 2, 1);
-    layout->addWidget(loadnetButton, 5, 1);
 
     //fields for generated net
     layout->addWidget(numnodesLabel, 1, 0);
@@ -210,10 +203,8 @@ void MainWindow::createNetworkSettingsBox() {
     layout->addWidget(param1Line, 3, 1);
     layout->addWidget(param2Label, 4, 0);
     layout->addWidget(param2Line, 4, 1);
-    layout->addWidget(generatenetButton, 5,1);
     
-        networkSettingsGroupBox->setLayout(layout);
-    cerr << "net row spacing: " << layout->verticalSpacing() << endl;
+    networkSettingsGroupBox->setLayout(layout);
 }
 
 void MainWindow::createSimulatorSettingsBox() {
@@ -266,7 +257,7 @@ void MainWindow::createSimulatorSettingsBox() {
     layout->addWidget(pzeroLine, 4, 2);
     layout->addWidget(numrunsLabel, 5, 1);
     layout->addWidget(numrunsLine, 5, 2);
-    layout->addWidget(retainDataCheckBox,6,1);
+    layout->addWidget(retainDataCheckBox,6,1,2,2);
 
     simulatorSettingsGroupBox->setLayout(layout);
 //cerr << "sim row height: "  << layout->rowPreferredHeight(2) << endl;
@@ -279,26 +270,41 @@ void MainWindow::createControlButtonsBox() {
 //Creates the horizontal control box at the bottom of the interface
 
     controlButtonsGroupBox = new QGroupBox(tr("Step 3: Profit!"));
-    QHBoxLayout *layout = new QHBoxLayout;
-
-    buttons[0] = new QPushButton("Clear data");
-    connect(buttons[0], SIGNAL(clicked()), this, SLOT(clear_data()));
-
-
-    buttons[1] = new QPushButton("Default Settings");
-    connect(buttons[1], SIGNAL(clicked()), this, SLOT(defaultSettings()));
-
-    //buttons[2] = new QPushButton("Help");
-    //buttons[3] = new QPushButton("Exit");
-    //connect(buttons[3], SIGNAL(clicked()), this, SLOT(close()));
+    QGridLayout *layout = new QGridLayout;
     
-    buttons[2] = new QPushButton("Run &Simulation");
-    connect(buttons[2], SIGNAL(clicked()), this, SLOT(simulatorWrapper()));
+    int rows = 2;
+    int cols = 3;
+    QPushButton* button[rows][cols];
+    
+    button[0][0] = new QPushButton("Clear Network");
+    connect(button[0][0], SIGNAL(clicked()), this, SLOT(clear_network()));
+    
+    button[0][1] = new QPushButton("Default Settings");
+    connect(button[0][1], SIGNAL(clicked()), this, SLOT(defaultSettings()));
+
+    loadnetButton     = new QPushButton("Import Edge List");
+    connect(loadnetButton,     SIGNAL(clicked()), this, SLOT(readEdgeList()));
+
+    generatenetButton = new QPushButton("Generate Network");
+    button[0][2] = generatenetButton;
+    connect(generatenetButton, SIGNAL(clicked()), this, SLOT(generate_network()));
+
+    button[1][0] = new QPushButton("Clear data");
+    connect(button[1][0], SIGNAL(clicked()), this, SLOT(clear_data()));
+
+    button[1][1] = new QPushButton("Help");
+    //connect(button[0][1], SIGNAL(clicked()), this, SLOT(open_help()));
+
+    button[1][2] = new QPushButton("Run &Simulation");
+    connect(button[1][2], SIGNAL(clicked()), this, SLOT(simulatorWrapper()));
     //buttons[0]->setDefault(true);
 
-    for (int i = 0; i < 3; ++i) {
-        layout->addWidget(buttons[i]);
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols; c++) {
+            layout->addWidget(button[r][c], r, c);
+        }
     }
+    layout->addWidget(loadnetButton, 0, 2);
     controlButtonsGroupBox->setLayout(layout);
 }
 
@@ -392,7 +398,7 @@ void MainWindow::changeNetSource(int source) {
         netfileLabel->show();
         netfileLine->show();
         makeReadonly(netfileLine);
-        clearnetButton->show();
+        //clearnetButton->show();
         loadnetButton->show();
         generatenetButton->hide();
         numnodesLine->setText("0");
@@ -403,7 +409,7 @@ void MainWindow::changeNetSource(int source) {
     else {
         netfileLabel->hide();
         netfileLine->hide();
-        clearnetButton->show();
+        //clearnetButton->show();
         loadnetButton->hide();
         generatenetButton->show();
 
@@ -494,6 +500,8 @@ void MainWindow::clear_data() {
     statePlot->clearData();
     statePlot->replot();
     
+    histPlot->clearData();
+    histPlot->replot();
     appendOutputLine("Epidemic data deleted");
 }
 
@@ -563,7 +571,6 @@ void MainWindow::simulatorWrapper() {
     runSimulation(j_max, p_zero, RunID);
 
     //MAKE PLOTS
-    appendOutputLine("Done\n");
     epiCurvePlot->replot();
     statePlot->replot();
     histPlot->replot();
@@ -587,8 +594,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
         return;
     }
 
-    appendOutputLine("Simulation running . . . ");
-
+    //appendOutputLine("Simulation running . . . ");
     vector<int> epi_sizes (j_max);
     for ( int j = 0; j < j_max; j++) {
         simulator->rand_infect(patient_zero_ct);
@@ -596,7 +602,6 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
         vector<int> epi_curve;
         epi_curve.push_back(simulator->count_infected());
 
-        //vector<int> cache(0,1000);
         if (j == j_max - 1) {
             statePlot->clearData();
             statePlot->replot(); // draws a white background when data is cleared
@@ -620,12 +625,10 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
 
         epiCurvePlot->addData(epi_curve);
 
-        //Use pointer to report epidemic size back to MainWindow class
         epi_sizes[j] = epi_size;
 
         cout << RunID << " " << j << " " << simulator->epidemic_size() << " ";
 
-        //sim.summary();
         simulator->reset();
     }
     histPlot->addData(epi_sizes);

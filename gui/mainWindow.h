@@ -114,7 +114,6 @@ class MainWindow : public QMainWindow
 
         QCheckBox* retainDataCheckBox;
 
-        QPushButton* buttons[3];
         QPushButton* clearnetButton;
         QPushButton* loadnetButton;
         QPushButton* generatenetButton;

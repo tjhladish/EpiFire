@@ -9,7 +9,7 @@ PlotArea::PlotArea(QWidget*) {
     //setMinimumSize(300,200);
     PlotScene* myscene = new PlotScene(this);
     setScene(myscene);
-    scene()->setSceneRect(0,0,300,100);
+    scene()->setSceneRect(0,0,400,100);
     xAxis = NULL;
     yAxis = NULL;
 
@@ -134,23 +134,25 @@ void PlotArea::drawHistogram() {
 
     int n = 0;
     for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
-    int nbins = 10; 
+    int nbins = n < 10 ? n : 10; 
 
     float max_val = (float) find_max_val(data);
     float min_val = (float) find_min_val(data);
 
-    vector<int> density(nbins+1,0);
-    
+    vector<int> density(nbins,0);
+    cerr << "nbins: " << nbins << endl;
     if (max_val == min_val) {
         density[0] = n;
     } else {
         for (unsigned int i = 0; i<data.size(); i++) {
             for (unsigned int j = 0; j<data[i].size(); j++) {
-                int bin = (data[i][j]-min_val) / (max_val-min_val)*nbins;
+                int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
                 density[ bin ]++;
+    cerr << data[i][j] << "<-datum bin->" << bin<< endl;
             }
         }
     }
+    cerr << endl;
 
     for (unsigned int i = 0; i<density.size(); i++) {
         cerr << i << " " << density[i] << endl;
@@ -167,15 +169,15 @@ void PlotArea::drawHistogram() {
     yAxis->setRange(0,max_ct);   
     yAxis->show(); 
 
-    QPen pen(Qt::NoPen);
+    QPen pen(Qt::white);
     QBrush brush(Qt::red);
-    cerr << "scenew: " << myscene->width() << endl;
+    //cerr << "scenew: " << myscene->width() << endl;
     float w = (float) myscene->width()/nbins;
     for (unsigned int r = 0; r < density.size(); r++) {
         float x = myscene->toPlotX(r);
         float y = myscene->toPlotY(density[r]);
         float h = myscene->toPlotY(0) - y;
-        cerr << "coords: " << x << " " << y << " " << w << " " << h << endl;
+        //cerr << "coords: " << x << " " << y << " " << w << " " << h << endl;
         myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
     }
 }
@@ -183,8 +185,8 @@ void PlotArea::drawHistogram() {
  
 void PlotArea::drawEpiCurvePlot() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
-clearData();
-cerr << "Data cleared for epi curve plot\n";
+//clearData();
+//cerr << "Data cleared for epi curve plot\n";
     if (data.size() == 0 ) {
         clearPlot();
         scene()->update();
@@ -198,7 +200,7 @@ cerr << "Data cleared for epi curve plot\n";
     int plotH = height() - 50;  //height of the view
     myscene->setSceneRect(0,0,plotW,plotH);
 
-    float axis_multiplier = 1.1; // how much longer should axes be
+    float axis_multiplier = 1; // how much longer should axes be
     float max_val = (float) find_max_val(data) * axis_multiplier;
     int   max_idx = find_max_idx(data) * axis_multiplier;
 
@@ -212,7 +214,7 @@ cerr << "Data cleared for epi curve plot\n";
     yAxis->setRange(0,max_val*axis_multiplier);   
     yAxis->show(); 
 
-    float r = 4;                 // radius of data points
+    float r = 3;                 // radius of data points
     int margin = 35;
     qreal zval = 0;
     
@@ -256,12 +258,12 @@ cerr << "Data cleared for epi curve plot\n";
     newDataCursor = data.size();
 
     scene()->update();
-    setAlignment(Qt::AlignRight);
+    //setAlignment(Qt::AlignRight);
 
 }
 
 void PlotArea::drawNodeStatePlot() {
-    QRgb colors[3] = { qRgb(0, 0, 254), qRgb(254, 254, 0), qRgb(0, 254, 0) };
+    QRgb colors[3] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0) };
 
     if (data.size() == 0 ) {
         scene()->clear();
