@@ -17,6 +17,7 @@ class Axis : public QGraphicsItem
         void setYLabel(QString t) { ylabel = t; }
         void setTitle(QString  t) { title =  t; }
         void setNumTicks(int x)  { nticks = x; }
+        void forceNumTicks(bool t) { force_nticks = t; }
 
     protected:
         QRectF boundingRect() const;
@@ -27,6 +28,7 @@ class Axis : public QGraphicsItem
         float min;
         float max;
         int nticks;
+        bool force_nticks;
         QString xlabel;
         QString ylabel;
         QString title;

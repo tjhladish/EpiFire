@@ -1,7 +1,7 @@
 #include "plotArea.h"
 #include "plotScene.h"
 #include "plotPoint.h"
-
+#include <math.h>
 #include "../src/Utility.h"
 
 PlotArea::PlotArea(QWidget*) {
@@ -134,7 +134,14 @@ void PlotArea::drawHistogram() {
 
     int n = 0;
     for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
-    int nbins = n < 10 ? n : 10; 
+
+    // for n data points, number of bins should be:
+    // n if n < 10
+    // 10 if 10 < n < 100
+    // (int) sqrt(n) if n > 100
+    int nbins = n < 10 ? n : 10;
+    nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
+    
 
     float max_val = (float) find_max_val(data);
     float min_val = (float) find_min_val(data);
@@ -164,7 +171,8 @@ void PlotArea::drawHistogram() {
     myscene->setYrange(0,max_ct);
 
     xAxis->setRange(min_val,max_val);
-    xAxis->setNumTicks(nbins+1);
+    xAxis->setNumTicks(nbins);
+    xAxis->forceNumTicks(true);
     xAxis->show(); 
     yAxis->setRange(0,max_ct);   
     yAxis->show(); 
