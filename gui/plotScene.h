@@ -21,6 +21,10 @@ class PlotScene : public QGraphicsScene
      float getMaxY() { return maxY; }
      float toPlotX( float x ) { return (x-minX)/(maxX-minX)*width(); } 
      float toPlotY( float y ) { return height()*(1.0-(y-minY)/(maxY-minY)); } 
+     void setLabel(QString l, qreal x, qreal y) { label=addText(l); label->setPos(x,y); }
+     //void clearLabel() { if (label != NULL) { qDebug() << "true "; qDebug() << label->toPlainText();};}//removeItem(label); }
+     QGraphicsTextItem* getLabel() {return label;}
+     //bool hasLabel() { if (&label != NULL) return true; return false; }
         
    private:
         float xmargin;
@@ -29,7 +33,7 @@ class PlotScene : public QGraphicsScene
         float minY;
         float maxX;
         float maxY;
-
+        QGraphicsTextItem* label;
 };
 
 #endif

@@ -24,13 +24,16 @@ MainWindow::MainWindow() {
     logEditor->setReadOnly(true);
     logEditor->setPlainText(tr("No output yet"));
 
-    epiCurvePlot = new PlotArea(this);
+    epiCurvePlot = new PlotArea(this, "Epidemic curves");
+//    epiCurvePlot->setLabel("Epidemic curves");
     epiCurvePlot->setPlotType(PlotArea::EPICURVE);
 
-    statePlot = new PlotArea(this);
+    statePlot = new PlotArea(this, "Node state evolution");
+//    statePlot->setLabel("Node state evolution");
     statePlot->setPlotType(PlotArea::STATEPLOT);
 
-    histPlot = new PlotArea(this);
+    histPlot = new PlotArea(this, "Histogram of epidemic sizes");
+//    histPlot->setLabel("Histogram of epidemic sizes");
     histPlot->setPlotType(PlotArea::HISTPLOT);
     
     QHBoxLayout *mainLayout = new QHBoxLayout;

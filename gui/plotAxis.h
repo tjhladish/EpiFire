@@ -6,6 +6,9 @@
 #include <QPainter>
 #include <QFlags>
 #include <math.h>
+#include <iostream>
+
+using namespace std;
 
 class Axis : public QGraphicsItem
 {
@@ -13,8 +16,8 @@ class Axis : public QGraphicsItem
         Axis( int type, float min, float max, int nticks);
         ~Axis();
         void setRange(float a, float b) { min=a; max=b; }
-        void setXLabel(QString t) { xlabel = t; }
-        void setYLabel(QString t) { ylabel = t; }
+        void setLabel(QString t) { label = t; }
+        //void setYLabel(QString t) { ylabel = t; }
         void setTitle(QString  t) { title =  t; }
         void setNumTicks(int x)  { nticks = x; }
         void forceNumTicks(bool t) { force_nticks = t; }
@@ -29,8 +32,8 @@ class Axis : public QGraphicsItem
         float max;
         int nticks;
         bool force_nticks;
-        QString xlabel;
-        QString ylabel;
+        QString label;
+        //QString ylabel;
         QString title;
 
 };

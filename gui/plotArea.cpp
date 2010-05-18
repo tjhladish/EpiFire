@@ -4,12 +4,13 @@
 #include <math.h>
 #include "../src/Utility.h"
 
-PlotArea::PlotArea(QWidget*) {
+PlotArea::PlotArea(QWidget*, QString l) {
     setObjectName("PlotArea");
-    //setMinimumSize(300,200);
-    PlotScene* myscene = new PlotScene(this);
+    setMinimumSize(500,200);
+    myscene = new PlotScene(this);
     setScene(myscene);
-    scene()->setSceneRect(0,0,400,100);
+    scene()->setSceneRect(0,0,minimumWidth()-110,minimumHeight()-50);
+    label = l;
     xAxis = NULL;
     yAxis = NULL;
 
@@ -102,35 +103,20 @@ void PlotArea::clearPlot() {
     xAxis->translate(0,+10);
     xAxis->hide();
     yAxis->hide();
-
+    myscene->setLabel(label, 0, -30);
 }
+
 void PlotArea::drawHistogram() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
     clearPlot();
-    if (data.size() == 0 ) {
-        scene()->update();
-        return;
-    }
-/*    clearData();
-    vector<int> fake;
-    fake.push_back(3);
-    fake.push_back(3);
-    fake.push_back(4);
-    fake.push_back(7);
-    fake.push_back(3);
-    fake.push_back(6);
-    fake.push_back(6);
-    fake.push_back(4);
-    data.push_back(fake);    
-*/
+    scene()->update(); // clears any artifacts in plot margins
+    if (data.size() == 0 ) return;
+    
     PlotScene* myscene = (PlotScene*) scene();
 
-    //scene()->clear();
-    int plotW = width() - 80;   //width of the view
-    int plotH = height() - 50;  //height of the view
+    int plotW = width() - 110;   //width of the view
+    int plotH = height() - 80;  //height of the view
     myscene->setSceneRect(0,0,plotW,plotH);
-
-    float axis_multiplier = 1.1; // how much longer should axes be
 
     int n = 0;
     for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
@@ -142,12 +128,11 @@ void PlotArea::drawHistogram() {
     int nbins = n < 10 ? n : 10;
     nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
     
-
     float max_val = (float) find_max_val(data);
     float min_val = (float) find_min_val(data);
 
     vector<int> density(nbins,0);
-    cerr << "nbins: " << nbins << endl;
+//    cerr << "nbins: " << nbins << endl;
     if (max_val == min_val) {
         density[0] = n;
     } else {
@@ -155,25 +140,28 @@ void PlotArea::drawHistogram() {
             for (unsigned int j = 0; j<data[i].size(); j++) {
                 int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
                 density[ bin ]++;
-    cerr << data[i][j] << "<-datum bin->" << bin<< endl;
+//    cerr << data[i][j] << "<-datum bin->" << bin<< endl;
             }
         }
     }
-    cerr << endl;
+//    cerr << endl;
 
-    for (unsigned int i = 0; i<density.size(); i++) {
-        cerr << i << " " << density[i] << endl;
-     }
+//  for (unsigned int i = 0; i<density.size(); i++) {
+//      cerr << i << " " << density[i] << endl;
+//   }
 
-    int   max_ct = max_element(density);
+    int max_ct = max_element(density);
 
     myscene->setXrange(0,nbins);
     myscene->setYrange(0,max_ct);
 
+    xAxis->setLabel("Epidemic size");
     xAxis->setRange(min_val,max_val);
     xAxis->setNumTicks(nbins);
     xAxis->forceNumTicks(true);
     xAxis->show(); 
+
+    yAxis->setLabel("Frequency");
     yAxis->setRange(0,max_ct);   
     yAxis->show(); 
 
@@ -188,6 +176,8 @@ void PlotArea::drawHistogram() {
         //cerr << "coords: " << x << " " << y << " " << w << " " << h << endl;
         myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
     }
+    //myscene->setLabel(getLabel(), 0, -30);
+    //qDebug() << "label: <" << getLabel() << ">" << endl;
 }
     
  
@@ -204,8 +194,8 @@ void PlotArea::drawEpiCurvePlot() {
     PlotScene* myscene = (PlotScene*) scene();
 
     //scene()->clear();
-    int plotW = width() - 80;   //width of the view
-    int plotH = height() - 50;  //height of the view
+    int plotW = width() - 110;   //width of the view
+    int plotH = height() - 80;  //height of the view
     myscene->setSceneRect(0,0,plotW,plotH);
 
     float axis_multiplier = 1; // how much longer should axes be
@@ -265,7 +255,8 @@ void PlotArea::drawEpiCurvePlot() {
     
     newDataCursor = data.size();
 
-    scene()->update();
+    //myscene->setLabel("asdfasdf", 0, -30);
+    myscene->update();
     //setAlignment(Qt::AlignRight);
 
 }

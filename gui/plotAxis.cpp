@@ -27,7 +27,7 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     painter->setPen(pen);
 
     float fontsize = 8;
-    QFont font("Helvetica",8);
+    QFont font("Helvetica",fontsize);
     painter->setFont(font);
 
     if (nticks == 0 ) nticks = 2;
@@ -36,7 +36,7 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     int x1 = scene()->width();
     int y1 = 0;
     int offset = 8;
-    int float_prec = 2; // precision to use when printing floats
+    int float_prec = 1; // precision to use when printing floats
     
     /*
     float range = (max-min);
@@ -63,12 +63,18 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     double iy = (double) (y1-y0)/ticks;
 
     //if ( b == 0 ) return;
+    //Check size of biggest label--is it too big, given tick spacing?
+    QFontMetrics fm = painter->fontMetrics();
 
     if ( type == 0) {            // for x-axis
         painter->drawLine(x0, y0, x1, y0);
         for (int i=0; i <= ticks; i++ ) painter->drawLine(x0+ix*i,y0-5,x0+ix*i,y0+5);
-        int decimals = force_nticks ? 2 : 0; // how many decimal digits to display
-        for (int i=0; i <= ticks; i++ ) painter->drawText(x0+ix*i,y0+10,QString::number(min+bin_width*i,'f',decimals));
+        int decimals = force_nticks ? float_prec : 0; // how many decimal digits to display
+        
+        //Is there enough room to print all labels, or should we skip some?
+        int maxLabelWidth = fm.width(QString::number(min+bin_width*(ticks-1), 'f', decimals));
+        int skip = ix > maxLabelWidth*1.6 ? 1 : 2; // print every other one if spacing is small
+        for (int i=0; i <= ticks; i += skip ) painter->drawText(x0+ix*i,y0+10,QString::number(min+bin_width*i,'f',decimals));
     }                            // for y-axis
     else if ( type == 1 ) {
         painter->drawLine(x0+offset,y0,x0+offset,y1);

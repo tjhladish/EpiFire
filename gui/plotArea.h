@@ -20,7 +20,7 @@ class PlotArea : public QGraphicsView
         void setPlotType(PlotType x) { plotType = x; }
         PlotType getPlotType() { return plotType; }
 
-        PlotArea(QWidget* mw);
+        PlotArea(QWidget* mw, QString l);
         void debugger();
 
     public slots:
@@ -30,6 +30,8 @@ class PlotArea : public QGraphicsView
         void clearPlot();
         void saveData();
         void savePicture();
+        void setLabel(QString l) {label = l;}
+        QString getLabel() {return label;}
 
     protected:
         void drawEpiCurvePlot();
@@ -42,6 +44,8 @@ class PlotArea : public QGraphicsView
         Axis* xAxis;
         Axis* yAxis;
         vector< vector<int> > data;
+        PlotScene* myscene;
+        QString label;
         
         QList< QGraphicsEllipseItem* > ellipseData;
         int newDataCursor;  // starting position of data that has never been plotted

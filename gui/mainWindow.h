@@ -50,7 +50,7 @@ class MainWindow : public QMainWindow
         void appendOutput(QString);
         void appendOutputLine(QString);
 
-        Network  * network;
+        Network* network;
         Simulator* simulator;
         QTextEdit* logEditor;
 
