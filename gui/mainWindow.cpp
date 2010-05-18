@@ -12,6 +12,8 @@ MainWindow::MainWindow() {
 
     centralWidget = new QWidget(this);
     leftBox       = new QGroupBox(this);
+    // Allow the leftBox to expand vertically, but not horizontally
+    leftBox->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding));
     rightBox      = new QGroupBox(this);
 
     network = new Network("mynetwork",false);
@@ -70,7 +72,7 @@ MainWindow::MainWindow() {
     rightLayout->addWidget(epiCurvePlot);
     rightLayout->addWidget(histPlot);
     rightBox->setLayout(rightLayout);     
-
+//rightBox->hide();
     setWindowTitle(tr("EpiFire"));
 
     createMenu();
@@ -691,7 +693,9 @@ double MainWindow::calculate_T_crit() {
     return  numerator/denominator;
 }
 
+
 void MainWindow::resizeEvent ( QResizeEvent *event ) {
+return;
     if (leftBox->width() > 100) leftBox->setMaximumWidth(leftBox->width());
     return;
 
