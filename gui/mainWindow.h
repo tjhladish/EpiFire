@@ -100,7 +100,7 @@ class MainWindow : public QMainWindow
 
         QGroupBox* mainBox;
         QGroupBox* leftBox;
-        QGroupBox* rightBox;
+        QSplitter* rightBox;
 
         QMenuBar* menuBar;
         QGroupBox* settingsGroupBox;

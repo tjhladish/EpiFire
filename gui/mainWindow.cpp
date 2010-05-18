@@ -14,7 +14,8 @@ MainWindow::MainWindow() {
     leftBox       = new QGroupBox(this);
     // Allow the leftBox to expand vertically, but not horizontally
     leftBox->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding));
-    rightBox      = new QGroupBox(this);
+    //rightBox      = new QGroupBox(this);
+    rightBox      = new QSplitter(Qt::Vertical, this);
 
     network = new Network("mynetwork",false);
     simulator = NULL;
