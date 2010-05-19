@@ -18,6 +18,7 @@ MainWindow::MainWindow() {
 
     network = new Network("mynetwork",false);
     simulator = NULL;
+    rep_ct = 0;
 
     logEditor = new QTextEdit();
     logEditor->setReadOnly(true);
@@ -57,6 +58,7 @@ MainWindow::MainWindow() {
     centralWidget->setLayout(mainLayout);
 
     setCentralWidget(centralWidget);
+    statusBar()->showMessage(generateNetMsg);
 
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
@@ -468,7 +470,10 @@ void MainWindow::clear_data() {
     
     histPlot->clearData();
     histPlot->replot();
+
+    rep_ct = 0;
     appendOutputLine("Epidemic data deleted");
+    statusBar()->showMessage(clearedDataMsg, 1000);
 }
 
 
@@ -476,6 +481,7 @@ void MainWindow::clear_network() {
     if(network) network->clear_nodes();
     updateRZero();
     appendOutputLine("Network deleted");
+    statusBar()->showMessage(clearedNetMsg, 1000);
 }
 
 
@@ -560,9 +566,17 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
         return;
     }
 
-    //appendOutputLine("Simulation running . . . ");
+    double R0 = (rzeroLine->text()).toDouble();
+    int n = network->size();
+    double I0 = (double) patient_zero_ct / n;
+    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * guessEpiSize(R0, 0);
+    cerr << "Predicted size: " << predictedSize << " " << I0 << endl;
+    setCursor(Qt::WaitCursor);
     vector<int> epi_sizes (j_max);
+    QList<QString> progress; progress << " --" << " \\" << " |" << " /";
     for ( int j = 0; j < j_max; j++) {
+        QString rep_str = QString::number(++rep_ct, 10);
+        statusBar()->showMessage(busySimMsg % progress[rep_ct % 4]);
         simulator->rand_infect(patient_zero_ct);
 
         vector<int> epi_curve;
@@ -582,12 +596,9 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
 
         int epi_size = simulator->epidemic_size();
 
-        QString status_line="Rep: ";
-        status_line.append(QString::number(j+1, 10));
-        status_line.append(", Total infected: ");
-        status_line.append(QString::number(epi_size,10));
+        QString status_line="Rep: " % rep_str % ", Total infected: " % QString::number(epi_size,10);
         appendOutputLine(status_line);
-        cout << "Rep: " << j << "    Total: " << epi_size << "\n\n";
+        cout << "Rep: " << rep_ct << "    Total: " << epi_size << "\n\n";
 
         epiCurvePlot->addData(epi_curve);
 
@@ -596,12 +607,17 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
         simulator->reset();
     }
     histPlot->addData(epi_sizes);
+    setCursor(Qt::ArrowCursor);
+    statusBar()->showMessage(simDoneMsg, 1000);
     return;
 }
 
 
 void MainWindow::generate_network() {
+    statusBar()->showMessage(busyNetMsg);
+    setCursor(Qt::WaitCursor);
     appendOutputLine("Generating network . . . ");
+
     int n = (numnodesLine->text()).toInt();
     DistType dist_type = (DistType) distBox->currentIndex();
     double param1 = (param1Line->text()).toDouble();
@@ -615,6 +631,8 @@ void MainWindow::generate_network() {
     connect_network(network, dist_type, param1, param2);
     updateRZero();
     appendOutput("Done.");
+    setCursor(Qt::ArrowCursor);
+    statusBar()->showMessage(simulateMsg);
 }
 
 
@@ -655,6 +673,16 @@ double MainWindow::calculate_T_crit() {
     return  numerator/denominator;
 }
 
+
+double MainWindow::guessEpiSize(double R0, double P0) {
+    //This calculation is based on the expected epidemic size
+    //for a mass action model. See Tildesley & Keeling (JTB, 2009).
+    double S0 = 1.0 - P0;
+    for (double p = 0.01; p <= 1.0; p += 0.01) {
+        if (S0*(1-exp(-R0 * p)) <= p) return p;
+    }
+    return 1.0;
+}
 
 double MainWindow::convertR0toT(double R0) { return R0 * calculate_T_crit(); }
 

@@ -1,5 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
+#define QT_USE_FAST_CONCATENATION
 
 #include <QtGui>
 #include <QApplication>
@@ -24,6 +25,15 @@ const QString default_network_size="10000";
 const QString default_P0="10";
 const QString default_T ="0.1";
 const QString default_infectious_pd ="5";
+
+const QString generateNetMsg = "Click Generate network to begin";
+const QString clearedNetMsg = "Network deleted";
+const QString clearedDataMsg = "All data deleted";
+const QString simulateMsg = "Click Run simulation to generate data";
+const QString saveDataMsg = "Right-click on plot to save image or data";
+const QString busyNetMsg = "Generating network topology . . .";
+const QString busySimMsg = "Running simulation";
+const QString simDoneMsg = "Simulation complete";
 
 // Forward definitions of classes
 class QMainWindow;
@@ -55,6 +65,7 @@ class MainWindow : public QMainWindow
         QTextEdit* logEditor;
 
         enum DistType  { POI, EXP, POW, URB, CON};
+        int rep_ct;
 
     public slots:
 
@@ -81,6 +92,7 @@ class MainWindow : public QMainWindow
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
         void runSimulation(int j_max, int patient_zero_ct, string RunID);
+        double guessEpiSize(double R0, double P0_frac);
 
         void makeReadonly(QLineEdit* lineEdit);
         void addStateData();
