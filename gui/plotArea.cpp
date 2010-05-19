@@ -157,7 +157,6 @@ void PlotArea::drawHistogram() {
     yAxis->preferedNumTicks(yticks);
     yAxis->calculateRange(0,max_ct);   
     yAxis->useIntLabels(true);
-    //yAxis->forceNumTicks(false);
     yAxis->show(); 
 
     myscene->setXrange(0,nbins);
@@ -165,17 +164,13 @@ void PlotArea::drawHistogram() {
 
     QPen pen(Qt::white);
     QBrush brush(Qt::red);
-    //cerr << "scenew: " << myscene->width() << endl;
     float w = (float) myscene->width()/nbins;
     for (unsigned int r = 0; r < density.size(); r++) {
         float x = myscene->toPlotX(r);
         float y = myscene->toPlotY(density[r]);
         float h = myscene->toPlotY(0) - y;
-        //cerr << "coords: " << x << " " << y << " " << w << " " << h << endl;
         myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
     }
-    //myscene->setLabel(getLabel(), 0, -30);
-    //qDebug() << "label: <" << getLabel() << ">" << endl;
 }
     
  
@@ -195,21 +190,14 @@ void PlotArea::drawEpiCurvePlot() {
 
     float max_val = (float) find_max_val(data);
     int   max_idx = find_max_idx(data);
-    //xAxis->preferedNumTicks(10);
+
     xAxis->calculateRange(0,max_idx);
     xAxis->useIntLabels(true);
-    //xAxis->forceNumTicks(false);
     xAxis->show(); 
-    //yAxis->preferedNumTicks(10);
+    
     yAxis->calculateRange(0,max_val);   
     yAxis->useIntLabels(true);
-    //yAxis->forceNumTicks(false);
     yAxis->show(); 
-
-    //myscene->setXrange(0,max_idx);
-    //myscene->setYrange(0,max_val);
-//cerr << "requested, received x max : " << max_idx << " " << xAxis->getMax() endl;
-//cerr << "requested, received y max : " << max_val << " " << yAxis->getMax() endl;
 
     myscene->setXrange(0,xAxis->getMax());
     myscene->setYrange(0,yAxis->getMax());
@@ -257,10 +245,8 @@ void PlotArea::drawEpiCurvePlot() {
     
     newDataCursor = data.size();
 
-    //myscene->setLabel("asdfasdf", 0, -30);
     myscene->update();
     //setAlignment(Qt::AlignRight);
-
 }
 
 void PlotArea::drawNodeStatePlot() {
@@ -276,32 +262,24 @@ void PlotArea::drawNodeStatePlot() {
     int W = width();
     int H = height();
 
-    //cerr << "1width: " << (int) width() << " height: " << (int) height() << endl;
     scene()->setSceneRect(0,0,W-20,H-20); //set scene to parent widget width x height
 
-    //QImage image(scene()->width(),scene()->height(),QImage::Format_ARGB32);
     QImage image(data.size(),data[0].size(),QImage::Format_ARGB32);
     image.fill(Qt::white);
     int w = width();
 
-    cerr << "HM" << data.size() << endl;
-
     for( unsigned int r=0; r < data.size(); r++) {
         for( unsigned int c=0; c < data[r].size(); c++ ) {
-        //for( unsigned int c=0; c < data[r].size()/2 && c < width; c++ ) {
              int val = data[r][c];
              
              if (val == 0) {}
              else if (val == -1) { val = 2; }
              else { val = 1;}
 
-             //cerr << "HMM" << w << " " <<r << " " << c << " " << val << endl;
              if (val > 2) cerr << "Node " << c << " has nonsense state " << val << endl;
              value = colors[ val % 3 ];
              image.setPixel(r, c, value);
-             //cerr << val;
         }
-        //cerr << endl;
     }
     
     image = image.scaled(width()-20, height()-20);

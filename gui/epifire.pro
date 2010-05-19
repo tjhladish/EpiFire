@@ -1,5 +1,4 @@
-##include( ./epifire.pri )
-CONFIG += qt thread warn_off #debug 
+CONFIG += qt thread warn_off 
 
 HEADERS     = mainWindow.h \
              plotArea.h \
@@ -13,9 +12,6 @@ HEADERS     = mainWindow.h \
                plotArea.cpp \
                plotAxis.cpp \
                plotPoint.cpp 
-
-INCLUDEPATH += /usr/include/qwt-qt4
-#LIBS += -lqwt-qt4
 
  # install
  target.path = ./

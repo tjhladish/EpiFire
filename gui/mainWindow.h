@@ -72,7 +72,6 @@ class MainWindow : public QMainWindow
         void saveEdgeList();
 
     protected:
-        void resizeEvent ( QResizeEvent *event );
 
     private:
 
@@ -81,8 +80,6 @@ class MainWindow : public QMainWindow
         void createNetworkSettingsBox();
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
-        //void createGridGroupBox();
-        //void createFormGroupBox();
         void runSimulation(int j_max, int patient_zero_ct, string RunID);
 
         void makeReadonly(QLineEdit* lineEdit);

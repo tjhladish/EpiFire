@@ -14,7 +14,6 @@ MainWindow::MainWindow() {
     leftBox       = new QGroupBox(this);
     // Allow the leftBox to expand vertically, but not horizontally
     leftBox->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding));
-    //rightBox      = new QGroupBox(this);
     rightBox      = new QSplitter(Qt::Vertical, this);
 
     network = new Network("mynetwork",false);
@@ -25,15 +24,12 @@ MainWindow::MainWindow() {
     logEditor->setPlainText(tr("No output yet"));
 
     epiCurvePlot = new PlotArea(this, "Epidemic curves");
-//    epiCurvePlot->setLabel("Epidemic curves");
     epiCurvePlot->setPlotType(PlotArea::EPICURVE);
 
     statePlot = new PlotArea(this, "Node state evolution");
-//    statePlot->setLabel("Node state evolution");
     statePlot->setPlotType(PlotArea::STATEPLOT);
 
     histPlot = new PlotArea(this, "Histogram of epidemic sizes");
-//    histPlot->setLabel("Histogram of epidemic sizes");
     histPlot->setPlotType(PlotArea::HISTPLOT);
     
     QHBoxLayout *mainLayout = new QHBoxLayout;
@@ -48,35 +44,10 @@ MainWindow::MainWindow() {
     leftBox->setLayout(leftLayout);
     leftBox->setFlat(true);
 
-    //centralWidget->setMaximumHeight(700);
-    //centralWidget->setMaximumWidth(500);
-    //QSizePolicy* sizePolicy = new QSizePolicy();
-
-
-    //dockWidget1 = new QWidget("Node State Plot", this, Qt::Widget);
-    //dockWidget1->setWidget(statePlot);
-    //dockWidget1->setFloating(true);
-    //dockWidget1->setMinimumSize(600,228);
-    //dockWidget1->setAllowedAreas(Qt::AllDockWidgetAreas);
-
-    //dockWidget2 = new QWidget("Epidemic Curve Plot", this, Qt::Widget);
-    //dockWidget2->setWidget(epiCurvePlot);
-    //dockWidget2->setFloating(true);
-    //dockWidget2->setMinimumSize(600,300);
-    //dockWidget2->setAllowedAreas(Qt::AllDockWidgetAreas);
-
-
-    //addDockWidget(Qt::RightDockWidgetArea,dockWidget1);
-    //addDockWidget(Qt::RightDockWidgetArea,dockWidget2);
-
-    //dockWidget1->show();
-    //dockWidget2->show();
-
     rightLayout->addWidget(statePlot);
     rightLayout->addWidget(epiCurvePlot);
     rightLayout->addWidget(histPlot);
     rightBox->setLayout(rightLayout);     
-//rightBox->hide();
     setWindowTitle(tr("EpiFire"));
 
     createMenu();
@@ -86,12 +57,8 @@ MainWindow::MainWindow() {
     centralWidget->setLayout(mainLayout);
 
     setCentralWidget(centralWidget);
-    //leftBox->sizePolicy().setHorizontalPolicy(QSizePolicy::Fixed);
-    //rightBox->sizePolicy().setHorizontalPolicy(QSizePolicy::Ignored);
-   // dockWidget2->sizePolicy().setHorizontalPolicy(QSizePolicy::Ignored);
 
-
-    probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
+    //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
 
 void MainWindow::createMenu() {
@@ -266,9 +233,6 @@ void MainWindow::createSimulatorSettingsBox() {
     layout->addWidget(retainDataCheckBox,6,1,2,2);
 
     simulatorSettingsGroupBox->setLayout(layout);
-//cerr << "sim row height: "  << layout->rowPreferredHeight(2) << endl;
-cerr << "sim row spacing: " << layout->verticalSpacing() << endl;
-//cerr << "sim row stretch: " << layout->rowStretchFactor(2) << endl;
 }
 
 
@@ -404,7 +368,6 @@ void MainWindow::changeNetSource(int source) {
         netfileLabel->show();
         netfileLine->show();
         makeReadonly(netfileLine);
-        //clearnetButton->show();
         loadnetButton->show();
         generatenetButton->hide();
         numnodesLine->setText("0");
@@ -415,7 +378,6 @@ void MainWindow::changeNetSource(int source) {
     else {
         netfileLabel->hide();
         netfileLine->hide();
-        //clearnetButton->show();
         loadnetButton->hide();
         generatenetButton->show();
 
@@ -486,7 +448,6 @@ void MainWindow::changeSimType(int type) {
         transLine->setText( QString::number( convertTtoTCB(T, d) ) );
         infectiousPeriodLabel->show();
         infectiousPeriodLine->show();
-        //updateRZero();
     
     } else { // Percolation
         double TCB = (transLine->text()).toDouble();
@@ -494,7 +455,6 @@ void MainWindow::changeSimType(int type) {
         transLine->setText( QString::number( convertTCBtoT(TCB, d) ) );
         infectiousPeriodLabel->hide();
         infectiousPeriodLine->hide();
-        //updateRZero();
     }
 }
 
@@ -633,8 +593,6 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
 
         epi_sizes[j] = epi_size;
 
-        cout << RunID << " " << j << " " << simulator->epidemic_size() << " ";
-
         simulator->reset();
     }
     histPlot->addData(epi_sizes);
@@ -696,41 +654,6 @@ double MainWindow::calculate_T_crit() {
     }
     return  numerator/denominator;
 }
-
-
-void MainWindow::resizeEvent ( QResizeEvent *event ) {
-return;
-    if (leftBox->width() > 100) leftBox->setMaximumWidth(leftBox->width());
-    return;
-
-    QSize old = event->oldSize();   //-1,-1
-    QSize size = event->size();     //770,720
-    qDebug() << size << " " << old;
-
-
-    QSize cSize = centralWidget->size();    //
-    //centralWidget->setMaximumSize(700,centralWidget->height());
-    dockWidget1->setMaximumSize( size.width()-cSize.width(), dockWidget1->height()-10 );
-    dockWidget2->setMaximumSize( size.width()-cSize.width(), dockWidget2->height()-10 );
-    //dockWidget1->setMinimumSize( size.width()-cSize.width()-10, dockWidget1->height()-10 );
-    //dockWidget2->setMinimumSize( size.width()-cSize.width()-10, dockWidget2->height()-10 );
-    dockWidget1->setMinimumSize( 200, dockWidget1->height()-10 );
-    dockWidget2->setMinimumSize( 200, dockWidget2->height()-10 );
-    
-}
-
-/*
-QSize(770, 720)   QSize(-1, -1) 
-QSize(771, 721)   QSize(770, 720) 
-QSize(774, 725)   QSize(771, 721) 
-QSize(774, 726)   QSize(774, 725) 
-QSize(774, 727)   QSize(774, 726) 
-QSize(774, 731)   QSize(774, 727) 
-QSize(781, 752)   QSize(774, 731) 
-QSize(782, 761)   QSize(781, 752) 
-QSize(791, 782)   QSize(782, 761) 
-QSize(793, 783)   QSize(791, 782) 
-*/
 
 
 double MainWindow::convertR0toT(double R0) { return R0 * calculate_T_crit(); }

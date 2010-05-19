@@ -33,7 +33,6 @@ void Axis::calculateRange(double minPref, double maxPref) {
 
     setNumTicks( ceil(range/bin_width) );
     setRange(minPref, minPref + nticks*bin_width);
-    //forceNumTicks(true);
 }
 
 void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
@@ -54,22 +53,12 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
     int offset = 8;
     int float_prec = 1; // precision to use when printing floats
     
-  
-//    if (force_nticks) {
-//cerr << "forcing ticks\n";
-        double range = max - min;
-        double bin_width = range/nticks;
-        int ticks = nticks;
-//    } else {
-//cerr << "not forcing ticks\n";
-        /*
-        range = max-min;
-        bin_width = (int) range/nticks;
-        ticks = ceil(range/bin_width);
-     */
-//   }
-    cerr << "min\tmax\trange\tnticks\tticks\tbin_width\n";
-    cerr << min << "\t" << max << "\t" << range << "\t" << nticks << "\t" << ticks << "\t" << bin_width << endl;
+    double range = max - min;
+    double bin_width = range/nticks;
+    int ticks = nticks;
+
+    //cerr << "min\tmax\trange\tnticks\tticks\tbin_width\n";
+    //cerr << min << "\t" << max << "\t" << range << "\t" << nticks << "\t" << ticks << "\t" << bin_width << endl;
     double ix = (double) (x1-x0)/ticks; // in scene coordinates
     double iy = (double) (y1-y0)/ticks; //
 
@@ -112,6 +101,4 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
         for (int i=0; i <= ticks; i++ )
             painter->drawLine(offset+x0-5,y0+iy*i,x1,y0+iy*i);
     }
-    //painter->drawText(posX-10,posY-3,QString( eics[i]->sampleName.c_str() ));
-    //painter->setRenderHint((QPainter::RenderHints) savedHints);
 }

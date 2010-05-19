@@ -1,14 +1,12 @@
 #include "plotPoint.h"
 #include "plotScene.h"
 
-QRectF Point::boundingRect() const
-{
+QRectF Point::boundingRect() const {
     return(QRectF(-r,-r,2*r,2*r));             
 }
 
 
 void Point::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
-    //painter->setRenderHint(QPainter::Antialiasing, false);
 
     painter->setBrush(brush);
     painter->setPen(Qt::NoPen);
