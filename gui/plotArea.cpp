@@ -95,8 +95,9 @@ void PlotArea::debugger() { // makes it easier to see what's going on with coord
 
 void PlotArea::clearPlot() { 
     scene()->clear();
-    xAxis = new Axis(0,0.0,1.0,10);
-    yAxis = new Axis(1,0.0,1.0,10);
+    // Args: axis_type, min, max, nticks, force_nticks, use_int_labels
+    xAxis = new Axis(0, 0.0, 1.0, 10, false, false);
+    yAxis = new Axis(1, 0.0, 1.0, 10, false, false);
     scene()->addItem(xAxis);
     scene()->addItem(yAxis);
     yAxis->translate(-40,0);
@@ -132,7 +133,6 @@ void PlotArea::drawHistogram() {
     float min_val = (float) find_min_val(data);
 
     vector<int> density(nbins,0);
-//    cerr << "nbins: " << nbins << endl;
     if (max_val == min_val) {
         density[0] = n;
     } else {
@@ -140,30 +140,28 @@ void PlotArea::drawHistogram() {
             for (unsigned int j = 0; j<data[i].size(); j++) {
                 int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
                 density[ bin ]++;
-//    cerr << data[i][j] << "<-datum bin->" << bin<< endl;
             }
         }
     }
-//    cerr << endl;
-
-//  for (unsigned int i = 0; i<density.size(); i++) {
-//      cerr << i << " " << density[i] << endl;
-//   }
 
     int max_ct = max_element(density);
 
-    myscene->setXrange(0,nbins);
-    myscene->setYrange(0,max_ct);
-
     xAxis->setLabel("Epidemic size");
-    xAxis->setRange(min_val,max_val);
     xAxis->setNumTicks(nbins);
+    xAxis->setRange(min_val,max_val);
     xAxis->forceNumTicks(true);
     xAxis->show(); 
 
     yAxis->setLabel("Frequency");
-    yAxis->setRange(0,max_ct);   
+    int yticks = max_ct > 10 ? 10 : max_ct;
+    yAxis->preferedNumTicks(yticks);
+    yAxis->calculateRange(0,max_ct);   
+    yAxis->useIntLabels(true);
+    //yAxis->forceNumTicks(false);
     yAxis->show(); 
+
+    myscene->setXrange(0,nbins);
+    myscene->setYrange(0,yAxis->getMax());
 
     QPen pen(Qt::white);
     QBrush brush(Qt::red);
@@ -183,8 +181,6 @@ void PlotArea::drawHistogram() {
  
 void PlotArea::drawEpiCurvePlot() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
-//clearData();
-//cerr << "Data cleared for epi curve plot\n";
     if (data.size() == 0 ) {
         clearPlot();
         scene()->update();
@@ -193,24 +189,30 @@ void PlotArea::drawEpiCurvePlot() {
 
     PlotScene* myscene = (PlotScene*) scene();
 
-    //scene()->clear();
     int plotW = width() - 110;   //width of the view
     int plotH = height() - 80;  //height of the view
     myscene->setSceneRect(0,0,plotW,plotH);
 
-    float axis_multiplier = 1; // how much longer should axes be
-    float max_val = (float) find_max_val(data) * axis_multiplier;
-    int   max_idx = find_max_idx(data) * axis_multiplier;
-
-
-    myscene->setXrange(0,max_idx*axis_multiplier);
-    myscene->setYrange(0,max_val*axis_multiplier);
-
-
-    xAxis->setRange(0,max_idx*axis_multiplier);
+    float max_val = (float) find_max_val(data);
+    int   max_idx = find_max_idx(data);
+    //xAxis->preferedNumTicks(10);
+    xAxis->calculateRange(0,max_idx);
+    xAxis->useIntLabels(true);
+    //xAxis->forceNumTicks(false);
     xAxis->show(); 
-    yAxis->setRange(0,max_val*axis_multiplier);   
+    //yAxis->preferedNumTicks(10);
+    yAxis->calculateRange(0,max_val);   
+    yAxis->useIntLabels(true);
+    //yAxis->forceNumTicks(false);
     yAxis->show(); 
+
+    //myscene->setXrange(0,max_idx);
+    //myscene->setYrange(0,max_val);
+//cerr << "requested, received x max : " << max_idx << " " << xAxis->getMax() endl;
+//cerr << "requested, received y max : " << max_val << " " << yAxis->getMax() endl;
+
+    myscene->setXrange(0,xAxis->getMax());
+    myscene->setYrange(0,yAxis->getMax());
 
     float r = 3;                 // radius of data points
     int margin = 35;

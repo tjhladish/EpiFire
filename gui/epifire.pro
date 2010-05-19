@@ -1,5 +1,5 @@
 ##include( ./epifire.pri )
-CONFIG += qt thread warn_off debug 
+CONFIG += qt thread warn_off #debug 
 
 HEADERS     = mainWindow.h \
              plotArea.h \
