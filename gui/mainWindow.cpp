@@ -60,6 +60,8 @@ MainWindow::MainWindow() {
     setCentralWidget(centralWidget);
     statusBar()->showMessage(generateNetMsg);
 
+    simProgress = new QProgressDialog("Simulation running . . .", "Cancel", 0, 100, this);
+    simProgress->setWindowModality(Qt::WindowModal);
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
 
@@ -570,10 +572,14 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     int n = network->size();
     double I0 = (double) patient_zero_ct / n;
     double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * guessEpiSize(R0, 0);
+    int currentSize = patient_zero_ct;
     cerr << "Predicted size: " << predictedSize << " " << I0 << endl;
     setCursor(Qt::WaitCursor);
+    bool abort = false;
+
     vector<int> epi_sizes (j_max);
     QList<QString> progress; progress << " --" << " \\" << " |" << " /";
+    //time_t start;
     for ( int j = 0; j < j_max; j++) {
         QString rep_str = QString::number(++rep_ct, 10);
         statusBar()->showMessage(busySimMsg % progress[rep_ct % 4]);
@@ -587,13 +593,21 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
             statePlot->replot(); // draws a white background when data is cleared
             addStateData();
         }
-             
-        while (simulator->count_infected() > 0) {
-            simulator->step_simulation();
-            epi_curve.push_back(simulator->count_infected());
-            if (j == j_max - 1) addStateData();
-        }
+        //start = time(NULL);     
 
+        while (simulator->count_infected() > 0 && ! abort) {
+            cerr << "Cancelled? " << simProgress->wasCanceled() << endl;
+            simProgress->setValue(percent_complete(currentSize, predictedSize));
+            if ( ! simProgress->wasCanceled()) {
+                //cerr << percent_complete(currentSize, predictedSize) << " " << difftime(time(NULL), start) << endl;
+                simulator->step_simulation();
+                epi_curve.push_back(simulator->count_infected());
+                currentSize = simulator->epidemic_size();
+                if (j == j_max - 1) addStateData();
+            } else { abort = true; }
+        }
+        simProgress->setValue(100);
+        //cerr << "100\n";
         int epi_size = simulator->epidemic_size();
 
         QString status_line="Rep: " % rep_str % ", Total infected: " % QString::number(epi_size,10);
@@ -696,4 +710,4 @@ double MainWindow::convertTtoTCB (double T, int d) { return 1.0 - pow(1.0 - T, 1
 double MainWindow::convertTCBtoT (double TCB, int d) { return 1.0 - pow(1.0 - TCB, d); }
 
 
-
+int MainWindow::percent_complete(int current, double predicted) { return current > predicted ? 99 : (int) (100 * current/predicted); }

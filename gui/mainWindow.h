@@ -134,6 +134,7 @@ class MainWindow : public QMainWindow
         double convertTtoR0(double T);
         double convertTtoTCB (double T, int d);
         double convertTCBtoT (double TCB, int d);
+        int percent_complete(int current, double predicted);
 
 
         // Define textboxes and other main menu items
@@ -161,5 +162,6 @@ class MainWindow : public QMainWindow
         QMenu* plotMenu;
         QAction* exitAction;
         QAction* openAction;
+        QProgressDialog* simProgress;
 };
 #endif
