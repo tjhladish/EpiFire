@@ -571,10 +571,10 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     double R0 = (rzeroLine->text()).toDouble();
     int n = network->size();
     double I0 = (double) patient_zero_ct / n;
-    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * guessEpiSize(R0, 0);
+    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * guessEpiSize(R0, 0, 0.5);
     int currentSize = patient_zero_ct;
-    cerr << "Predicted size: " << predictedSize << " " << I0 << endl;
-    setCursor(Qt::WaitCursor);
+    cerr << "Predicted (itr, rec, bin)" << predictedSize << " " << I0 << endl;
+    setCursor(Qt::WaitCursor); 
     bool abort = false;
 
     vector<int> epi_sizes (j_max);
@@ -595,8 +595,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
         }
         //start = time(NULL);     
 
-        while (simulator->count_infected() > 0 && ! abort) {
-            cerr << "Cancelled? " << simProgress->wasCanceled() << endl;
+        while (simulator->count_infected() > 0 ) {
             simProgress->setValue(percent_complete(currentSize, predictedSize));
             if ( ! simProgress->wasCanceled()) {
                 //cerr << percent_complete(currentSize, predictedSize) << " " << difftime(time(NULL), start) << endl;
@@ -687,16 +686,48 @@ double MainWindow::calculate_T_crit() {
     return  numerator/denominator;
 }
 
-
+/*
 double MainWindow::guessEpiSize(double R0, double P0) {
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
     double S0 = 1.0 - P0;
     for (double p = 0.01; p <= 1.0; p += 0.01) {
+        cerr << "i: " << p << endl;
         if (S0*(1-exp(-R0 * p)) <= p) return p;
     }
     return 1.0;
+}*/
+
+
+double MainWindow::guessEpiSize(double R0, double P0, double guess) {
+    //This calculation is based on the expected epidemic size
+    //for a mass action model. See Tildesley & Keeling (JTB, 2009).
+    cerr << "r: " << guess << endl;
+    double S0 = 1.0 - P0;
+    double p = S0*(1-exp(-R0 * guess));
+    if (fabs(p-guess) < 0.0001) {return p;}
+    else return guessEpiSize(R0, P0, p);
 }
+
+/*
+double MainWindow::guessEpiSizeB(double R0, double P0) {
+    //This calculation is based on the expected epidemic size
+    //for a mass action model. See Tildesley & Keeling (JTB, 2009).
+    cerr << "b" << endl;
+    double guess = 0.5;
+    double S0 = 1.0 - P0;
+    for (int i = 0; i < 10; i++) {
+        cerr << "b: " << guess << endl;
+        double p = S0*(1-exp(-R0 * guess));
+        if (guess < p) {
+            guess += 1.0/pow(2, i+2);
+        } else if (guess > p) {
+            guess -= 1.0/pow(2, i+2);
+        }
+    }
+    return guess;
+}
+*/
 
 double MainWindow::convertR0toT(double R0) { return R0 * calculate_T_crit(); }
 

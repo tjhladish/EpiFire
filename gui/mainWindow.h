@@ -92,7 +92,7 @@ class MainWindow : public QMainWindow
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
         void runSimulation(int j_max, int patient_zero_ct, string RunID);
-        double guessEpiSize(double R0, double P0_frac);
+        double guessEpiSize(double R0, double P0_frac, double guess);
 
         void makeReadonly(QLineEdit* lineEdit);
         void addStateData();
