@@ -632,7 +632,10 @@ void MainWindow::showGraphWidget() {
     graphWidget->clear();
 
     vector<Edge*> edges = network->get_edges();
+    map<Edge*, bool> seen;
     for( int i=0; i < edges.size(); i++ ) {
+        if (seen.count(edges[i]->get_complement())) continue;
+        seen[edges[i]] = true;
         int id1 = edges[i]->get_start()->get_id();
         int id2 = edges[i]->get_end()->get_id();
         string name1 = QString::number(id1).toStdString();
@@ -645,7 +648,6 @@ void MainWindow::showGraphWidget() {
         cerr << n2->isVisible() << endl;
         GEdge* e = graphWidget->addGEdge(n1,n2,"edgeTag",0);
     }
-
     graphWidget->setLayoutAlgorithm(GraphWidget::Circular);
     graphWidget->newLayout();
     graphWidget->show();

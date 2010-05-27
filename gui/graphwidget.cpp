@@ -280,17 +280,6 @@ void GraphWidget::resetZoom() {
 
 	centerX /= itemCount;
 	centerY /= itemCount;
-	    
-	/*
-	float sceneRectWidth=width();
-	if ( sceneRectWidth < 100 )  sceneRectWidth=100;
-	float sceneRectHeight= sceneRectWidth* (maxY-minY)/(maxX-minX);
-
-	//ratio 
-	float Rhw = (maxY-minY)/(maxX-minX);
-	float W = 	sceneRectWidth;
-	float H  =  sceneRectWidth*Rhw;
-	*/
 
 	float scale=1;
 	float W = maxX-minX;
@@ -328,8 +317,51 @@ void GraphWidget::resetZoom() {
 void GraphWidget::newLayout() {
 	cerr << "newLayout() " << endl;
 	clearLayout();
-	layoutOGDF();
+//	layoutOGDF();
+    randomLayout();
 	resetZoom();
+}
+
+void GraphWidget::randomLayout() { 
+
+    int W=300; int H=300;
+    scene()->setSceneRect(-W/2,-H/2,W,H);
+
+    fitInView(sceneRect(),Qt::KeepAspectRatio);
+    foreach(GNode* n1, nodelist ) {
+        float x = ((float) rand())/RAND_MAX*W;
+        float y = ((float) rand())/RAND_MAX*H;
+        n1->setPos(x,y);
+    }
+
+    for(int itr=0; itr<50; itr++ ) {
+        foreach(GNode* n1, nodelist ) {
+            //attration                                      n1=><=n2 <--->  n3 
+            float aX=0; float aY=0;
+            foreach (GEdge* e, n1->edges() ) {
+                GNode* other = e->destGNode(); if(other == n1) other = e->sourceGNode();
+                aX += (other->pos().x() - n1->pos().x()) * 0.1;
+                aY += (other->pos().y() - n1->pos().y()) * 0.1;
+            }
+
+            float rX=0; float rY=0;
+            foreach(GNode* n2, nodelist ) {
+                if (n1 == n2) continue;
+                float distX = n1->pos().x() - n2->pos().x();
+                float distY = n1->pos().y() - n2->pos().y();
+                distX = distX == 0 ? 0.1 : distX;                
+                distY = distY == 0 ? 0.1 : distY;                
+                rX = distX > 0 ? rX + 3/(distX*distX) : rX - 3/(distX*distX);
+                rY = distY > 0 ? rY + 3/(distY*distY) : rY - 3/(distY*distY);
+            }
+
+        
+            float newX = n1->pos().x() + aX + rX;
+            float newY = n1->pos().y() + aY + rY;
+            n1->setPos( newX, newY);
+        }
+    }
+   // fitInView(sceneRect(),Qt::KeepAspectRatio);
 }
 
 void GraphWidget::updateLayout() {

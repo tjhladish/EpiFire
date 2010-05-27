@@ -92,6 +92,7 @@ public slots:
 
 	void dump();
     void layoutOGDF();
+    void randomLayout();
     void updateLayout();
     void newLayout();
 	void adjustLayout();
