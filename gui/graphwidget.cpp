@@ -329,7 +329,7 @@ float len(vector<float> vec) { return sqrt(vec[0]*vec[0] + vec[1]*vec[1]); }
 float attraction (float d, float k) { return d*d/k; }
 float repulsion (float d, float k)  { return k*k/d; }
 float cool (float temp, float initial_temp, int rep_max) { 
-    temp -= initiap_temp / rep_max;
+    temp -= initial_temp / rep_max;
     return temp < 0 ? 0 : temp;
 }
 
