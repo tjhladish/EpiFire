@@ -8,6 +8,7 @@
 #include <QSizePolicy>
 
 #include "plotArea.h"
+#include "graphwidget.h"
 #include "../src/Network.h"
 #include "../src/Simulator.h";
 #include "../src/Percolation_Sim.h"
@@ -49,6 +50,7 @@ class QTextEdit;
 class QComboBox;
 class QCheckBox;
 class PlotArea;
+class GraphWidget;
 
 //Define public and private functions and slots for 'MainWindow' class
 class MainWindow : public QMainWindow
@@ -62,6 +64,7 @@ class MainWindow : public QMainWindow
 
         Network* network;
         Simulator* simulator;
+        GraphWidget* graphWidget;
         QTextEdit* logEditor;
 
         enum DistType  { POI, EXP, POW, URB, CON};
@@ -81,6 +84,7 @@ class MainWindow : public QMainWindow
         void generate_network();
         void connect_network (Network* net, DistType dist, double param1, double param2);
         void saveEdgeList();
+        void showGraphWidget();
 
     protected:
 
@@ -122,11 +126,15 @@ class MainWindow : public QMainWindow
         QComboBox* simBox;
 
         QCheckBox* retainDataCheckBox;
-
-        QPushButton* clearnetButton;
-        QPushButton* loadnetButton;
-        QPushButton* generatenetButton;
-
+    
+        QPushButton* clearNetButton;
+        QPushButton* defaultSettingsButton;
+        QPushButton* loadNetButton;
+        QPushButton* generateNetButton;
+        QPushButton* clearDataButton;
+        QPushButton* helpButton;
+        QPushButton* runSimulationButton;
+     
         QMainWindowButtonBox* buttonBox;
 
         double calculate_T_crit();

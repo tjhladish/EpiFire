@@ -18,6 +18,7 @@ MainWindow::MainWindow() {
 
     network = new Network("mynetwork",false);
     simulator = NULL;
+    graphWidget = new GraphWidget();
     rep_ct = 0;
 
     logEditor = new QTextEdit();
@@ -92,7 +93,10 @@ void MainWindow::createMenu() {
     QMenu* plotMenu = new QMenu(tr("&Plot"), this);
     QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
     QAction* showStatePlot = plotMenu->addAction("Show state plot");
+    QAction* showGraphWidget = plotMenu->addAction("Show graph Widget");
 
+
+    connect(showGraphWidget, SIGNAL(triggered()), this, SLOT(showGraphWidget()));
     //connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
     //connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
     
@@ -244,41 +248,40 @@ void MainWindow::createControlButtonsBox() {
 //Creates the horizontal control box at the bottom of the interface
 
     controlButtonsGroupBox = new QGroupBox(tr("Step 3: Profit!"));
-    QGridLayout *layout = new QGridLayout;
+    QGridLayout *layout    = new QGridLayout;
     
-    int rows = 2;
-    int cols = 3;
-    QPushButton* button[rows][cols];
+    clearNetButton = new QPushButton("Clear Network");
+    connect(clearNetButton, SIGNAL(clicked()), this, SLOT(clear_network()));
+    layout->addWidget(clearNetButton, 0, 0);
+    clearNetButton->setEnabled(false);
     
-    button[0][0] = new QPushButton("Clear Network");
-    connect(button[0][0], SIGNAL(clicked()), this, SLOT(clear_network()));
-    
-    button[0][1] = new QPushButton("Default Settings");
-    connect(button[0][1], SIGNAL(clicked()), this, SLOT(defaultSettings()));
+    defaultSettingsButton = new QPushButton("Default Settings");
+    connect(defaultSettingsButton, SIGNAL(clicked()), this, SLOT(defaultSettings()));
+    layout->addWidget(defaultSettingsButton, 0, 1);
 
-    loadnetButton     = new QPushButton("Import Edge List");
-    connect(loadnetButton,     SIGNAL(clicked()), this, SLOT(readEdgeList()));
+    loadNetButton     = new QPushButton("Import Edge List");
+    connect(loadNetButton,     SIGNAL(clicked()), this, SLOT(readEdgeList()));
+    layout->addWidget(loadNetButton, 0, 2);
 
-    generatenetButton = new QPushButton("Generate Network");
-    button[0][2] = generatenetButton;
-    connect(generatenetButton, SIGNAL(clicked()), this, SLOT(generate_network()));
+    generateNetButton = new QPushButton("Generate Network");
+    connect(generateNetButton, SIGNAL(clicked()), this, SLOT(generate_network()));
+    layout->addWidget(generateNetButton, 0, 2);
 
-    button[1][0] = new QPushButton("Clear data");
-    connect(button[1][0], SIGNAL(clicked()), this, SLOT(clear_data()));
+    clearDataButton = new QPushButton("Clear data");
+    connect(clearDataButton, SIGNAL(clicked()), this, SLOT(clear_data()));
+    layout->addWidget(clearDataButton, 1, 0);
+    clearDataButton->setEnabled(false);
 
-    button[1][1] = new QPushButton("Help");
-    //connect(button[0][1], SIGNAL(clicked()), this, SLOT(open_help()));
+    helpButton = new QPushButton("Help");
+    //connect(helpButton, SIGNAL(clicked()), this, SLOT(open_help()));
+    layout->addWidget(helpButton, 1, 1);
 
-    button[1][2] = new QPushButton("Run &Simulation");
-    connect(button[1][2], SIGNAL(clicked()), this, SLOT(simulatorWrapper()));
-    //buttons[0]->setDefault(true);
+    runSimulationButton = new QPushButton("Run &Simulation");
+    connect(runSimulationButton, SIGNAL(clicked()), this, SLOT(simulatorWrapper()));
+    runSimulationButton->setDefault(true);
+    layout->addWidget(runSimulationButton, 1, 2);
+    runSimulationButton->setEnabled(false);
 
-    for (int r = 0; r < rows; r++) {
-        for (int c = 0; c < cols; c++) {
-            layout->addWidget(button[r][c], r, c);
-        }
-    }
-    layout->addWidget(loadnetButton, 0, 2);
     controlButtonsGroupBox->setLayout(layout);
 }
 
@@ -372,8 +375,8 @@ void MainWindow::changeNetSource(int source) {
         netfileLabel->show();
         netfileLine->show();
         makeReadonly(netfileLine);
-        loadnetButton->show();
-        generatenetButton->hide();
+        loadNetButton->show();
+        generateNetButton->hide();
         numnodesLine->setText("0");
         distBox->hide();
         distLabel->hide();
@@ -382,8 +385,8 @@ void MainWindow::changeNetSource(int source) {
     else {
         netfileLabel->hide();
         netfileLine->hide();
-        loadnetButton->hide();
-        generatenetButton->show();
+        loadNetButton->hide();
+        generateNetButton->show();
 
         distBox->show();
         distLabel->show();
@@ -624,6 +627,39 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     statusBar()->showMessage(simDoneMsg, 1000);
     return;
 }
+
+void MainWindow::showGraphWidget() { 
+    graphWidget->clear();
+
+    vector<Edge*> edges = network->get_edges();
+    for( int i=0; i < edges.size(); i++ ) {
+        int id1 = edges[i]->get_start()->get_id();
+        int id2 = edges[i]->get_end()->get_id();
+        string name1 = QString::number(id1).toStdString();
+        string name2 = QString::number(id2).toStdString();
+        GNode* n1 = graphWidget->addGNode(name1,0);
+        GNode* n2 = graphWidget->addGNode(name2,0);
+        cerr << id1 << " " << n1 << endl;
+        cerr << id2 << " " << n2 << endl;
+        cerr << n1->isVisible() << endl;
+        cerr << n2->isVisible() << endl;
+        GEdge* e = graphWidget->addGEdge(n1,n2,"edgeTag",0);
+    }
+
+    graphWidget->setLayoutAlgorithm(GraphWidget::Circular);
+    graphWidget->newLayout();
+    graphWidget->show();
+}
+
+/*
+#0  0xb7ccffe7 in QGraphicsItem::isVisible() const () from /usr/lib/libQtGui.so.4
+#1  0x0807857a in GEdge::setSourceGNode (this=0x8512360, node=0x84d5b50) at edge.cpp:24
+#2  0x0807a1e8 in GraphWidget::addGEdge (this=0x813f3c0, n1=0x84d5b50, n2=0x8508600, note=..., data=0x0) at graphwidget.cpp:98
+#3  0x080590ce in MainWindow::showGraphWidget (this=0xbffff240) at mainWindow.cpp:640
+#4  0x080808cf in MainWindow::qt_metacall (this=0xbffff240, _c=QMetaObject::InvokeMetaMethod, _id=12, _a=0xbfffe248) at moc_mainWindow.cpp:104
+#5  0xb7427c9a in QMetaObject::metacall(QObject*, QMetaObject::Call, int, void**) () from /usr/lib/libQtCore.so.4
+*/
+
 
 
 void MainWindow::generate_network() {
