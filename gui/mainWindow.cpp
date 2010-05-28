@@ -677,37 +677,41 @@ void MainWindow::generate_network() {
     network = new Network("mynetwork", false);
     network->populate(n);
                                  // connect network using the parameters above
-    connect_network(network, dist_type, param1, param2);
-    updateRZero();
-    appendOutput("Done.");
-    setCursor(Qt::ArrowCursor);
-    statusBar()->showMessage(simulateMsg);
+    if ( connect_network(network, dist_type, param1, param2) ) {
+        updateRZero();
+        appendOutput("Done.");
+        setCursor(Qt::ArrowCursor);
+        statusBar()->showMessage(simulateMsg);
+    } else {
+        appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using the specified parameters."); 
+        setCursor(Qt::ArrowCursor);
+        statusBar()->showMessage(generateNetMsg);
+    }
 }
 
 
-void MainWindow::connect_network (Network* net, DistType dist, double param1, double param2) {
+bool MainWindow::connect_network (Network* net, DistType dist, double param1, double param2) {
     if (dist == POI) {
-        net->rand_connect_poisson(param1);
+        return net->rand_connect_poisson(param1);
     }
     else if (dist == EXP) {
-        net->rand_connect_exponential(param1);
+        return net->rand_connect_exponential(param1);
     }
     else if (dist == POW) {
-        net->rand_connect_powerlaw(param1, param2);
+        return net->rand_connect_powerlaw(param1, param2);
     }
     else if (dist == URB) {
         vector<double> dist;
         double deg_array[] = {0, 0, 1, 12, 45, 50, 73, 106, 93, 74, 68, 78, 91, 102, 127, 137, 170, 165, 181, 181, 150, 166, 154, 101, 67, 69, 58, 44, 26, 24, 17, 6, 11, 4, 0, 6, 5, 3, 1, 1, 3, 1, 1, 0, 1, 0, 2};
         dist.assign(deg_array,deg_array+47);
         dist = normalize_dist(dist, sum(dist));
-        net->rand_connect_user(dist);
+        return net->rand_connect_user(dist);
     }
     else if (dist == CON) {
         vector<double> dist(param1+1, 0);
         dist[param1] = 1;
-        net->rand_connect_user(dist);
+        return net->rand_connect_user(dist);
     }
-    cerr << "Node count: " << net->size() << " Edge count: " << net->get_edges().size() << endl;
 }
 
 

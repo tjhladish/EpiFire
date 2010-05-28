@@ -82,7 +82,7 @@ class MainWindow : public QMainWindow
         void clear_network();
         void clear_data();
         void generate_network();
-        void connect_network (Network* net, DistType dist, double param1, double param2);
+        bool connect_network (Network* net, DistType dist, double param1, double param2);
         void saveEdgeList();
         void showGraphWidget();
 
