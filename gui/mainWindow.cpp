@@ -630,6 +630,18 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
 
 void MainWindow::showGraphWidget() { 
     graphWidget->clear();
+/*
+    network->clear_nodes();
+    int n = 5;
+    network->populate(n);
+    for (int i=0; i<n-1; i++) {
+        Node* n1 = network->get_nodes()[i];
+        for (int j=i; j<n; j++) {
+            Node* n2 = network->get_nodes()[j];
+            n1->connect_to(n2);
+        }
+    }*/
+
 
     vector<Edge*> edges = network->get_edges();
     map<Edge*, bool> seen;
@@ -642,26 +654,12 @@ void MainWindow::showGraphWidget() {
         string name2 = QString::number(id2).toStdString();
         GNode* n1 = graphWidget->addGNode(name1,0);
         GNode* n2 = graphWidget->addGNode(name2,0);
-        cerr << id1 << " " << n1 << endl;
-        cerr << id2 << " " << n2 << endl;
-        cerr << n1->isVisible() << endl;
-        cerr << n2->isVisible() << endl;
         GEdge* e = graphWidget->addGEdge(n1,n2,"edgeTag",0);
     }
     graphWidget->setLayoutAlgorithm(GraphWidget::Circular);
     graphWidget->newLayout();
     graphWidget->show();
 }
-
-/*
-#0  0xb7ccffe7 in QGraphicsItem::isVisible() const () from /usr/lib/libQtGui.so.4
-#1  0x0807857a in GEdge::setSourceGNode (this=0x8512360, node=0x84d5b50) at edge.cpp:24
-#2  0x0807a1e8 in GraphWidget::addGEdge (this=0x813f3c0, n1=0x84d5b50, n2=0x8508600, note=..., data=0x0) at graphwidget.cpp:98
-#3  0x080590ce in MainWindow::showGraphWidget (this=0xbffff240) at mainWindow.cpp:640
-#4  0x080808cf in MainWindow::qt_metacall (this=0xbffff240, _c=QMetaObject::InvokeMetaMethod, _id=12, _a=0xbfffe248) at moc_mainWindow.cpp:104
-#5  0xb7427c9a in QMetaObject::metacall(QObject*, QMetaObject::Call, int, void**) () from /usr/lib/libQtCore.so.4
-*/
-
 
 
 void MainWindow::generate_network() {

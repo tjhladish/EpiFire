@@ -322,10 +322,7 @@ void GraphWidget::newLayout() {
 	resetZoom();
 }
 
-//float len(vector<float> vec) { return sqrt(POW2(vec[0]) + POW2(vec[1])); }
-//float attraction (float d, float k) { return POW2(d)/k; }
-//float repulsion (float d, float k) { return POW2(k)/d; }
-float len(vector<float> vec) { return sqrt(vec[0]*vec[0] + vec[1]*vec[1]); }
+float len(float b1, float b2) { return sqrt(b1*b1 + b2*b2); }
 float attraction (float d, float k) { return d*d/k; }
 float repulsion (float d, float k)  { return k*k/d; }
 float cool (float temp, float initial_temp, int rep_max) { 
@@ -336,83 +333,71 @@ float cool (float temp, float initial_temp, int rep_max) {
 void GraphWidget::randomLayout() { 
 
     int W=300; int H=300;
+    int sceneW = W*1.2; int sceneH = H*1.2;
     int A = W*H;
     float k = sqrt((float) A/nodelist.size());
-    scene()->setSceneRect(-W/2,-H/2,W,H);
+    scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
 
     fitInView(sceneRect(),Qt::KeepAspectRatio);
     foreach(GNode* n1, nodelist ) {
-        float x = ((float) rand())/RAND_MAX*W - W/2;
-        float y = ((float) rand())/RAND_MAX*H - H/2;
+        float x = (((float) rand())/RAND_MAX*W - W/2)/(n1->edges().size() + 1);
+        float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
         n1->setPos(x,y);
     }
-    float t_init = 30;
+    float t_init = 100;
     float t = t_init;
-    int rep_max = 100;
-int i=0;
+    int rep_max = 50;
 
     map<GNode*, vector<float> > newDisp;
 
     for(int itr=0; itr<rep_max; itr++ ) {
         
         foreach(GNode* n1, nodelist ) {
-            cerr << i++ << " " << n1->pos().x() << " " << n1->pos().y() << endl;
             // calculate repulsion
-            vector<float> coord(2,0);
             vector<float> disp(2,0);
             newDisp[n1] = disp;
-            float vec_len = 0.0; float rep = 0.0;
-//            cerr << "R: ";
-/*            foreach(GNode* n2, nodelist ) {
+            float rep = 0.0;
+            foreach(GNode* n2, nodelist ) {
                 if (n1 == n2) continue;
-                coord[0] = n1->pos().x() - n2->pos().x();
-                coord[1] = n1->pos().y() - n2->pos().y();
-                vec_len = len(coord);
-                vec_len = vec_len == 0 ? 1 : vec_len;
-                rep = repulsion(vec_len, k);
-                newDisp[n1][0] += coord[0]*POW2(k);
-                newDisp[n1][1] += coord[1]*POW2(k);
-                //newDisp[n1][0] += (coord[0]/vec_len)*rep;
-                //newDisp[n1][1] += (coord[1]/vec_len)*rep;
-//                cerr << (coord[0]/vec_len)*rep << "," << (coord[1]/vec_len)*rep << " ";
+                float delta_x = n1->pos().x() - n2->pos().x();
+                float delta_y = n1->pos().y() - n2->pos().y();
+                float dist = len(delta_x, delta_y);
+//                dist = dist == 0 ? 0.00001 : dist;
+                rep = repulsion(dist, k);
+                newDisp[n1][0] += (delta_x/dist)*rep;
+                newDisp[n1][1] += (delta_y/dist)*rep;
             }
-//            cerr << endl;*/
             
             // calculate attration
             float aX=0; float aY=0;
             float att = 0.0;
-            cerr << "A: ";
             foreach (GEdge* e, n1->edges() ) { 
                 GNode* n2 = e->destGNode(); if(n2 == n1) n2 = e->sourceGNode();
                 if (newDisp.count(n2) == 0) newDisp[n2] = disp; 
-                coord[0] = n1->pos().x() - n2->pos().x();
-                coord[1] = n1->pos().y() - n2->pos().y();
-                vec_len = len(coord);
-                vec_len = vec_len == 0 ? 1 : vec_len;
-                att = attraction(vec_len, k);
-                newDisp[n1][0] -= (coord[0]/vec_len)*att;
-                newDisp[n1][1] -= (coord[1]/vec_len)*att;
-                newDisp[n2][0] += (coord[0]/vec_len)*att;
-                newDisp[n2][1] += (coord[1]/vec_len)*att;
-cerr << coord[0] << " " << vec_len << " " << k << endl;
-cerr << coord[0] << "," << coord[1] << " " << coord[0]/vec_len*k << "," << coord[1]/vec_len*k << endl;
+                float delta_x = n1->pos().x() - n2->pos().x();
+                float delta_y = n1->pos().y() - n2->pos().y();
+                float dist = len(delta_x, delta_y);
+//                dist = dist == 0 ? 0.00001 : dist;
+                att = attraction(dist, k);
+                newDisp[n1][0] -= (delta_x/dist)*att;
+                newDisp[n1][1] -= (delta_y/dist)*att;
+                newDisp[n2][0] += (delta_x/dist)*att;
+                newDisp[n2][1] += (delta_y/dist)*att;
             }
-            //cerr << endl;
 
         }
         foreach(GNode* n1, nodelist ) {
-            float vec_len = len(newDisp[n1]);
-            vec_len = vec_len == 0 ? 1 : vec_len;
+            float disp_x = newDisp[n1][0];
+            float disp_y = newDisp[n1][1];
 
-            float newX = n1->pos().x() + (newDisp[n1][0]/vec_len)*min(vec_len,t);
-            cerr << "x0: " << n1->pos().x() << "\tx1: " << newX;
+            float disp_magnitude = len(disp_x, disp_y);
+//            disp_magnitude = disp_magnitude == 0 ? 0.00001 : disp_magnitude;
+
+            float newX = n1->pos().x() + (disp_x/disp_magnitude)*min(disp_magnitude,t);
             newX = min((float) W/2, max((float) -W/2, newX));
-            cerr << "\tx2: " << newX << endl;
 
-            float newY = n1->pos().y() + (newDisp[n1][1]/vec_len)*min(vec_len,t);
-            cerr << "y0: " << n1->pos().y() << "\ty1: " << newY;
+            float newY = n1->pos().y() + (disp_y/disp_magnitude)*min(disp_magnitude,t);
             newY = min((float) H/2, max((float) -H/2, newY));
-            cerr << "\ty2: " << newY << "\n\n";
 
             n1->setPos( newX, newY);
 
