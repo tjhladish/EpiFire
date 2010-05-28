@@ -363,7 +363,7 @@ int i=0;
             newDisp[n1] = disp;
             float vec_len = 0.0; float rep = 0.0;
 //            cerr << "R: ";
-            foreach(GNode* n2, nodelist ) {
+/*            foreach(GNode* n2, nodelist ) {
                 if (n1 == n2) continue;
                 coord[0] = n1->pos().x() - n2->pos().x();
                 coord[1] = n1->pos().y() - n2->pos().y();
@@ -376,7 +376,7 @@ int i=0;
                 //newDisp[n1][1] += (coord[1]/vec_len)*rep;
 //                cerr << (coord[0]/vec_len)*rep << "," << (coord[1]/vec_len)*rep << " ";
             }
-//            cerr << endl;
+//            cerr << endl;*/
             
             // calculate attration
             float aX=0; float aY=0;
@@ -390,10 +390,10 @@ int i=0;
                 vec_len = len(coord);
                 vec_len = vec_len == 0 ? 1 : vec_len;
                 att = attraction(vec_len, k);
-                newDisp[n1][0] -= coord[0]/vec_len*k;
-                newDisp[n1][1] -= coord[1]/vec_len*k;
-                newDisp[n2][0] += coord[0]/vec_len*k;
-                newDisp[n2][1] += coord[1]/vec_len*k;
+                newDisp[n1][0] -= (coord[0]/vec_len)*att;
+                newDisp[n1][1] -= (coord[1]/vec_len)*att;
+                newDisp[n2][0] += (coord[0]/vec_len)*att;
+                newDisp[n2][1] += (coord[1]/vec_len)*att;
 cerr << coord[0] << " " << vec_len << " " << k << endl;
 cerr << coord[0] << "," << coord[1] << " " << coord[0]/vec_len*k << "," << coord[1]/vec_len*k << endl;
             }
