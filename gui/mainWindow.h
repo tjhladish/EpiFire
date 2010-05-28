@@ -22,7 +22,7 @@
 //Set default values that are not related to distribution
 
 const QString default_num_runs="1";
-const QString default_network_size="10";
+const QString default_network_size="10000";
 const QString default_P0="10";
 const QString default_T ="0.1";
 const QString default_infectious_pd ="5";

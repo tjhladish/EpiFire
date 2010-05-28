@@ -118,21 +118,30 @@ Node* Network::get_node(int node_id) {
 }
 
 
-void Network::ring_lattice(int k) {
+bool Network::ring_lattice(int k) {
+    if (k > (size() - 1) / 2) {
+        cerr << "Cannot construct a ring lattice with k-nearest neighbors where k > (network size - 1) / 2\n";
+        return false;
+    }
     for (unsigned int i = 0; i < node_list.size(); i++) {
         for (int j = 1; j <= k; j++) {
             int dest = (i+j) % node_list.size();
             node_list[i]->connect_to(node_list[dest]);
         }
     }
+    return true;
 }
 
 
 // Assumes undirected network
-void Network::square_lattice(int R, int C, bool diag) {
+bool Network::square_lattice(int R, int C, bool diag) {
+    if (R < 1 or C < 1) {
+        cerr << "Square lattice must have at least one row and one column.\n";
+        return false;
+    }
     clear_nodes();
-    for (int i=0; i < R; i++) {
-        for (int j=0; j<C; j++) {
+    for (int i = 0; i < R; i++) {
+        for (int j = 0; j < C; j++) {
             Node* node = add_new_node();
             int id = node->get_id();
                                  // if we're not in the first row or column
@@ -159,14 +168,16 @@ void Network::square_lattice(int R, int C, bool diag) {
             }
         }
     }
+    return true;
 }
 
 
 //void Network::small_world(double p) {}
 
 // generates a poisson network vi the Erdos & Renyi algorithm
-void Network::erdos_renyi(double lambda) {
+bool Network::erdos_renyi(double lambda) {
     int n = size();
+    if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
     for (unsigned int a = 0; a < nodes.size() - 1; a++) {
@@ -176,11 +187,12 @@ void Network::erdos_renyi(double lambda) {
             }
         }
     }
+    return true;
 }
 
 
 // generates a poisson network.  Faster than Erdos-Renyi for sparse graphs
-void Network::sparse_random_graph(double lambda) {
+bool Network::sparse_random_graph(double lambda) {
     int n = size();
     double p = lambda / (n-1);
     double sd = sqrt(n*(n-1)*p*(1-p));
@@ -194,32 +206,32 @@ void Network::sparse_random_graph(double lambda) {
         node_list[a]->connect_to(node_list[b]);
                                  // an undirected edge
     }
-    lose_loops();
+    return lose_loops();
 }
 
 
 
-void Network::rand_connect_poisson(double lambda) {
+bool Network::rand_connect_poisson(double lambda) {
     int min = 0;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
     int max = node_list.size() - 1;
     vector<double> dist = gen_trunc_poisson(lambda, min, max);
-    rand_connect_user(dist);
+    return rand_connect_user(dist);
 }
 
 
-void Network::rand_connect_powerlaw(double alpha, double kappa) {
+bool Network::rand_connect_powerlaw(double alpha, double kappa) {
     int min = 1;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
     int max = node_list.size() - 1;
     vector<double> dist = gen_trunc_powerlaw(alpha, kappa, min, max);
-    rand_connect_user(dist);
+    return rand_connect_user(dist);
 }
 
 
-void Network::rand_connect_exponential(double lambda) {
+bool Network::rand_connect_exponential(double lambda) {
     int min = 1;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
     int max = node_list.size() - 1;
     vector<double> dist = gen_trunc_exponential(lambda, min, max);
-    rand_connect_user(dist);
+    return rand_connect_user(dist);
 }
 
 
@@ -229,33 +241,33 @@ void Network::rand_connect_user(map<int,double>) {
 
 }*/
 
-void Network::rand_connect_explicit(vector<int> degree_series) {
+bool Network::rand_connect_explicit(vector<int> degree_series) {
     assert(degree_series.size() == node_list.size());
     assert(sum(degree_series) % 2 == 0);
     for (unsigned int i = 0; i < degree_series.size(); i++ ) {
         node_list[i]->add_stubs(degree_series[i]);
     }
-    rand_connect_stubs( get_edges() );
+    return rand_connect_stubs( get_edges() );
 }
 
 
-void Network::rand_connect_user(vector<double> dist) {
+bool Network::rand_connect_user(vector<double> dist) {
     gen_deg_dist = dist;
     _assign_deg_series();
-    rand_connect_stubs( get_edges() );
+    return rand_connect_stubs( get_edges() );
 }
 
 
 // use this only if the generating degree dist has already been stored
-void Network::_rand_connect() {
+bool Network::_rand_connect() {
     _assign_deg_series();
-    rand_connect_stubs( get_edges() );
+    return rand_connect_stubs( get_edges() );
 }
 
 
 // rand_connect_stubs() expects ONLY stubs in network, i.e. not some complete edges
 // and some stubs
-void Network::rand_connect_stubs(vector<Edge*> stubs) {
+bool Network::rand_connect_stubs(vector<Edge*> stubs) {
                                  //get all edges in network
     vector<Edge*>::iterator itr;
     Edge* m;
@@ -276,13 +288,15 @@ void Network::rand_connect_stubs(vector<Edge*> stubs) {
         m->define_end(n->start);
         n->define_end(m->start);
     }
-    lose_loops();
+    if (! lose_loops()) { clear_edges(); return false; }
+    return true;
 }
 
 
 // This method removes self loops (edges with the same node as start and end)
 // and multi-edges (e.g. pairs of edges which have identical starts and ends)
-void Network::lose_loops() {
+// Returns true on success, false if network could not be rewired
+bool Network::lose_loops() {
                                  //all (outbound) edges in the network
     vector<Edge*> edges = get_edges();
     vector<Edge*>::iterator edge1, edge2;
@@ -315,7 +329,7 @@ void Network::lose_loops() {
             cerr    << "It may be impossible to equilibriate a network with these parameters--"
                 << "couldn't get rid of any self-loops or multi-edges in the last 100 attempts"
                 << endl;
-            return;
+            return false;
         }
 
         Edge* edge1 = bad_edges[m];
@@ -369,6 +383,7 @@ void Network::lose_loops() {
     //    self_loops.clear();
     //    multiedges.clear();
     //    get_bad_edges( self_loops, multiedges);
+    return true;
 }
 
 

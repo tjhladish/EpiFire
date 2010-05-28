@@ -141,15 +141,15 @@ class Network
         // Erdos-Renyi can only produce Poisson distributed networks, whereas
         // all the rand_connect* functions use an adaptation of the Molloy-Reed
         // algorithm, and therefore can take any discrete, non-negative distribution.
-        void erdos_renyi(double lambda);
-        void sparse_random_graph(double lambda);
-        void ring_lattice(int k);
+        bool erdos_renyi(double lambda);
+        bool sparse_random_graph(double lambda);
+        bool ring_lattice(int k);
                                  // RxC lattice, including diagonals if diag
-        void square_lattice(int R, int C, bool diag);
-        void small_world(double p);
-        void rand_connect_poisson(double lambda);
-        void rand_connect_powerlaw(double alpha, double kappa);
-        void rand_connect_exponential(double lambda);
+        bool square_lattice(int R, int C, bool diag);
+        bool small_world(double p);
+        bool rand_connect_poisson(double lambda);
+        bool rand_connect_powerlaw(double alpha, double kappa);
+        bool rand_connect_exponential(double lambda);
         //void rand_connect_user(map<int,double>); not implemented
 
         // User provides arbitrary (normalized!) distribution.  normalize_dist(my_dist)
@@ -157,22 +157,22 @@ class Network
         // of the index (index = degree), i.e. if the contents of the vector are
         // (0, 0.13, 0.2, 0.04, 0.63), then the probability of drawing a deviate (=degree)
         // of 0 is 0, of 1 is 13%, of 2 is 20%, and so on.
-        void rand_connect_user(vector<double> dist);
+        bool rand_connect_user(vector<double> dist);
 
         // User provides an explicit degree series, one degree per node. Sum of
         // all degrees should be even, or else it's impossible to connect all nodes
-        void rand_connect_explicit(vector<int> deg_series);
+        bool rand_connect_explicit(vector<int> deg_series);
 
         // You probably don't want this, unless you are manually creating stubs for
         // each node.  It is likely easier for you to call one of the other
         // rand_connect* functions that takes either a distribution or
         // distribution parameters.
-        void rand_connect_stubs(vector<Edge*> stubs);
+        bool rand_connect_stubs(vector<Edge*> stubs);
 
         // Gets rid of self-loops and multi-edges.  This is called automatically
         // by erdos_renyi() and all of the rand_connect* functions.  You only
         // need it if you are using your own algorithm to connect nodes.
-        void lose_loops();
+        bool lose_loops();
 
         // Unpopulate the network.
         void clear_nodes();      // { for (int i = 0; i < size(); i++) delete node_list[i]; }
@@ -243,7 +243,7 @@ class Network
 
         // The network has no stubs, but gen_deg_dist (a normalized degree distribution
         // to draw deviates from) has already been stored.
-        void _rand_connect();
+        bool _rand_connect();
 
 };
 

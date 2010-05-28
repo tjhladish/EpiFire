@@ -707,6 +707,7 @@ void MainWindow::connect_network (Network* net, DistType dist, double param1, do
         dist[param1] = 1;
         net->rand_connect_user(dist);
     }
+    cerr << "Node count: " << net->size() << " Edge count: " << net->get_edges().size() << endl;
 }
 
 
