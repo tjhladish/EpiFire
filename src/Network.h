@@ -143,6 +143,8 @@ class Network
         // algorithm, and therefore can take any discrete, non-negative distribution.
         bool erdos_renyi(double lambda);
         bool sparse_random_graph(double lambda);
+        //fast_random_graph() tries to pick the fastest algorithm based on parameters given
+        bool fast_random_graph(double lambda);
         bool ring_lattice(int k);
                                  // RxC lattice, including diagonals if diag
         bool square_lattice(int R, int C, bool diag);

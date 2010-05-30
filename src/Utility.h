@@ -14,9 +14,10 @@ using namespace std;
 template <typename T> inline T sum(vector<T> list) { T sum=0; for (unsigned int i=0; i<list.size(); i++) sum += list[i]; return sum;}
 template <typename T> inline double mean(vector<T> list) { return (double) sum(list) / list.size(); }
 
-double factorial (int num);
+long double factorial (int num);
 int max_element(vector<int> list);
 
+long double poisson_pmf(double lambda, int k);
 vector<double> gen_trunc_poisson (double lambda, int min, int max);
 vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
@@ -26,7 +27,9 @@ int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
 double rand_exp (double lambda, MTRand* mtrand);
 
 void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
-
+double normal_pdf(double x, double mu, double var);
+double normal_cdf(double x, double mu, double var);
+ 
 void split(const string& s, char c, vector<string>& v);
 string strip (string const& str, char const* sepSet);
 
@@ -53,7 +56,7 @@ template <typename T>
 inline int sign(const T& _a) { return (int)((_a)<0 ? (-1) : (1)); }
 
 template <typename T>
-inline T min(const T& _a, const T& _b) { return ((_a)<(_b)?(_a):(_b));}
+inline T MIN(const T& _a, const T& _b) { return ((_a)<(_b)?(_a):(_b));}
 
 template <typename T>
 inline T MAX(const T& _a,const T& _b) { return ((_a)>(_b)?(_a):(_b));}

@@ -67,7 +67,6 @@ Network* Network::duplicate() {
 
 
 Network::~Network() {
-cerr << node_list.size() << endl;
     for (unsigned int i = 0; i < node_list.size(); i++) {
         delete node_list[i];
     }
@@ -209,7 +208,16 @@ bool Network::sparse_random_graph(double lambda) {
     return lose_loops();
 }
 
-
+bool Network::fast_random_graph(double lambda) {
+    // Testing networks of 10e3, 10e4, and 10e5 nodes, I found that the break-even point
+    // where the algorithms performance was comparable was when nodes were connected to
+    // between 1 and 2% of the network
+    if (lambda/size() > 0.01) {
+        return erdos_renyi(lambda);
+    } else {
+        return sparse_random_graph(lambda);
+    }
+}
 
 bool Network::rand_connect_poisson(double lambda) {
     int min = 0;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
