@@ -122,6 +122,8 @@ class Network
 
         vector<Node*> get_component(Node* node);
         vector<Node*> get_major_component();
+        
+        inline bool topology_altered() { return _topology_altered; }
         // vector< vector<Node*> > get_components(){};
 
         /***************************************************************************
@@ -190,6 +192,8 @@ class Network
         void disconnect_edges();
 
         void set_node_states(vector<stateType> &states);
+        
+        inline void set_topology_altered(bool flag) { _topology_altered = flag; }
 
         /***************************************************************************
          * Network Input/Output (including visualization)
@@ -201,6 +205,15 @@ class Network
                                  // output a graphviz file
         void graphviz(string filename);
         void dumper();           // print the network object contents in the terminal
+
+        /***************************************************************************
+         * Network Properties
+         **************************************************************************/
+        void gen_deg_series(vector<int> &deg_series);
+        vector<int> get_states();// get the states of all nodes
+                                 // get the state sequences, indexed by degree
+        vector< vector<int> > get_states_by_degree();
+
         bool validate();
 
                                  // list of degrees, one for each node
@@ -217,16 +230,6 @@ class Network
                                  // 2D matrix of distances
         vector< vector<double> > all_distances();
 
-        inline bool topology_altered() { return _topology_altered; }
-        inline void set_topology_altered(bool flag) { _topology_altered = flag; }
-
-        /***************************************************************************
-         * Network Properties
-         **************************************************************************/
-        void gen_deg_series(vector<int> &deg_series);
-        vector<int> get_states();// get the states of all nodes
-                                 // get the state sequences, indexed by degree
-        vector< vector<int> > get_states_by_degree();
 
     private:
         int id;                  //unique id for the node
