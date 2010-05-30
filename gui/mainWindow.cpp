@@ -478,6 +478,7 @@ void MainWindow::clear_data() {
 
     rep_ct = 0;
     appendOutputLine("Epidemic data deleted");
+    clearDataButton->setEnabled(false);
     statusBar()->showMessage(clearedDataMsg, 1000);
 }
 
@@ -486,6 +487,8 @@ void MainWindow::clear_network() {
     if(network) network->clear_nodes();
     updateRZero();
     appendOutputLine("Network deleted");
+    runSimulationButton->setEnabled(false);
+    clearNetButton->setEnabled(false);
     statusBar()->showMessage(clearedNetMsg, 1000);
 }
 
@@ -624,6 +627,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     }
     histPlot->addData(epi_sizes);
     setCursor(Qt::ArrowCursor);
+    clearDataButton->setEnabled(true);
     statusBar()->showMessage(simDoneMsg, 1000);
     return;
 }
@@ -681,6 +685,8 @@ void MainWindow::generate_network() {
         updateRZero();
         appendOutput("Done.");
         setCursor(Qt::ArrowCursor);
+        runSimulationButton->setEnabled(true);
+        clearNetButton->setEnabled(true);
         statusBar()->showMessage(simulateMsg);
     } else {
         appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using the specified parameters."); 
