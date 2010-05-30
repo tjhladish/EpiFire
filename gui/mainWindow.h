@@ -65,6 +65,7 @@ class MainWindow : public QMainWindow
         Network* network;
         Simulator* simulator;
         GraphWidget* graphWidget;
+        QDialog* netAnalysisDialog;
         QTextEdit* logEditor;
 
         enum DistType  { POI, EXP, POW, URB, CON};
@@ -84,8 +85,12 @@ class MainWindow : public QMainWindow
         void generate_network();
         bool connect_network (Network* net, DistType dist, double param1, double param2);
         void saveEdgeList();
-        void showGraphWidget();
-
+        void showNetworkPlot();
+        void showNetworkAnalysis();
+        void calculateTransitivity();
+        void calculateDiameter();
+        void calculateMeanDistance();
+ 
     protected:
 
     private:
@@ -95,6 +100,7 @@ class MainWindow : public QMainWindow
         void createNetworkSettingsBox();
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
+        void createNetworkAnalysis();
         void runSimulation(int j_max, int patient_zero_ct, string RunID);
         double guessEpiSize(double R0, double P0_frac, double guess);
 
@@ -157,13 +163,13 @@ class MainWindow : public QMainWindow
         QLineEdit* infectiousPeriodLine;
         QLineEdit* netfileLine;
 
-
         PlotArea* epiCurvePlot;
         PlotArea* statePlot;
         PlotArea* histPlot;
+        PlotArea* degDistPlot;
 
-        QWidget* dockWidget1;
-        QWidget* dockWidget2;
+        //QWidget* dockWidget1;
+        //QWidget* dockWidget2;
 
         QDoubleValidator* probValidator;
         QMenu* fileMenu;
@@ -171,5 +177,19 @@ class MainWindow : public QMainWindow
         QAction* exitAction;
         QAction* openAction;
         QProgressDialog* simProgress;
+        
+        QLineEdit* nodeCountEdit;
+        QLineEdit* edgeCountEdit;
+        QLineEdit* meanDegreeEdit;
+        QLineEdit* componentCountEdit;
+        QLineEdit* maxComponentSizeEdit;
+        QLineEdit* transitivityEdit;
+        QLineEdit* diameterEdit;
+        QLineEdit* meanDistanceEdit;
+
+        QPushButton* transitivityButton;
+        QPushButton* diameterButton;
+        QPushButton* meanDistanceButton;
+
 };
 #endif

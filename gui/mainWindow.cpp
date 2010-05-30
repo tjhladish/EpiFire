@@ -19,6 +19,8 @@ MainWindow::MainWindow() {
     network = new Network("mynetwork",false);
     simulator = NULL;
     graphWidget = new GraphWidget();
+    netAnalysisDialog = new QDialog(this);
+    netAnalysisDialog->setWindowTitle("Analysis of current network");
     rep_ct = 0;
 
     logEditor = new QTextEdit();
@@ -61,6 +63,8 @@ MainWindow::MainWindow() {
     setCentralWidget(centralWidget);
     statusBar()->showMessage(generateNetMsg);
 
+    createNetworkAnalysis();
+
     simProgress = new QProgressDialog("Simulation running . . .", "Cancel", 0, 100, this);
     simProgress->setWindowModality(Qt::WindowModal);
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
@@ -93,15 +97,20 @@ void MainWindow::createMenu() {
     QMenu* plotMenu = new QMenu(tr("&Plot"), this);
     QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
     QAction* showStatePlot = plotMenu->addAction("Show state plot");
-    QAction* showGraphWidget = plotMenu->addAction("Show graph Widget");
 
 
-    connect(showGraphWidget, SIGNAL(triggered()), this, SLOT(showGraphWidget()));
+    //Create 'Data' menu
+    QMenu* dataMenu = new QMenu(tr("&Data"), this);
+    QAction* showNetworkPlot = dataMenu->addAction("Plot network");
+    QAction* showNetworkAnalysis = dataMenu->addAction("Network analysis");
+    connect(showNetworkPlot, SIGNAL(triggered()), this, SLOT(showNetworkPlot()));
+    connect(showNetworkAnalysis, SIGNAL(triggered()), this, SLOT(showNetworkAnalysis()));
     //connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
     //connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
     
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(plotMenu);
+    menuBar->addMenu(dataMenu);
 }
 
 void MainWindow::createSettingsBox() {
@@ -632,20 +641,8 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     return;
 }
 
-void MainWindow::showGraphWidget() { 
+void MainWindow::showNetworkPlot() { 
     graphWidget->clear();
-/*
-    network->clear_nodes();
-    int n = 5;
-    network->populate(n);
-    for (int i=0; i<n-1; i++) {
-        Node* n1 = network->get_nodes()[i];
-        for (int j=i; j<n; j++) {
-            Node* n2 = network->get_nodes()[j];
-            n1->connect_to(n2);
-        }
-    }*/
-
 
     vector<Edge*> edges = network->get_edges();
     map<Edge*, bool> seen;
@@ -665,6 +662,112 @@ void MainWindow::showGraphWidget() {
     graphWidget->show();
 }
 
+
+void MainWindow::createNetworkAnalysis() {
+    QVBoxLayout* netAnalysisLayout = new QVBoxLayout();
+    QHBoxLayout* netTopLayout = new QHBoxLayout();
+    QFormLayout* netTopLeftLayout = new QFormLayout();
+    QVBoxLayout* netTopRightLayout = new QVBoxLayout();
+
+    nodeCountEdit        = new QLineEdit(netAnalysisDialog);
+    edgeCountEdit        = new QLineEdit(netAnalysisDialog);
+    meanDegreeEdit       = new QLineEdit(netAnalysisDialog);
+    componentCountEdit   = new QLineEdit(netAnalysisDialog);
+    maxComponentSizeEdit = new QLineEdit(netAnalysisDialog);
+    transitivityEdit     = new QLineEdit(netAnalysisDialog);
+    diameterEdit         = new QLineEdit(netAnalysisDialog);
+    meanDistanceEdit     = new QLineEdit(netAnalysisDialog);
+
+    makeReadonly(nodeCountEdit);
+    makeReadonly(edgeCountEdit);
+    makeReadonly(meanDegreeEdit);
+    makeReadonly(componentCountEdit);
+    makeReadonly(maxComponentSizeEdit);
+    makeReadonly(transitivityEdit);
+    makeReadonly(diameterEdit);
+    makeReadonly(meanDistanceEdit);
+
+    netTopLeftLayout->addRow("Node count:",         nodeCountEdit);
+    netTopLeftLayout->addRow("Edge count:",         edgeCountEdit);
+    netTopLeftLayout->addRow("Mean degree:",        meanDegreeEdit);
+    netTopLeftLayout->addRow("Component count:",    componentCountEdit);
+    netTopLeftLayout->addRow("Largest component:",  maxComponentSizeEdit);
+    netTopLeftLayout->addRow("Transitivity:",       transitivityEdit);
+    netTopLeftLayout->addRow("Diameter:",           diameterEdit);
+    netTopLeftLayout->addRow("Mean shortest path:", meanDistanceEdit);
+
+    QGroupBox* netForm = new QGroupBox();
+    netForm->setFlat(true);
+    netForm->setLayout(netTopLeftLayout);
+
+    transitivityButton = new QPushButton("Calculate", netAnalysisDialog);
+    diameterButton     = new QPushButton("Calculate", netAnalysisDialog);
+    meanDistanceButton = new QPushButton("Calculate", netAnalysisDialog);
+
+    connect(transitivityButton, SIGNAL(clicked()), this, SLOT(calculateTransitivity()));
+    connect(diameterButton, SIGNAL(clicked()), this, SLOT(calculateDiameter()));
+    connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(calculateMeanDistance()));
+    netTopRightLayout->addStretch(); 
+    netTopRightLayout->addWidget(transitivityButton); 
+    netTopRightLayout->addWidget(diameterButton);
+    netTopRightLayout->addWidget(meanDistanceButton);
+
+    QGroupBox* netButtons = new QGroupBox();
+    netButtons->setFlat(true);
+    netButtons->setLayout(netTopRightLayout);
+
+    netTopLayout->addWidget(netForm);
+    netTopLayout->addWidget(netButtons);
+
+    QGroupBox* netTopBox = new QGroupBox();
+    netTopBox->setLayout(netTopLayout);
+
+
+    degDistPlot = new PlotArea(this, "Degree distribution");
+    degDistPlot->setPlotType(PlotArea::HISTPLOT);
+
+    netAnalysisLayout->addWidget(netTopBox);
+    netAnalysisLayout->addWidget(degDistPlot);
+    netAnalysisDialog->setLayout(netAnalysisLayout);
+}
+
+
+void MainWindow::showNetworkAnalysis() {
+    nodeCountEdit        ->setText(QString::number( network->size() ));
+    edgeCountEdit        ->setText(QString::number( network->get_edges().size() ));
+    meanDegreeEdit       ->setText(QString::number( network->mean_deg() ));
+//    componentCountEdit   ->setText(QString::number( network->size() ));
+    maxComponentSizeEdit ->setText(QString::number( network->get_major_component().size() ));
+    transitivityEdit     ->clear();
+    diameterEdit         ->clear();
+    meanDistanceEdit     ->clear();
+
+    degDistPlot->clearData();
+    degDistPlot->addData(network->get_deg_series());
+    degDistPlot->replot();
+
+    netAnalysisDialog->exec();
+}
+
+void MainWindow::calculateTransitivity() {
+    vector<Node*> empty;
+    transitivityEdit->setText(QString::number( network->transitivity(empty) ));
+}
+
+void MainWindow::calculateDiameter() {
+    vector< vector<double> > distances = network->all_distances();
+    double diam = 0;
+    for (unsigned int i = 0; i<distances.size(); i++) {
+        for (unsigned int j = 0; j<distances[i].size(); j++) {
+            diam = distances[i][j] > diam ? distances[i][j] : diam;
+        }
+    }
+    diameterEdit->setText(QString::number( diam ));
+}
+
+void MainWindow::calculateMeanDistance() {
+    meanDistanceEdit->setText(QString::number( network->mean_dist() ));
+}
 
 void MainWindow::generate_network() {
     statusBar()->showMessage(busyNetMsg);
@@ -698,7 +801,7 @@ void MainWindow::generate_network() {
 
 bool MainWindow::connect_network (Network* net, DistType dist, double param1, double param2) {
     if (dist == POI) {
-        return net->rand_connect_poisson(param1);
+        return net->fast_random_graph(param1);
     }
     else if (dist == EXP) {
         return net->rand_connect_exponential(param1);
