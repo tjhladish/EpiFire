@@ -67,7 +67,7 @@ vector<double> gen_trunc_powerlaw(double alpha, double kappa, int min, int max) 
     double sum = 0;
 
     for (int k = min; k <= max; k++) {
-        double pk = pow(k, -alpha) * exp(-k/kappa);
+        double pk = powl(k, (long double) -alpha) * expl(-k/(long double) kappa);
         dist[k] = pk;
         sum += pk;
         if (pk/sum < EPSILON) break;

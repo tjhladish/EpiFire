@@ -1,0 +1,38 @@
+#ifndef BAKGROUNDTHREAD
+#define BAKGROUNDTHREAD
+
+#include <QThread>
+#include "mainWindow.h"
+
+
+class MainWindow;
+
+class BackgroundThread: public QThread {
+Q_OBJECT
+
+    public:
+
+        BackgroundThread(MainWindow* w);
+
+        enum ThreadType { GENERATENET, SIMULATENET };
+        void setThreadType(ThreadType t) { type=t; }
+        bool stopped() { return _stopped; }
+
+    public slots:
+        void stop();
+
+    signals:
+        void statusChanged(QString string);
+        void completed(bool);
+        void setProgressValue(int);
+
+    protected:
+        void run(void);
+
+    private:
+        volatile bool _stopped;
+        ThreadType type;
+        MainWindow* mw;
+};
+
+#endif

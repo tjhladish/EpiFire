@@ -65,8 +65,11 @@ MainWindow::MainWindow() {
 
     createNetworkAnalysis();
 
-    simProgress = new QProgressDialog("Simulation running . . .", "Cancel", 0, 100, this);
-    simProgress->setWindowModality(Qt::WindowModal);
+    progressDialog = new QProgressDialog("Simulation running . . .", "Cancel", 0, 100, this);
+    progressDialog->setWindowModality(Qt::WindowModal);
+
+    backgroundThread = new BackgroundThread(this);
+    connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
 
@@ -273,7 +276,7 @@ void MainWindow::createControlButtonsBox() {
     layout->addWidget(loadNetButton, 0, 2);
 
     generateNetButton = new QPushButton("Generate Network");
-    connect(generateNetButton, SIGNAL(clicked()), this, SLOT(generate_network()));
+    connect(generateNetButton, SIGNAL(clicked()), this, SLOT(generate_network_thread()));
     layout->addWidget(generateNetButton, 0, 2);
 
     clearDataButton = new QPushButton("Clear data");
@@ -611,8 +614,8 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
         //start = time(NULL);     
 
         while (simulator->count_infected() > 0 ) {
-            simProgress->setValue(percent_complete(currentSize, predictedSize));
-            if ( ! simProgress->wasCanceled()) {
+            progressDialog->setValue(percent_complete(currentSize, predictedSize));
+            if ( ! progressDialog->wasCanceled()) {
                 //cerr << percent_complete(currentSize, predictedSize) << " " << difftime(time(NULL), start) << endl;
                 simulator->step_simulation();
                 epi_curve.push_back(simulator->count_infected());
@@ -620,7 +623,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
                 if (j == j_max - 1) addStateData();
             } else { abort = true; }
         }
-        simProgress->setValue(100);
+        progressDialog->setValue(100);
         //cerr << "100\n";
         int epi_size = simulator->epidemic_size();
 
@@ -769,22 +772,47 @@ void MainWindow::calculateMeanDistance() {
     meanDistanceEdit->setText(QString::number( network->mean_dist() ));
 }
 
-void MainWindow::generate_network() {
+void MainWindow::generate_network_thread() {
     statusBar()->showMessage(busyNetMsg);
     setCursor(Qt::WaitCursor);
     appendOutputLine("Generating network . . . ");
 
+    if(network) delete(network);
+
     int n = (numnodesLine->text()).toInt();
+    network = new Network("mynetwork", false);
+    network->populate(n);
+     
+   //backgroundThread->setThreadType(BackgroundThread::SIMULATENET);
+   backgroundThread->setThreadType(BackgroundThread::GENERATENET);
+   connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
+
+   backgroundThread->start();
+}
+
+void MainWindow::stopBackgroundThread() {
+     if (backgroundThread) backgroundThread->stop();
+     if (backgroundThread) backgroundThread->terminate();
+     //delete(backgroundThread);
+}
+
+bool MainWindow::generate_network() {
+    //int n = (numnodesLine->text()).toInt();
     DistType dist_type = (DistType) distBox->currentIndex();
     double param1 = (param1Line->text()).toDouble();
     double param2 = (param2Line->text()).toDouble();
 
-    if(network) delete(network);
+    return connect_network(network, dist_type, param1, param2);
 
+    /*if(network) delete(network);
     network = new Network("mynetwork", false);
-    network->populate(n);
-                                 // connect network using the parameters above
-    if ( connect_network(network, dist_type, param1, param2) ) {
+    network->populate(n);*/ 
+                                // connect network using the parameters above
+}
+
+
+void MainWindow::netDoneUpdate(bool success) {
+    if ( success ) {
         updateRZero();
         appendOutput("Done.");
         setCursor(Qt::ArrowCursor);

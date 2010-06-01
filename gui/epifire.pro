@@ -7,7 +7,8 @@ HEADERS     = mainWindow.h \
              plotScene.h \ 
              node.h \
              edge.h \
-             graphwidget.h
+             graphwidget.h \
+             backgroundthread.h
 
  SOURCES     = mainWindow.cpp \
                ../src/*.cpp \
@@ -17,7 +18,9 @@ HEADERS     = mainWindow.h \
                plotPoint.cpp  \
                node.cpp \
                edge.cpp \
-               graphwidget.cpp
+               graphwidget.cpp \
+             backgroundthread.cpp
+
 
 
  # install

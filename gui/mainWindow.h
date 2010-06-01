@@ -9,6 +9,7 @@
 
 #include "plotArea.h"
 #include "graphwidget.h"
+#include "backgroundthread.h"
 #include "../src/Network.h"
 #include "../src/Simulator.h";
 #include "../src/Percolation_Sim.h"
@@ -51,6 +52,7 @@ class QComboBox;
 class QCheckBox;
 class PlotArea;
 class GraphWidget;
+class BackgroundThread;
 
 //Define public and private functions and slots for 'MainWindow' class
 class MainWindow : public QMainWindow
@@ -65,8 +67,10 @@ class MainWindow : public QMainWindow
         Network* network;
         Simulator* simulator;
         GraphWidget* graphWidget;
+        BackgroundThread* backgroundThread;
         QDialog* netAnalysisDialog;
         QTextEdit* logEditor;
+        QProgressDialog* progressDialog;
 
         enum DistType  { POI, EXP, POW, URB, CON};
         int rep_ct;
@@ -82,14 +86,17 @@ class MainWindow : public QMainWindow
         void readEdgeList();
         void clear_network();
         void clear_data();
-        void generate_network();
+        bool generate_network();
+        void generate_network_thread();
         bool connect_network (Network* net, DistType dist, double param1, double param2);
+        void netDoneUpdate(bool success);
         void saveEdgeList();
         void showNetworkPlot();
         void showNetworkAnalysis();
         void calculateTransitivity();
         void calculateDiameter();
         void calculateMeanDistance();
+        void stopBackgroundThread();
  
     protected:
 
@@ -176,7 +183,6 @@ class MainWindow : public QMainWindow
         QMenu* plotMenu;
         QAction* exitAction;
         QAction* openAction;
-        QProgressDialog* simProgress;
         
         QLineEdit* nodeCountEdit;
         QLineEdit* edgeCountEdit;
