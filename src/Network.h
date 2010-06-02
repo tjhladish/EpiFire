@@ -120,8 +120,9 @@ class Network
         // with the problematic edges inside the function
         void get_bad_edges(vector<Edge*> &self_loops, vector<Edge*> &multiedges);
 
-        vector<Node*> get_component(Node* node);
-        vector<Node*> get_major_component();
+        vector<Node*> get_component(Node* node);  // get the component this node is in
+        vector< vector<Node*> > get_components(); // get all components
+        vector<Node*> get_biggest_component();
         
         inline bool topology_altered() { return _topology_altered; }
         // vector< vector<Node*> > get_components(){};
@@ -231,8 +232,16 @@ class Network
         vector< vector<double> > all_distances();
 
 
+
+        /***************************************************************************
+         * Network Properties
+         **************************************************************************/
+        // Allows outside control of terminating some long-running network processes
+        void stop_processing() { process_stopped = true; }
+
     private:
-        int id;                  //unique id for the node
+        bool is_stopped();       // checks process status, resets to false if true
+        int id;                  // unique id for the node
         string name;
         vector<Node*> node_list;
         bool unit_edges;
@@ -250,6 +259,9 @@ class Network
         // to draw deviates from) has already been stored.
         bool _rand_connect();
 
+        // This is checked during some long-running processes to determine whether to
+        // continue
+        bool process_stopped;
 };
 
 class Node

@@ -26,6 +26,7 @@ Network::Network( string name, bool directed) {
     this->edge_id_counter = 0;
     this->_topology_altered=false;
     this->mtrand = mtrand;
+    this->process_stopped = false;
 }
 
 
@@ -180,6 +181,7 @@ bool Network::erdos_renyi(double lambda) {
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
     for (unsigned int a = 0; a < nodes.size() - 1; a++) {
+        if (is_stopped() ) { return false; }
         for (unsigned int b = a; b < nodes.size(); b++) {
             if ( mtrand.rand() < p) {
                 nodes[a]->connect_to(nodes[b]);
@@ -296,6 +298,7 @@ bool Network::rand_connect_stubs(vector<Edge*> stubs) {
         m->define_end(n->start);
         n->define_end(m->start);
     }
+    // if lose_loops() isn't successful, return false
     if (! lose_loops()) { clear_edges(); return false; }
     return true;
 }
@@ -305,6 +308,7 @@ bool Network::rand_connect_stubs(vector<Edge*> stubs) {
 // and multi-edges (e.g. pairs of edges which have identical starts and ends)
 // Returns true on success, false if network could not be rewired
 bool Network::lose_loops() {
+    if ( is_stopped() ) return false;
                                  //all (outbound) edges in the network
     vector<Edge*> edges = get_edges();
     vector<Edge*>::iterator edge1, edge2;
@@ -339,6 +343,7 @@ bool Network::lose_loops() {
                 << endl;
             return false;
         }
+        if ( is_stopped() ) return false;
 
         Edge* edge1 = bad_edges[m];
         Edge* edge2 = edges[n];
@@ -422,9 +427,14 @@ void Network::get_bad_edges(vector<Edge*> &self_loops, vector<Edge*> &multiedges
 }
 
 
-vector<Node*> Network::get_major_component() {
-    vector<Node*> major_comp(0);
-    vector<int> remaining_nodes(size(),1);
+vector<Node*> Network::get_biggest_component() {
+    vector<Node*> big_comp(0);
+    vector< vector<Node*> > all_comp = get_components();
+
+    for (unsigned int i = 0; i<all_comp.size(); i++) {
+        if (all_comp[i].size() > big_comp.size()) big_comp = all_comp[i];
+    }
+/*    vector<int> remaining_nodes(size(),1);
 
     while ((unsigned) sum(remaining_nodes) > major_comp.size()) {
         Node* starting_point = NULL;
@@ -438,8 +448,25 @@ vector<Node*> Network::get_major_component() {
         vector<Node*> temp_comp = get_component(starting_point);
         for ( unsigned int i = 0; i < temp_comp.size(); i++ ) remaining_nodes[i] = 0;
         if (temp_comp.size() > major_comp.size()) major_comp = temp_comp;
+    }*/
+    return big_comp;
+}
+
+
+vector< vector<Node*> > Network::get_components() {
+    vector< vector<Node*> > components;
+    vector<Node*> temp_comp(0);
+    list<int> remaining_nodes;
+    for (unsigned int i = 0; i<size(); i++) remaining_nodes.push_back( get_nodes()[i]->get_id() );
+
+    while ( remaining_nodes.size() > 0) {
+        Node* next = get_node( remaining_nodes.front() );
+        temp_comp = get_component( next );
+        components.push_back(temp_comp);
+
+        for (unsigned int i = 0; i<temp_comp.size(); i++) remaining_nodes.remove( temp_comp[i]->get_id() );
     }
-    return major_comp;
+    return components;
 }
 
 
@@ -874,6 +901,12 @@ void Network::graphviz (string filename) {
     pipe << "}\n";
 
     pipe.close();
+}
+
+bool Network::is_stopped() {
+    bool status = process_stopped;
+    process_stopped = false;
+    return status;
 }
 
 
