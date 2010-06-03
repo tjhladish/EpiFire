@@ -69,10 +69,14 @@ MainWindow::MainWindow() {
     progressDialog->setWindowModality(Qt::WindowModal);
 
     backgroundThread = new BackgroundThread(this);
-    connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
-    connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
+    connect(network,          SIGNAL(progress_update(int)), progressDialog, SLOT(setValue(int)));
+    connect(network,          SIGNAL(progress_update(int)), this, SLOT(wtf(int)));
+    connect(backgroundThread, SIGNAL(completed(bool)),      this,           SLOT(netDoneUpdate(bool)));
+    connect(progressDialog,   SIGNAL(canceled()),           this,           SLOT(stopBackgroundThread()));
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
+
+//void wtf(int i) { cerr << i << endl; }
 
 void MainWindow::createMenu() {
     //Create 'File' menu
@@ -418,8 +422,8 @@ void MainWindow::changeParameterLabels(int dist_type) {
     if (dist_type == 0) {
         param1Line->setVisible(1);
         param1Label->setText("Lambda:");
-	param1Label->show();
-        param1Line->setText("3.0");
+        param1Label->show();
+        param1Line->setText("1000.0");
         param2Label->hide();
         param2Line->hide();
     }
@@ -427,13 +431,13 @@ void MainWindow::changeParameterLabels(int dist_type) {
         param1Line->setVisible(1);
         param1Label->setText("Beta:");
         param1Label->show();
-	param1Line->setText("0.3");
+        param1Line->setText("0.3");
         param2Label->hide();
         param2Line->hide();
     }
     else if (dist_type == 2) {
         param1Line->show();
-	param1Label->show();
+        param1Label->show();
         param1Line->setText("1.0");
         param1Label->setText("Alpha:");
         param2Line->show();
@@ -450,7 +454,7 @@ void MainWindow::changeParameterLabels(int dist_type) {
     else if (dist_type == 4) {
         param1Line->setVisible(1);
         param1Line->setText("3");
-	param1Label->show();
+        param1Label->show();
         param1Label->setText("Fixed degree:");
         param2Line->hide();
         param2Label->hide();

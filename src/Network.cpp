@@ -31,6 +31,16 @@ Network::Network( string name, bool directed) {
 }
 
 
+void Network::set_progress(float percent_complete) {
+    //if (percent_complete != progress) {
+        progress = percent_complete;
+        cerr << "WTF!" << endl;
+        emit progress_update( 50);
+        //emit progress_update((int) 100 * progress);
+    //}
+}
+
+
 Network* Network::duplicate() {
     Network* dup = new Network( name, directed );
     dup->unit_edges = unit_edges;
@@ -189,7 +199,8 @@ bool Network::erdos_renyi(double lambda) {
             }
         }
         //set_progress( (double) a / n );
-        //set_progress( 1 - (double)(n-a)*(n-a-1) / (n*(n-1)) );
+        set_progress( 1 - (float)(n-a)*(n-a-1) / (n*(n-1)) );
+//        cerr << get_progress() << endl;
         //cerr <<  1 - (double)(n-a)*(n-a-1) / (n*(n-1))  << endl;
     }
     return true;

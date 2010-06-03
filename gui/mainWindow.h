@@ -99,6 +99,7 @@ class MainWindow : public QMainWindow
         void calculateDistances();
         void stopBackgroundThread();
  
+void wtf(int i) { cerr << i << endl; }
     protected:
 
     private:

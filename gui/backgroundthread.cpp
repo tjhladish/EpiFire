@@ -34,12 +34,12 @@ void BackgroundThread::run(void) {
     _stopped=false;
 
     if (type == GENERATENET ) {
-        emit setProgressValue(0);
+        //emit setProgressValue(0);
         bool success = mw->generate_network();
-        emit setProgressValue(100);
+        // emit setProgressValue(100);
         if (! success) mw->appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using these parameters."); 
         emit completed(success);
-        mw->network->reset_progress();
+        //mw->network->reset_progress();
     } else if (type == SIMULATENET ) {
         int p=0;
         while(1) {

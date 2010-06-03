@@ -8,7 +8,8 @@ HEADERS     = mainWindow.h \
              node.h \
              edge.h \
              graphwidget.h \
-             backgroundthread.h
+             backgroundthread.h \
+             ../src/Network.h
 
  SOURCES     = mainWindow.cpp \
                ../src/*.cpp \

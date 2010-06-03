@@ -13,6 +13,7 @@
 #include "Utility.h"
 #include <assert.h>
 #include "MersenneTwister.h"
+#include <QObject>
 
 using namespace std;
 
@@ -51,8 +52,9 @@ typedef int stateType;
  *
  **************************************************************************/
 
-class Network
+class Network : public QObject
 {
+        Q_OBJECT
     static int id_counter;       //remains in memory until end of the program
     static MTRand mtrand;        //pointer to a radom number generator
     friend class Node;
@@ -237,10 +239,15 @@ class Network
          * Process status & control
          **************************************************************************/
         // Allows outside control of terminating some long-running network processes
-        void stop_processing() { process_stopped = true; }
+        void stop_processing() { process_stopped = true; reset_progress(); }
         float get_progress() { return progress; }
+
+    public slots:
         void reset_progress() { progress = -1; }
-        void set_progress(float pct_complete) { progress = pct_complete; } 
+        void set_progress(float p); 
+
+    signals:
+        void progress_update( int );
 
     private:
         bool is_stopped();       // checks process status, resets to false if true
