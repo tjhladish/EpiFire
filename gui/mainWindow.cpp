@@ -69,6 +69,7 @@ MainWindow::MainWindow() {
     progressDialog->setWindowModality(Qt::WindowModal);
 
     backgroundThread = new BackgroundThread(this);
+    connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
@@ -497,6 +498,7 @@ void MainWindow::clear_data() {
 
 void MainWindow::clear_network() {
     if(network) network->clear_nodes();
+    netComponents.clear();
     updateRZero();
     appendOutputLine("Network deleted");
     runSimulationButton->setEnabled(false);
@@ -665,12 +667,19 @@ void MainWindow::showNetworkPlot() {
     graphWidget->show();
 }
 
+void MainWindow::_addAnalysisRow(QGridLayout* layout, QString text, QLineEdit* box, QPushButton* button) {
+    int r = layout->rowCount();
+    QLabel* label = new QLabel(text, netAnalysisDialog);
+    layout->addWidget(label, r, 0);
+    layout->addWidget(box, r, 1);
+    if (button) layout->addWidget(button, r, 2);
+}
 
 void MainWindow::createNetworkAnalysis() {
     QVBoxLayout* netAnalysisLayout = new QVBoxLayout();
-    QHBoxLayout* netTopLayout = new QHBoxLayout();
-    QFormLayout* netTopLeftLayout = new QFormLayout();
-    QVBoxLayout* netTopRightLayout = new QVBoxLayout();
+    //QHBoxLayout* netTopLayout = new QHBoxLayout();
+    QGridLayout* netTopLayout = new QGridLayout();
+    //QVBoxLayout* netTopRightLayout = new QVBoxLayout();
 
     nodeCountEdit        = new QLineEdit(netAnalysisDialog);
     edgeCountEdit        = new QLineEdit(netAnalysisDialog);
@@ -690,57 +699,67 @@ void MainWindow::createNetworkAnalysis() {
     makeReadonly(diameterEdit);
     makeReadonly(meanDistanceEdit);
 
-    netTopLeftLayout->addRow("Node count:",         nodeCountEdit);
-    netTopLeftLayout->addRow("Edge count:",         edgeCountEdit);
-    netTopLeftLayout->addRow("Mean degree:",        meanDegreeEdit);
-    netTopLeftLayout->addRow("Component count:",    componentCountEdit);
-    netTopLeftLayout->addRow("Largest component:",  maxComponentSizeEdit);
-    netTopLeftLayout->addRow("Transitivity:",       transitivityEdit);
-    netTopLeftLayout->addRow("Diameter:",           diameterEdit);
-    netTopLeftLayout->addRow("Mean shortest path:", meanDistanceEdit);
-
-    QGroupBox* netForm = new QGroupBox();
-    netForm->setFlat(true);
-    netForm->setLayout(netTopLeftLayout);
-
+    componentButton1   = new QPushButton("Calculate", netAnalysisDialog);
+    componentButton2   = new QPushButton("Calculate", netAnalysisDialog);
     transitivityButton = new QPushButton("Calculate", netAnalysisDialog);
     diameterButton     = new QPushButton("Calculate", netAnalysisDialog);
     meanDistanceButton = new QPushButton("Calculate", netAnalysisDialog);
 
+    connect(componentButton1, SIGNAL(clicked()), this, SLOT(calculateComponentStats()));
+    connect(componentButton2, SIGNAL(clicked()), this, SLOT(calculateComponentStats()));
     connect(transitivityButton, SIGNAL(clicked()), this, SLOT(calculateTransitivity()));
-    connect(diameterButton, SIGNAL(clicked()), this, SLOT(calculateDiameter()));
-    connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(calculateMeanDistance()));
-    netTopRightLayout->addStretch(); 
-    netTopRightLayout->addWidget(transitivityButton); 
-    netTopRightLayout->addWidget(diameterButton);
-    netTopRightLayout->addWidget(meanDistanceButton);
+    connect(diameterButton, SIGNAL(clicked()), this, SLOT(calculateDistances()));
+    connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(calculateDistances()));
 
-    QGroupBox* netButtons = new QGroupBox();
-    netButtons->setFlat(true);
-    netButtons->setLayout(netTopRightLayout);
+    _addAnalysisRow(netTopLayout, "Node count:",         nodeCountEdit);
+    _addAnalysisRow(netTopLayout, "Edge count:",         edgeCountEdit);
+    _addAnalysisRow(netTopLayout, "Mean degree:",        meanDegreeEdit);
+    _addAnalysisRow(netTopLayout, "Largest component:",  maxComponentSizeEdit, componentButton1);
+    _addAnalysisRow(netTopLayout, "Component count:",    componentCountEdit, componentButton2 );
+    _addAnalysisRow(netTopLayout, "Transitivity:",       transitivityEdit, transitivityButton);
+    _addAnalysisRow(netTopLayout, "Diameter:",           diameterEdit, diameterButton);
+    _addAnalysisRow(netTopLayout, "Mean shortest path:", meanDistanceEdit, meanDistanceButton);
 
-    netTopLayout->addWidget(netForm);
-    netTopLayout->addWidget(netButtons);
-
-    QGroupBox* netTopBox = new QGroupBox();
-    netTopBox->setLayout(netTopLayout);
-
+    QGroupBox* netAnalysisTop = new QGroupBox();
+    netAnalysisTop->setLayout(netTopLayout);
 
     degDistPlot = new PlotArea(this, "Degree distribution");
     degDistPlot->setPlotType(PlotArea::HISTPLOT);
 
-    netAnalysisLayout->addWidget(netTopBox);
+    netAnalysisLayout->addWidget(netAnalysisTop);
     netAnalysisLayout->addWidget(degDistPlot);
     netAnalysisDialog->setLayout(netAnalysisLayout);
 }
 
 
+void MainWindow::calculateComponentStats() {
+    if ( netComponents.empty() ) netComponents = network->get_components();
+    int count = netComponents.size();
+    int biggest = 0;
+
+    for (unsigned int i = 0; i<netComponents.size(); i++) {
+        if (netComponents[i].size() > (unsigned) biggest) {
+            biggest = netComponents[i].size();
+        }
+    }
+
+    componentCountEdit   ->setText(QString::number( count ));
+    maxComponentSizeEdit ->setText(QString::number( biggest ));
+}
+
+
 void MainWindow::showNetworkAnalysis() {
+    if (!network or network->size() == 0) {
+        QMessageBox msgBox;
+        msgBox.setText("Please generate or import a network first.");
+        msgBox.exec();
+        return;
+    }
     nodeCountEdit        ->setText(QString::number( network->size() ));
     edgeCountEdit        ->setText(QString::number( network->get_edges().size() ));
     meanDegreeEdit       ->setText(QString::number( network->mean_deg() ));
-//    componentCountEdit   ->setText(QString::number( network->size() ));
-    maxComponentSizeEdit ->setText(QString::number( network->get_major_component().size() ));
+    componentCountEdit   ->clear();
+    maxComponentSizeEdit ->clear();
     transitivityEdit     ->clear();
     diameterEdit         ->clear();
     meanDistanceEdit     ->clear();
@@ -752,25 +771,64 @@ void MainWindow::showNetworkAnalysis() {
     netAnalysisDialog->exec();
 }
 
+
 void MainWindow::calculateTransitivity() {
+    if (!network) return;
     vector<Node*> empty;
     transitivityEdit->setText(QString::number( network->transitivity(empty) ));
 }
 
-void MainWindow::calculateDiameter() {
-    vector< vector<double> > distances = network->all_distances();
-    double diam = 0;
-    for (unsigned int i = 0; i<distances.size(); i++) {
-        for (unsigned int j = 0; j<distances[i].size(); j++) {
-            diam = distances[i][j] > diam ? distances[i][j] : diam;
+
+void MainWindow::calculateDistances() {
+    if (!network) return;
+    calculateComponentStats();
+    vector<Node*>* giant_comp = &netComponents[0];
+
+    // locate the biggest component in the network
+    for (unsigned int i = 1; i<netComponents.size(); i++) {
+        if (netComponents[i].size() > (*giant_comp).size()) {
+            giant_comp = &netComponents[i];
         }
     }
+
+    // calculate the shortest path lengths within it
+    for(unsigned int t = 0; t< (*giant_comp).size(); t++) cerr << (*giant_comp)[t]->get_id() << endl;
+    vector< vector<double> > pathLengths = network->calculate_distances(*giant_comp);
+    double diam = 0.0;
+    double mean = 0.0;
+    for (unsigned int i = 0; i<pathLengths.size(); i++) {
+        double node_mean = 0.0;
+        for (unsigned int j = 0; j<pathLengths[i].size(); j++) {
+            if (i==j) continue;
+            cerr << pathLengths[i][j] << "\t";
+            diam = pathLengths[i][j] > diam ? pathLengths[i][j] : diam;
+            node_mean += pathLengths[i][j];
+        }
+        cerr << endl;
+        node_mean /= pathLengths[i].size() - 1;
+        mean += node_mean;
+    }
+    
+    mean /= pathLengths.size();
     diameterEdit->setText(QString::number( diam ));
+    meanDistanceEdit->setText(QString::number( mean ));
 }
 
-void MainWindow::calculateMeanDistance() {
-    meanDistanceEdit->setText(QString::number( network->mean_dist() ));
+
+void MainWindow::updateNetProcessProgress() {
+    // Sleep for 0.1 sec
+    /*struct timeval tv;
+    tv.tv_sec = 1;
+    tv.tv_usec = 10000000;
+    cerr << "starting\n";
+    network->set_progress(0);
+    while (network->get_progress() > -1 ) {
+        cerr << network->get_progress() << " " << progressDialog->value() << endl;
+        progressDialog->setValue((int) 100*network->get_progress());
+        select(0, NULL, NULL, NULL, &tv);
+    }*/
 }
+
 
 void MainWindow::generate_network_thread() {
     statusBar()->showMessage(busyNetMsg);
@@ -778,6 +836,7 @@ void MainWindow::generate_network_thread() {
     appendOutputLine("Generating network . . . ");
 
     if(network) delete(network);
+    netComponents.clear();
 
     int n = (numnodesLine->text()).toInt();
     network = new Network("mynetwork", false);
@@ -785,15 +844,15 @@ void MainWindow::generate_network_thread() {
      
    //backgroundThread->setThreadType(BackgroundThread::SIMULATENET);
    backgroundThread->setThreadType(BackgroundThread::GENERATENET);
-   connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
 
+   updateNetProcessProgress();
    backgroundThread->start();
 }
 
+
 void MainWindow::stopBackgroundThread() {
      if (backgroundThread) backgroundThread->stop();
-     if (backgroundThread) backgroundThread->terminate();
-     //delete(backgroundThread);
+     appendOutput("Process interrupted.");
 }
 
 bool MainWindow::generate_network() {
@@ -802,12 +861,9 @@ bool MainWindow::generate_network() {
     double param1 = (param1Line->text()).toDouble();
     double param2 = (param2Line->text()).toDouble();
 
+    // 'true' on success, 'false' if interrupted or impossible
     return connect_network(network, dist_type, param1, param2);
 
-    /*if(network) delete(network);
-    network = new Network("mynetwork", false);
-    network->populate(n);*/ 
-                                // connect network using the parameters above
 }
 
 
@@ -820,8 +876,8 @@ void MainWindow::netDoneUpdate(bool success) {
         clearNetButton->setEnabled(true);
         statusBar()->showMessage(simulateMsg);
     } else {
-        appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using the specified parameters."); 
         setCursor(Qt::ArrowCursor);
+        clear_network();
         statusBar()->showMessage(generateNetMsg);
     }
 }

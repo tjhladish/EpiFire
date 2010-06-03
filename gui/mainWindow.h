@@ -74,6 +74,7 @@ class MainWindow : public QMainWindow
 
         enum DistType  { POI, EXP, POW, URB, CON};
         int rep_ct;
+        vector< vector<Node*> > netComponents;
 
     public slots:
 
@@ -93,9 +94,9 @@ class MainWindow : public QMainWindow
         void saveEdgeList();
         void showNetworkPlot();
         void showNetworkAnalysis();
+        void calculateComponentStats();
         void calculateTransitivity();
-        void calculateDiameter();
-        void calculateMeanDistance();
+        void calculateDistances();
         void stopBackgroundThread();
  
     protected:
@@ -108,8 +109,11 @@ class MainWindow : public QMainWindow
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
         void createNetworkAnalysis();
+        void _addAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
+
         void runSimulation(int j_max, int patient_zero_ct, string RunID);
         double guessEpiSize(double R0, double P0_frac, double guess);
+        void updateNetProcessProgress();
 
         void makeReadonly(QLineEdit* lineEdit);
         void addStateData();
@@ -193,6 +197,8 @@ class MainWindow : public QMainWindow
         QLineEdit* diameterEdit;
         QLineEdit* meanDistanceEdit;
 
+        QPushButton* componentButton1;
+        QPushButton* componentButton2;
         QPushButton* transitivityButton;
         QPushButton* diameterButton;
         QPushButton* meanDistanceButton;

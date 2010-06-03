@@ -27,6 +27,7 @@ Network::Network( string name, bool directed) {
     this->_topology_altered=false;
     this->mtrand = mtrand;
     this->process_stopped = false;
+    this->progress = -1;
 }
 
 
@@ -180,13 +181,16 @@ bool Network::erdos_renyi(double lambda) {
     if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
-    for (unsigned int a = 0; a < nodes.size() - 1; a++) {
+    for (int a = 0; a < n - 1; a++) {
         if (is_stopped() ) { return false; }
         for (unsigned int b = a; b < nodes.size(); b++) {
             if ( mtrand.rand() < p) {
                 nodes[a]->connect_to(nodes[b]);
             }
         }
+        //set_progress( (double) a / n );
+        //set_progress( 1 - (double)(n-a)*(n-a-1) / (n*(n-1)) );
+        //cerr <<  1 - (double)(n-a)*(n-a-1) / (n*(n-1))  << endl;
     }
     return true;
 }

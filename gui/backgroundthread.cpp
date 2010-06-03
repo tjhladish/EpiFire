@@ -24,8 +24,8 @@ BackgroundThread::BackgroundThread(MainWindow* w) {
 
 void BackgroundThread::stop() {
     _stopped=true;
-    emit statusChanged("Stopping...please wait");
-//    mw->network->stopped(true); //flag set 
+    emit statusChanged("Stopping . . . please wait");
+    mw->network->stop_processing(); 
 }
 
 
@@ -33,16 +33,13 @@ void BackgroundThread::stop() {
 void BackgroundThread::run(void) { 
     _stopped=false;
 
-    emit statusChanged("Starting.. ");
-
     if (type == GENERATENET ) {
         emit setProgressValue(0);
-        emit statusChanged("Generating Network");
-        while(1) { mw->network->size(); usleep(1); }
-///        bool success = mw->generate_network();
+        bool success = mw->generate_network();
         emit setProgressValue(100);
-        //emit completed(success);
-        //statusBar()->showMessage(simulateMsg);
+        if (! success) mw->appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using these parameters."); 
+        emit completed(success);
+        mw->network->reset_progress();
     } else if (type == SIMULATENET ) {
         int p=0;
         while(1) {
@@ -54,9 +51,9 @@ void BackgroundThread::run(void) {
     }
 
     if (_stopped ) {
-        emit statusChanged("Terminated.. ");
+        emit statusChanged("Operation stopped");
     } else {
-        emit statusChanged("Done.. ");
+        emit statusChanged("Done");
     }
 
 }

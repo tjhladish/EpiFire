@@ -234,10 +234,13 @@ class Network
 
 
         /***************************************************************************
-         * Network Properties
+         * Process status & control
          **************************************************************************/
         // Allows outside control of terminating some long-running network processes
         void stop_processing() { process_stopped = true; }
+        float get_progress() { return progress; }
+        void reset_progress() { progress = -1; }
+        void set_progress(float pct_complete) { progress = pct_complete; } 
 
     private:
         bool is_stopped();       // checks process status, resets to false if true
@@ -262,6 +265,7 @@ class Network
         // This is checked during some long-running processes to determine whether to
         // continue
         bool process_stopped;
+        float progress; // stores percent complete for long-running processes
 };
 
 class Node
@@ -291,7 +295,7 @@ class Node
         inline void set_state(stateType s) { this->state = s; }
 
         double mean_min_path();
-        vector<double> min_paths(vector<Node*> node_set); 
+        vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
 
