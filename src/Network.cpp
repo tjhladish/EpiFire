@@ -1048,7 +1048,7 @@ void Node::dumper() {
     cerr << "\n";
 }
 
-
+// Mean path length from this node to all others in same component
 double Node::mean_min_path() {
     int component_size = 0;
     vector<double> distances = min_paths();
@@ -1137,7 +1137,7 @@ vector<double> Node::min_paths() {
     }                            //test  this->id = start;
 
     int n = nodes.size();
-    vector<double> distances(n+1,-1);
+    vector<double> distances(n,-1);
     for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
         distances[(*itr).first->id] = (*itr).second;
     }
