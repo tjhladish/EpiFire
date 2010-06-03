@@ -227,9 +227,9 @@ class Network
                                  // measure of clustering of nodes in node_set;
         double transitivity(vector<Node*> node_set);
                                  // if node_set is empty, use all nodes
-        double mean_dist();      // mean distANCE between all nodes A and B
+        double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
-        vector< vector<double> > all_distances();
+        vector< vector<double> > calculate_distances( vector<Node*> destinations );
 
 
 
@@ -291,7 +291,7 @@ class Node
         inline void set_state(stateType s) { this->state = s; }
 
         double mean_min_path();
-        vector<double> min_paths();
+        vector<double> min_paths(vector<Node*> node_set); 
 
         void add_stubs(int deg);
 

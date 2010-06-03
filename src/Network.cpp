@@ -457,7 +457,7 @@ vector< vector<Node*> > Network::get_components() {
     vector< vector<Node*> > components;
     vector<Node*> temp_comp(0);
     list<int> remaining_nodes;
-    for (unsigned int i = 0; i<size(); i++) remaining_nodes.push_back( get_nodes()[i]->get_id() );
+    for (int i = 0; i<size(); i++) remaining_nodes.push_back( get_nodes()[i]->get_id() );
 
     while ( remaining_nodes.size() > 0) {
         Node* next = get_node( remaining_nodes.front() );
@@ -606,23 +606,26 @@ double Network::transitivity (vector<Node*> node_set) {
 }
 
 
-double Network::mean_dist() {    // average distance between nodes in network
-    vector< vector<double> > distance_matrix = all_distances();
+double Network::mean_dist(vector<Node*> node_set) {    // average distance between nodes in network
+    if (node_set.size() == 0) node_set = node_list;
+    vector< vector<double> > distance_matrix = calculate_distances(node_set);
     double grand_total = 0;
     for( unsigned int i=0; i < distance_matrix.size(); i++ ) {
         grand_total += sum(distance_matrix[i]);
     }
-    double mean = grand_total / ( size()*size() );
+    double mean = grand_total / ( size()*( size()-1 ) ); // don't consider distance from nodes to themselves
     return mean;
 }
 
-
-vector< vector<double> > Network::all_distances() {
-    vector< vector<double> > all_dist( size() );
-    for(unsigned int i = 0; i < node_list.size(); i++ ) {
-        all_dist[i] = node_list[i]->min_paths();
+// if node_set is not provided, default is all nodes.  node_set would generally be
+// all nodes within a single component
+vector< vector<double> > Network::calculate_distances(vector<Node*> node_set) {
+    if (node_set.size() == 0) node_set = node_list;
+    vector< vector<double> > dist( node_set.size() );
+    for(unsigned int i = 0; i < node_set.size(); i++ ) {
+        dist[i] = node_set[i]->min_paths(node_set);
     }
-    return all_dist;
+    return dist;
 }
 
 
@@ -1051,7 +1054,8 @@ void Node::dumper() {
 // Mean path length from this node to all others in same component
 double Node::mean_min_path() {
     int component_size = 0;
-    vector<double> distances = min_paths();
+    vector<Node*> empty;
+    vector<double> distances = min_paths(empty);
     double sum = 0;
     for (int i = 0; i < (signed) distances.size(); i++) {
         if (distances[i] > -1 && id != i) {
@@ -1067,21 +1071,23 @@ double Node::mean_min_path() {
 
 
 double Node::min_path(Node* dest) {
-    vector<double> distances = this->min_paths();
+    vector<Node*> empty(0);
+    vector<double> distances = this->min_paths(empty);
     return distances[dest->id];
 }
 
 
-//Calculates length of the minimum path (if possible) between two nodes using Dijkstra's Algorithm
-vector<double> Node::min_paths() {
-    map <Node*, int> known_cost; //Per Dijkstra's Algorithm, these are the two lists
-    map <Node*, int>::iterator itr;
+// Calculates length of the minimum path (if possible) between *this* and everything in *nodes*
+// If *nodes* is empty, default is all nodes
+vector<double> Node::min_paths(vector<Node*> nodes) {
+    if (nodes.size() == 0) nodes = get_network()->node_list;
+    map <Node*, double> known_cost; //Per Dijkstra's Algorithm, these are the two lists
+    map <Node*, double>::iterator itr;
                                  //we need to keep track of
     map <Node*, double> uncertain_cost;
 
                                  //the following initializes the 'uncertain' set with undefined values,
                                  //since we have no information about these nodes yet.
-    vector <Node*> nodes = network->node_list;
     for (unsigned int i = 0; i < nodes.size(); i++) {
         if (this == nodes[i]) continue;
                                  // infinity =: 10^99
@@ -1138,8 +1144,10 @@ vector<double> Node::min_paths() {
 
     int n = nodes.size();
     vector<double> distances(n,-1);
-    for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
-        distances[(*itr).first->id] = (*itr).second;
+    for ( int i=0; i<n; i++) {
+        if ( known_cost.count(nodes[i]) ) {
+            distances[i] = known_cost[nodes[i]];
+        }
     }
     return distances;
 }
