@@ -8,6 +8,7 @@ HEADERS     = mainWindow.h \
              node.h \
              edge.h \
              graphwidget.h \
+             debug.h \
              backgroundthread.h
 
  SOURCES     = mainWindow.cpp \
@@ -19,6 +20,7 @@ HEADERS     = mainWindow.h \
                node.cpp \
                edge.cpp \
                graphwidget.cpp \
+               debug.cpp \
              backgroundthread.cpp
 
 

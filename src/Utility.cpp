@@ -265,6 +265,7 @@ void split(const string& s, char c, vector<string>& v) {
 }
 
 
+
 /*      	// initialize random seed:
 void  seed_rand() {
     if (called_seed) return;

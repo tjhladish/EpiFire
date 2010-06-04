@@ -1,12 +1,14 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 #define QT_USE_FAST_CONCATENATION
+#define PROG(x) cerr << x << endl
 
 #include <QtGui>
 #include <QApplication>
 #include <QMainWindow>
 #include <QSizePolicy>
 
+#include "debug.h"
 #include "plotArea.h"
 #include "graphwidget.h"
 #include "backgroundthread.h"
@@ -19,6 +21,7 @@
 #include <time.h>
 #include <stdlib.h>
 #include <iostream>
+
 
 //Set default values that are not related to distribution
 
@@ -75,7 +78,11 @@ class MainWindow : public QMainWindow
         enum DistType  { POI, EXP, POW, URB, CON};
         int rep_ct;
         vector< vector<Node*> > netComponents;
+        void updateProgress(int x);
 
+    signals:
+        void progressUpdated(int);
+    
     public slots:
 
         void simulatorWrapper();

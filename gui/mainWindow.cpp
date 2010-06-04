@@ -70,9 +70,11 @@ MainWindow::MainWindow() {
 
     backgroundThread = new BackgroundThread(this);
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
+    connect(this, SIGNAL(progressUpdated(int)),progressDialog,SLOT(setValue(int)));
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
+
 
 void MainWindow::createMenu() {
     //Create 'File' menu
@@ -115,6 +117,10 @@ void MainWindow::createMenu() {
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(plotMenu);
     menuBar->addMenu(dataMenu);
+}
+
+void MainWindow::updateProgress(int x) {
+     emit progressUpdated(x);
 }
 
 void MainWindow::createSettingsBox() {

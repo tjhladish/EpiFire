@@ -189,7 +189,7 @@ bool Network::erdos_renyi(double lambda) {
             }
         }
         //set_progress( (double) a / n );
-        //set_progress( 1 - (double)(n-a)*(n-a-1) / (n*(n-1)) );
+        PROG( (int) 100 * (1 - (double)(n-a)*(n-a-1) / (n*(n-1))) );
         //cerr <<  1 - (double)(n-a)*(n-a-1) / (n*(n-1))  << endl;
     }
     return true;

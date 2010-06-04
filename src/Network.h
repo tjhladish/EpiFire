@@ -14,6 +14,9 @@
 #include <assert.h>
 #include "MersenneTwister.h"
 
+//#ifndef QT
+#include "debug.h"
+
 using namespace std;
 
 //predeclare classes
