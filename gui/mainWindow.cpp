@@ -65,7 +65,7 @@ MainWindow::MainWindow() {
 
     createNetworkAnalysis();
 
-    progressDialog = new QProgressDialog("Simulation running . . .", "Cancel", 0, 100, this);
+    progressDialog = new QProgressDialog("", "Cancel", 0, 100, this);
     progressDialog->setWindowModality(Qt::WindowModal);
 
     backgroundThread = new BackgroundThread(this);
@@ -589,6 +589,7 @@ void MainWindow::addStateData() {
 
 
 void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
+    progressDialog->setLabelText("Running simulation");
     if(simulator == NULL || network == NULL ) {
         cerr << "ERROR: runSimulation() called with undefined sim and net parameters";
         return;
@@ -599,7 +600,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     double I0 = (double) patient_zero_ct / n;
     double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * guessEpiSize(R0, 0, 0.5);
     int currentSize = patient_zero_ct;
-    cerr << "Predicted (itr, rec, bin)" << predictedSize << " " << I0 << endl;
+//    cerr << "Predicted (itr, rec, bin)" << predictedSize << " " << I0 << endl;
     setCursor(Qt::WaitCursor); 
     bool abort = false;
 
@@ -649,6 +650,7 @@ void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
     setCursor(Qt::ArrowCursor);
     clearDataButton->setEnabled(true);
     statusBar()->showMessage(simDoneMsg, 1000);
+    progressDialog->setLabelText("");
     return;
 }
 
@@ -711,12 +713,19 @@ void MainWindow::createNetworkAnalysis() {
     diameterButton     = new QPushButton("Calculate", netAnalysisDialog);
     meanDistanceButton = new QPushButton("Calculate", netAnalysisDialog);
 
+    connect(componentButton1,   SIGNAL(clicked()), this, SLOT(generate_comp_thread()));
+    connect(componentButton2,   SIGNAL(clicked()), this, SLOT(generate_comp_thread()));
+    connect(transitivityButton, SIGNAL(clicked()), this, SLOT(generate_trans_thread()));
+    connect(diameterButton,     SIGNAL(clicked()), this, SLOT(generate_dist_thread()));
+    connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(generate_dist_thread()));
+
+/*
     connect(componentButton1, SIGNAL(clicked()), this, SLOT(calculateComponentStats()));
     connect(componentButton2, SIGNAL(clicked()), this, SLOT(calculateComponentStats()));
     connect(transitivityButton, SIGNAL(clicked()), this, SLOT(calculateTransitivity()));
     connect(diameterButton, SIGNAL(clicked()), this, SLOT(calculateDistances()));
     connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(calculateDistances()));
-
+*/
     _addAnalysisRow(netTopLayout, "Node count:",         nodeCountEdit);
     _addAnalysisRow(netTopLayout, "Edge count:",         edgeCountEdit);
     _addAnalysisRow(netTopLayout, "Mean degree:",        meanDegreeEdit);
@@ -787,6 +796,7 @@ void MainWindow::calculateTransitivity() {
 
 void MainWindow::calculateDistances() {
     if (!network) return;
+    progressDialog->setLabelText("Finding biggest component ...");
     calculateComponentStats();
     vector<Node*>* giant_comp = &netComponents[0];
 
@@ -797,6 +807,7 @@ void MainWindow::calculateDistances() {
         }
     }
 
+    progressDialog->setLabelText("Finding shortest paths in component ...");
     // calculate the shortest path lengths within it
     for(unsigned int t = 0; t< (*giant_comp).size(); t++) cerr << (*giant_comp)[t]->get_id() << endl;
     vector< vector<double> > pathLengths = network->calculate_distances(*giant_comp);
@@ -806,11 +817,11 @@ void MainWindow::calculateDistances() {
         double node_mean = 0.0;
         for (unsigned int j = 0; j<pathLengths[i].size(); j++) {
             if (i==j) continue;
-            cerr << pathLengths[i][j] << "\t";
+            //cerr << pathLengths[i][j] << "\t";
             diam = pathLengths[i][j] > diam ? pathLengths[i][j] : diam;
             node_mean += pathLengths[i][j];
         }
-        cerr << endl;
+        //cerr << endl;
         node_mean /= pathLengths[i].size() - 1;
         mean += node_mean;
     }
@@ -818,21 +829,6 @@ void MainWindow::calculateDistances() {
     mean /= pathLengths.size();
     diameterEdit->setText(QString::number( diam ));
     meanDistanceEdit->setText(QString::number( mean ));
-}
-
-
-void MainWindow::updateNetProcessProgress() {
-    // Sleep for 0.1 sec
-    /*struct timeval tv;
-    tv.tv_sec = 1;
-    tv.tv_usec = 10000000;
-    cerr << "starting\n";
-    network->set_progress(0);
-    while (network->get_progress() > -1 ) {
-        cerr << network->get_progress() << " " << progressDialog->value() << endl;
-        progressDialog->setValue((int) 100*network->get_progress());
-        select(0, NULL, NULL, NULL, &tv);
-    }*/
 }
 
 
@@ -847,18 +843,43 @@ void MainWindow::generate_network_thread() {
     int n = (numnodesLine->text()).toInt();
     network = new Network("mynetwork", false);
     network->populate(n);
-     
-   //backgroundThread->setThreadType(BackgroundThread::SIMULATENET);
-   backgroundThread->setThreadType(BackgroundThread::GENERATENET);
 
-   updateNetProcessProgress();
-   backgroundThread->start();
+    //backgroundThread->setThreadType(BackgroundThread::SIMULATENET);
+    backgroundThread->setThreadType(BackgroundThread::GENERATE_NET);
+
+    progressDialog->setLabelText("Generating network");
+    backgroundThread->start();
 }
+
+void MainWindow::generate_comp_thread() {
+    setCursor(Qt::WaitCursor);
+    backgroundThread->setThreadType(BackgroundThread::COMPONENTS);
+    progressDialog->setLabelText("Determining network components");
+    backgroundThread->start();
+}
+
+void MainWindow::generate_trans_thread() {
+    setCursor(Qt::WaitCursor);
+    backgroundThread->setThreadType(BackgroundThread::TRANSITIVITY);
+    progressDialog->setLabelText("Calculating transitivity clustering coefficient");
+    backgroundThread->start();
+}
+
+
+void MainWindow::generate_dist_thread() {
+    setCursor(Qt::WaitCursor);
+    backgroundThread->setThreadType(BackgroundThread::DISTANCES);
+    progressDialog->setLabelText("Beginning shortest path calculation ...");
+    backgroundThread->start();
+}
+
+
 
 
 void MainWindow::stopBackgroundThread() {
      if (backgroundThread) backgroundThread->stop();
-     appendOutput("Process interrupted.");
+     cerr << "thread supposedly stopped\n";
+     appendOutputLine("Process interrupted.");
 }
 
 bool MainWindow::generate_network() {
@@ -917,7 +938,6 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
 double MainWindow::calculate_T_crit() {
     vector<double> dist = network->get_gen_deg_dist();
     double numerator = 0;// mean degree, (= <k>)
-    // mean sq(deg) - mean deg (= <k^2> - <k>)
     double denominator = 0;
     for (unsigned int k=1; k < dist.size(); k++) {
         numerator += k * dist[k];

@@ -75,6 +75,7 @@ class MainWindow : public QMainWindow
         QTextEdit* logEditor;
         QProgressDialog* progressDialog;
 
+        enum ThreadType { GENERATE_NET, COMPONENTS, TRANSITIVITY, DISTANCES, SIMULATE };
         enum DistType  { POI, EXP, POW, URB, CON};
         int rep_ct;
         vector< vector<Node*> > netComponents;
@@ -96,6 +97,9 @@ class MainWindow : public QMainWindow
         void clear_data();
         bool generate_network();
         void generate_network_thread();
+        void generate_comp_thread();
+        void generate_trans_thread();
+        void generate_dist_thread();
         bool connect_network (Network* net, DistType dist, double param1, double param2);
         void netDoneUpdate(bool success);
         void saveEdgeList();

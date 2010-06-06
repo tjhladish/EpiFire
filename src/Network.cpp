@@ -464,11 +464,16 @@ vector< vector<Node*> > Network::get_components() {
     for (int i = 0; i<size(); i++) remaining_nodes.push_back( get_nodes()[i]->get_id() );
 
     while ( remaining_nodes.size() > 0) {
+        if (is_stopped()) {
+            vector< vector<Node*> > empty;
+            return empty;
+        }
         Node* next = get_node( remaining_nodes.front() );
         temp_comp = get_component( next );
         components.push_back(temp_comp);
 
         for (unsigned int i = 0; i<temp_comp.size(); i++) remaining_nodes.remove( temp_comp[i]->get_id() );
+        PROG(100*(1 - (remaining_nodes.size()/size()) ));
     }
     return components;
 }
@@ -593,6 +598,7 @@ double Network::transitivity (vector<Node*> node_set) {
     Node *a, *b, *c;
 
     for (unsigned int i = 0; i < node_list.size(); i++) {
+        if (is_stopped()) return -1 * std::numeric_limits<float>::max();
         a = node_list[i];
         vector<Node*> neighborhood_a = a->get_neighbors();
         for (unsigned int j = 0; j < neighborhood_a.size(); j++) {
@@ -605,6 +611,7 @@ double Network::transitivity (vector<Node*> node_set) {
                 tripples++;
             }
         }
+        PROG(100*i/size());
     }
     return (double) triangles / (double) tripples ;
 }
@@ -627,7 +634,13 @@ vector< vector<double> > Network::calculate_distances(vector<Node*> node_set) {
     if (node_set.size() == 0) node_set = node_list;
     vector< vector<double> > dist( node_set.size() );
     for(unsigned int i = 0; i < node_set.size(); i++ ) {
+cerr << "stopped? " << is_stopped() << endl;
+        if (is_stopped() ) {
+            vector< vector<double> > empty;
+            return empty;
+        }
         dist[i] = node_set[i]->min_paths(node_set);
+        PROG(100*i/node_set.size());
     }
     return dist;
 }
@@ -1094,14 +1107,15 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
                                  //since we have no information about these nodes yet.
     for (unsigned int i = 0; i < nodes.size(); i++) {
         if (this == nodes[i]) continue;
-                                 // infinity =: 10^99
-        uncertain_cost[ nodes[i] ] = 1e+99;
+                                 // infinity =: max double value
+        uncertain_cost[ nodes[i] ] = std::numeric_limits<double>::max();
     }
     known_cost[this] = 0;        //We only know initially that there is no cost to get to the starting node
 
     int j = 0;
                                  //As long as there are nodes with uncertain min costs
     while ( j++ < (signed) nodes.size() ) {
+        if (get_network()->is_stopped()) {vector<double> empty; return empty;}
                                  //Loop through the nodes we know about.
                                  //Initialize min to an arbitrary node in the "uncertain" map
         Node* min = NULL;        //(*uncertain_cost.begin()).first;

@@ -14,7 +14,7 @@ Q_OBJECT
 
         BackgroundThread(MainWindow* w);
 
-        enum ThreadType { GENERATENET, SIMULATENET };
+        enum ThreadType { GENERATE_NET, COMPONENTS, TRANSITIVITY, DISTANCES, SIMULATE };
         void setThreadType(ThreadType t) { type=t; }
         bool stopped() { return _stopped; }
 
@@ -23,6 +23,7 @@ Q_OBJECT
 
     signals:
         void statusChanged(QString string);
+        void updateDialogText(QString string);
         void completed(bool);
         void setProgressValue(int);
 

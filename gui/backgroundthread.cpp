@@ -9,7 +9,7 @@ BackgroundThread::BackgroundThread(MainWindow* w) {
      connect(this, SIGNAL(statusChanged(QString)), 
                     mw->statusBar(), SLOT(showMessage(QString)));
 
-     connect(this, SIGNAL(statusChanged(QString)), 
+     connect(this, SIGNAL(updateDialogText(QString)), 
                     mw->progressDialog, SLOT(setLabelText(QString)));
 
      connect(this, SIGNAL(setProgressValue(int)), 
@@ -24,8 +24,9 @@ BackgroundThread::BackgroundThread(MainWindow* w) {
 
 void BackgroundThread::stop() {
     _stopped=true;
-    emit statusChanged("Stopping . . . please wait");
+    emit updateDialogText("Stopping . . . please wait");
     mw->network->stop_processing(); 
+    emit updateDialogText("");
 }
 
 
@@ -33,14 +34,26 @@ void BackgroundThread::stop() {
 void BackgroundThread::run(void) { 
     _stopped=false;
 
-    if (type == GENERATENET ) {
+    if (type == GENERATE_NET ) {
         emit setProgressValue(0);
         bool success = mw->generate_network();
         emit setProgressValue(100);
         if (! success) mw->appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using these parameters."); 
         emit completed(success);
         mw->network->reset_progress();
-    } else if (type == SIMULATENET ) {
+    } else if (type == COMPONENTS ) {
+        emit setProgressValue(0);
+        mw->calculateComponentStats();
+        emit setProgressValue(100);
+    } else if (type == TRANSITIVITY ) {
+        emit setProgressValue(0);
+        mw->calculateTransitivity();
+        emit setProgressValue(100);
+    } else if (type == DISTANCES ) {
+        emit setProgressValue(0);
+        mw->calculateDistances();
+        emit setProgressValue(100);
+    } else if (type == SIMULATE ) {
         int p=0;
         while(1) {
             emit setProgressValue(p++ / 100000);
@@ -49,12 +62,5 @@ void BackgroundThread::run(void) {
         }
 
     }
-
-    if (_stopped ) {
-        emit statusChanged("Operation stopped");
-    } else {
-        emit statusChanged("Done");
-    }
-
 }
 

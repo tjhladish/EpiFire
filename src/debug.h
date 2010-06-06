@@ -5,7 +5,7 @@
 
 
 inline void __update_progress(float x) { 
-    cerr << x << endl;
+    //cerr << x << endl;
 }
     
 

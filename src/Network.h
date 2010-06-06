@@ -13,8 +13,8 @@
 #include "Utility.h"
 #include <assert.h>
 #include "MersenneTwister.h"
+#include <limits>
 
-//#ifndef QT
 #include "debug.h"
 
 using namespace std;
