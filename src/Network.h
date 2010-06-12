@@ -241,9 +241,10 @@ class Network
          **************************************************************************/
         // Allows outside control of terminating some long-running network processes
         void stop_processing() { process_stopped = true; }
-        float get_progress() { return progress; }
-        void reset_progress() { progress = -1; }
-        void set_progress(float pct_complete) { progress = pct_complete; } 
+        void reset_processing_flag() { process_stopped = false; }
+        //float get_progress() { return progress; }
+        //void reset_progress() { progress = -1; }
+        //void set_progress(float pct_complete) { progress = pct_complete; } 
 
     private:
         bool is_stopped();       // checks process status, resets to false if true
@@ -267,16 +268,18 @@ class Network
 
         // This is checked during some long-running processes to determine whether to
         // continue
-        bool process_stopped;
-        float progress; // stores percent complete for long-running processes
+        volatile bool process_stopped;
+        int known_nodes; // bookkeeping var; allows get_component() to report % complete
 };
 
 class Node
 {
     friend class Network;
     friend class Edge;
-
+    
     public:
+
+        inline bool is_stopped() {return network->is_stopped();}
 
         /***************************************************************************
          * Constructor and Destructor

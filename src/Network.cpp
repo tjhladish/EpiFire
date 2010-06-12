@@ -27,7 +27,7 @@ Network::Network( string name, bool directed) {
     this->_topology_altered=false;
     this->mtrand = mtrand;
     this->process_stopped = false;
-    this->progress = -1;
+    this->known_nodes = 0;
 }
 
 
@@ -199,8 +199,9 @@ bool Network::erdos_renyi(double lambda) {
 // generates a poisson network.  Faster than Erdos-Renyi for sparse graphs
 bool Network::sparse_random_graph(double lambda) {
     int n = size();
-    double p = lambda / (n-1);
-    double sd = sqrt(n*(n-1)*p*(1-p));
+    long double p = lambda / (n-1);
+    long double sd = sqrtl(n*lambda*(1-p));
+    //sqrtl(n*(n-1)*p*(1-p)); // sometimes yields -nan (e.g. n=50000,lambda=5)
                                  // randNorm(mean, variance)
     double edge_ct = mtrand.randNorm(lambda * n, sd);
                                  // we're increasing the degree of 2 nodes!
@@ -210,6 +211,7 @@ bool Network::sparse_random_graph(double lambda) {
                                  // for undirected graphs, this makes
         node_list[a]->connect_to(node_list[b]);
                                  // an undirected edge
+        PROG( (int) 50 * i/edge_ct );
     }
     return lose_loops();
 }
@@ -266,6 +268,7 @@ bool Network::rand_connect_explicit(vector<int> degree_series) {
 
 
 bool Network::rand_connect_user(vector<double> dist) {
+    if (is_stopped()) return false;
     gen_deg_dist = dist;
     _assign_deg_series();
     return rand_connect_stubs( get_edges() );
@@ -282,6 +285,7 @@ bool Network::_rand_connect() {
 // rand_connect_stubs() expects ONLY stubs in network, i.e. not some complete edges
 // and some stubs
 bool Network::rand_connect_stubs(vector<Edge*> stubs) {
+    if ( is_stopped() ) return false;
                                  //get all edges in network
     vector<Edge*>::iterator itr;
     Edge* m;
@@ -301,6 +305,7 @@ bool Network::rand_connect_stubs(vector<Edge*> stubs) {
         n  = stubs[i  + 1];
         m->define_end(n->start);
         n->define_end(m->start);
+        PROG( 25 + (int) (25 * i / stubs.size()) );
     }
     // if lose_loops() isn't successful, return false
     if (! lose_loops()) { clear_edges(); return false; }
@@ -339,6 +344,7 @@ bool Network::lose_loops() {
     for (int i = max; i >= 0; i-- ) swap(bad_edges[i], bad_edges[ mtrand.randInt(i) ]);
 
     while ( bad_edges.size() > 0 ) {
+        PROG( 50 + (int) (50 * (max - bad_edges.size()) / max) );
         m = bad_edges.size() - 1;
         n = mtrand.randInt(  edges.size() - 1 );
         if ( failed_attempts > 99 ) {
@@ -438,21 +444,7 @@ vector<Node*> Network::get_biggest_component() {
     for (unsigned int i = 0; i<all_comp.size(); i++) {
         if (all_comp[i].size() > big_comp.size()) big_comp = all_comp[i];
     }
-/*    vector<int> remaining_nodes(size(),1);
-
-    while ((unsigned) sum(remaining_nodes) > major_comp.size()) {
-        Node* starting_point = NULL;
-        for ( unsigned int i = 0; i < remaining_nodes.size(); i++ ) {
-            if (remaining_nodes[i] == 1) {
-                starting_point = get_node(i);
-                break;
-            }
-        }
-
-        vector<Node*> temp_comp = get_component(starting_point);
-        for ( unsigned int i = 0; i < temp_comp.size(); i++ ) remaining_nodes[i] = 0;
-        if (temp_comp.size() > major_comp.size()) major_comp = temp_comp;
-    }*/
+    
     return big_comp;
 }
 
@@ -460,20 +452,30 @@ vector<Node*> Network::get_biggest_component() {
 vector< vector<Node*> > Network::get_components() {
     vector< vector<Node*> > components;
     vector<Node*> temp_comp(0);
-    list<int> remaining_nodes;
-    for (int i = 0; i<size(); i++) remaining_nodes.push_back( get_nodes()[i]->get_id() );
+    map<Node*,bool> remaining_nodes;
+    PROG(0);
+    for (int i = 0; i<size(); i++) remaining_nodes.insert( make_pair(get_nodes()[i], true) );
 
-    while ( remaining_nodes.size() > 0) {
+    known_nodes = 0;
+    while ( known_nodes < size() ) {
         if (is_stopped()) {
             vector< vector<Node*> > empty;
             return empty;
         }
-        Node* next = get_node( remaining_nodes.front() );
-        temp_comp = get_component( next );
-        components.push_back(temp_comp);
 
-        for (unsigned int i = 0; i<temp_comp.size(); i++) remaining_nodes.remove( temp_comp[i]->get_id() );
-        PROG(100*(1 - (remaining_nodes.size()/size()) ));
+        map<Node*, bool>::iterator it;
+
+        for (it = remaining_nodes.begin(); it != remaining_nodes.end(); ++it){
+            if (it->second == true){
+                Node* next = it->first;
+
+                temp_comp = get_component( next );
+                components.push_back(temp_comp);
+                known_nodes += temp_comp.size();
+
+                for (unsigned int i = 0; i<temp_comp.size(); i++) remaining_nodes[ temp_comp[i] ] = false;
+            }
+        }
     }
     return components;
 }
@@ -488,6 +490,8 @@ vector<Node*> Network::get_component(Node* node) {
     state[node->id] = 1;
 
     while (hot_nodes.size() > 0) {
+        if (process_stopped) return cold_nodes;
+        
         vector<Node*> new_hot_nodes;
         for (unsigned int i = 0; i < hot_nodes.size(); i++) {
             vector<Node*> neighbors = hot_nodes[i]->get_neighbors();
@@ -499,6 +503,7 @@ vector<Node*> Network::get_component(Node* node) {
             }
             state[hot_nodes[i]->id] = 2;
             cold_nodes.push_back( hot_nodes[i] );
+            PROG((int) 100*((float) (known_nodes + cold_nodes.size())/size() ));
         }
         hot_nodes = new_hot_nodes;
     }
@@ -512,8 +517,10 @@ void Network::_assign_deg_series() {
 
     gen_deg_series(deg_series);
 
+    if ( is_stopped() ) return;
     for (int i = 0; i < n; i++ ) {
         this->node_list[i]->add_stubs(deg_series[i]);
+        PROG( (int) (25.0 * i / n));
     }
 }
 
@@ -634,13 +641,12 @@ vector< vector<double> > Network::calculate_distances(vector<Node*> node_set) {
     if (node_set.size() == 0) node_set = node_list;
     vector< vector<double> > dist( node_set.size() );
     for(unsigned int i = 0; i < node_set.size(); i++ ) {
-cerr << "stopped? " << is_stopped() << endl;
         if (is_stopped() ) {
             vector< vector<double> > empty;
             return empty;
         }
+        PROG(100*(i-1)/node_set.size());
         dist[i] = node_set[i]->min_paths(node_set);
-        PROG(100*i/node_set.size());
     }
     return dist;
 }
@@ -1115,7 +1121,8 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
     int j = 0;
                                  //As long as there are nodes with uncertain min costs
     while ( j++ < (signed) nodes.size() ) {
-        if (get_network()->is_stopped()) {vector<double> empty; return empty;}
+        //cerr << "stopped in min_paths? " << get_network()->process_stopped << endl;
+        if (get_network()->process_stopped) {vector<double> empty; return empty;}
                                  //Loop through the nodes we know about.
                                  //Initialize min to an arbitrary node in the "uncertain" map
         Node* min = NULL;        //(*uncertain_cost.begin()).first;
