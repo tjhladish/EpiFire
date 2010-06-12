@@ -106,8 +106,8 @@ void PlotArea::clearPlot() {
     yAxis->hide();
     myscene->setLabel(label, 0, -30);
 }
-
-void PlotArea::drawHistogram() {
+/*
+void PlotArea::drawDegreeDist() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
     clearPlot();
     scene()->update(); // clears any artifacts in plot margins
@@ -131,6 +131,78 @@ void PlotArea::drawHistogram() {
     
     float max_val = (float) find_max_val(data);
     float min_val = (float) find_min_val(data);
+
+    vector<int> density(nbins,0);
+    if (max_val == min_val) {
+        density[0] = n;
+    } else {
+        for (unsigned int i = 0; i<data.size(); i++) {
+            for (unsigned int j = 0; j<data[i].size(); j++) {
+                int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
+                density[ bin ]++;
+            }
+        }
+    }
+
+    int max_ct = max_element(density);
+
+    xAxis->setLabel("Epidemic size");
+    xAxis->setNumTicks(nbins);
+    xAxis->setRange(min_val,max_val);
+    xAxis->forceNumTicks(true);
+    xAxis->show(); 
+
+    yAxis->setLabel("Frequency");
+    int yticks = max_ct > 10 ? 10 : max_ct;
+    yAxis->preferedNumTicks(yticks);
+    yAxis->calculateRange(0,max_ct);   
+    yAxis->useIntLabels(true);
+    yAxis->show(); 
+
+    myscene->setXrange(0,nbins);
+    myscene->setYrange(0,yAxis->getMax());
+
+    QPen pen(Qt::white);
+    QBrush brush(Qt::red);
+    float w = (float) myscene->width()/nbins;
+    for (unsigned int r = 0; r < density.size(); r++) {
+        float x = myscene->toPlotX(r);
+        float y = myscene->toPlotY(density[r]);
+        float h = myscene->toPlotY(0) - y;
+        myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
+    }
+}*/
+
+void PlotArea::drawHistogram() {
+    setRenderHint(QPainter::Antialiasing); // smooth data points
+    clearPlot();
+    scene()->update(); // clears any artifacts in plot margins
+    if (data.size() == 0 ) return;
+    
+    PlotScene* myscene = (PlotScene*) scene();
+
+    int plotW = width() - 110;   //width of the view
+    int plotH = height() - 80;  //height of the view
+    myscene->setSceneRect(0,0,plotW,plotH);
+
+    int n = 0;
+    for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
+
+    // for n data points, number of bins should be:
+    // n if n < 10
+    // 10 if 10 < n < 100
+    // (int) sqrt(n) if n > 100
+    int nbins = n < 10 ? n 
+              : sqrt(n) < 10 ? 10
+              : sqrt(n) < 20 ? sqrt(n)
+              : 20;
+    //nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
+    
+    float max_val = (float) find_max_val(data);
+    float min_val = (float) find_min_val(data);
+    float range = max_val - min_val;
+   
+    nbins = nbins > range + 1 ? range + 1 : nbins;
 
     vector<int> density(nbins,0);
     if (max_val == min_val) {
@@ -296,9 +368,17 @@ void PlotArea::resizeEvent ( QResizeEvent * event ) {
 
 
 void PlotArea::saveData() {
-    QString startdir = ".";
-    QString file = QFileDialog::getOpenFileName(
-        this, "Select file to save to", startdir, "CSV Files(*.csv)");
+    //QString startdir = ".";
+    //QString file = QFileDialog::getOpenFileName(
+        //this, "Select file to save to", startdir, "CSV Files(*.csv)");
+cerr << "data size: " << data.size() << endl; return;
+    for( unsigned int r=0; r < data.size(); r++) {
+        for( unsigned int c=0; c < data[r].size(); c++ ) {
+            cout << data[r][c] << " ";
+        }
+        cout << endl;
+    }
+
 
 }
 

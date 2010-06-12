@@ -26,6 +26,8 @@ Q_OBJECT
         void updateDialogText(QString string);
         void completed(bool);
         void setProgressValue(int);
+        void showProgressDialog();
+        void hideProgressDialog();
 
     protected:
         void run(void);
@@ -34,6 +36,7 @@ Q_OBJECT
         volatile bool _stopped;
         ThreadType type;
         MainWindow* mw;
+        void runSimulation();
 };
 
 #endif

@@ -62,6 +62,8 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    friend class BackgroundThread;
+
         public:
         MainWindow();
         void appendOutput(QString);
@@ -75,7 +77,7 @@ class MainWindow : public QMainWindow
         QTextEdit* logEditor;
         QProgressDialog* progressDialog;
 
-        enum ThreadType { GENERATE_NET, COMPONENTS, TRANSITIVITY, DISTANCES, SIMULATE };
+        //enum ThreadType { GENERATE_NET, COMPONENTS, TRANSITIVITY, DISTANCES, SIMULATE };
         enum DistType  { POI, EXP, POW, URB, CON};
         int rep_ct;
         vector< vector<Node*> > netComponents;
@@ -96,6 +98,7 @@ class MainWindow : public QMainWindow
         void clear_network();
         void clear_data();
         bool generate_network();
+        void generate_sim_thread();
         void generate_network_thread();
         void generate_comp_thread();
         void generate_trans_thread();
@@ -122,7 +125,6 @@ class MainWindow : public QMainWindow
         void createNetworkAnalysis();
         void _addAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
 
-        void runSimulation(int j_max, int patient_zero_ct, string RunID);
         double guessEpiSize(double R0, double P0_frac, double guess);
         void updateNetProcessProgress();
 

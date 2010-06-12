@@ -542,12 +542,12 @@ void MainWindow::simulatorWrapper() {
     if (!network || network->size() == 0 ) { appendOutputLine("Network must be generated first."); return; }
 
     // Get values from textboxes
-    int j_max = (numrunsLine->text()).toInt();
+    //int j_max = (numrunsLine->text()).toInt();
     double T = (transLine->text()).toDouble();
-    int p_zero = (pzeroLine->text()).toInt();
-    string RunID="1";            // This needs to be updated
-    int dist_size_array[j_max];  //Initiate array that will contain distribution sizes
-    int* dist_size_point=dist_size_array;
+    //int p_zero = (pzeroLine->text()).toInt();
+    //string RunID="1";            // This needs to be updated
+    //int dist_size_array[j_max];  //Initiate array that will contain distribution sizes
+    //int* dist_size_point=dist_size_array;
 
     //CREATE SIMULATOR
     if(simulator) { delete(simulator); simulator=NULL; }
@@ -565,10 +565,16 @@ void MainWindow::simulatorWrapper() {
     if (! retain_data) {
         epiCurvePlot->clearData();
     }
-    statePlot->clearData();
 
     //RUN SIMULATION
-    runSimulation(j_max, p_zero, RunID);
+    generate_sim_thread();
+    while (backgroundThread->isRunning()) {
+        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+    setCursor(Qt::ArrowCursor);
+    clearDataButton->setEnabled(true);
+    statusBar()->showMessage(simDoneMsg, 1000);
+    progressDialog->setLabelText("");
 
     //MAKE PLOTS
     epiCurvePlot->replot();
@@ -587,72 +593,6 @@ void MainWindow::addStateData() {
     statePlot->addData(node_states);
 }
 
-
-void MainWindow::runSimulation(int j_max, int patient_zero_ct, string RunID) {
-    progressDialog->setLabelText("Running simulation");
-    if(simulator == NULL || network == NULL ) {
-        cerr << "ERROR: runSimulation() called with undefined sim and net parameters";
-        return;
-    }
-
-    double R0 = (rzeroLine->text()).toDouble();
-    int n = network->size();
-    double I0 = (double) patient_zero_ct / n;
-    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * guessEpiSize(R0, 0, 0.5);
-    int currentSize = patient_zero_ct;
-//    cerr << "Predicted (itr, rec, bin)" << predictedSize << " " << I0 << endl;
-    setCursor(Qt::WaitCursor); 
-    bool abort = false;
-
-    vector<int> epi_sizes (j_max);
-    QList<QString> progress; progress << " --" << " \\" << " |" << " /";
-    //time_t start;
-    for ( int j = 0; j < j_max; j++) {
-        QString rep_str = QString::number(++rep_ct, 10);
-        statusBar()->showMessage(busySimMsg % progress[rep_ct % 4]);
-        simulator->rand_infect(patient_zero_ct);
-
-        vector<int> epi_curve;
-        epi_curve.push_back(simulator->count_infected());
-
-        if (j == j_max - 1) {
-            statePlot->clearData();
-            statePlot->replot(); // draws a white background when data is cleared
-            addStateData();
-        }
-        //start = time(NULL);     
-
-        while (simulator->count_infected() > 0 ) {
-            progressDialog->setValue(percent_complete(currentSize, predictedSize));
-            if ( ! progressDialog->wasCanceled()) {
-                //cerr << percent_complete(currentSize, predictedSize) << " " << difftime(time(NULL), start) << endl;
-                simulator->step_simulation();
-                epi_curve.push_back(simulator->count_infected());
-                currentSize = simulator->epidemic_size();
-                if (j == j_max - 1) addStateData();
-            } else { abort = true; }
-        }
-        progressDialog->setValue(100);
-        //cerr << "100\n";
-        int epi_size = simulator->epidemic_size();
-
-        QString status_line="Rep: " % rep_str % ", Total infected: " % QString::number(epi_size,10);
-        appendOutputLine(status_line);
-        cout << "Rep: " << rep_ct << "    Total: " << epi_size << "\n\n";
-
-        epiCurvePlot->addData(epi_curve);
-
-        epi_sizes[j] = epi_size;
-
-        simulator->reset();
-    }
-    histPlot->addData(epi_sizes);
-    setCursor(Qt::ArrowCursor);
-    clearDataButton->setEnabled(true);
-    statusBar()->showMessage(simDoneMsg, 1000);
-    progressDialog->setLabelText("");
-    return;
-}
 
 void MainWindow::showNetworkPlot() { 
     graphWidget->clear();
@@ -806,7 +746,7 @@ void MainWindow::calculateDistances() {
             giant_comp = &netComponents[i];
         }
     }
-
+    
     progressDialog->setLabelText("Finding shortest paths in component ...");
     // calculate the shortest path lengths within it
     for(unsigned int t = 0; t< (*giant_comp).size(); t++) cerr << (*giant_comp)[t]->get_id() << endl;
@@ -850,6 +790,15 @@ void MainWindow::generate_network_thread() {
     progressDialog->setLabelText("Generating network");
     backgroundThread->start();
 }
+
+
+void MainWindow::generate_sim_thread() {
+    setCursor(Qt::WaitCursor);
+    backgroundThread->setThreadType(BackgroundThread::SIMULATE);
+    progressDialog->setLabelText("Simulation running");
+    backgroundThread->start();
+}
+
 
 void MainWindow::generate_comp_thread() {
     setCursor(Qt::WaitCursor);
