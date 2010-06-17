@@ -344,6 +344,7 @@ void GraphWidget::randomLayout() {
         float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
         n1->setPos(x,y);
     }
+
     float t_init = 100;
     float t = t_init;
     int rep_max = 50;

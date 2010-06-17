@@ -183,7 +183,7 @@ bool Network::erdos_renyi(double lambda) {
     vector<Node*> nodes = get_nodes();
     for (int a = 0; a < n - 1; a++) {
         if (is_stopped() ) { return false; }
-        for (unsigned int b = a; b < nodes.size(); b++) {
+        for (unsigned int b = a + 1; b < nodes.size(); b++) {
             if ( mtrand.rand() < p) {
                 nodes[a]->connect_to(nodes[b]);
             }
