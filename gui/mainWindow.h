@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <iostream>
 
-
 //Set default values that are not related to distribution
 
 const QString default_num_runs="1";
@@ -77,7 +76,6 @@ class MainWindow : public QMainWindow
         QTextEdit* logEditor;
         QProgressDialog* progressDialog;
 
-        //enum ThreadType { GENERATE_NET, COMPONENTS, TRANSITIVITY, DISTANCES, SIMULATE };
         enum DistType  { POI, EXP, POW, URB, CON};
         int rep_ct;
         vector< vector<Node*> > netComponents;
@@ -107,12 +105,17 @@ class MainWindow : public QMainWindow
         void netDoneUpdate(bool success);
         void saveEdgeList();
         void updateNetworkPlot();
-        void showNetworkPlot();
-        void showNetworkAnalysis();
+        void updatePlotMenuFlags();
+        void showHideStatePlot();
+        void showHideEpiCurvePlot();
+        void showHideHistPlot();
+        void plotNetwork();
+        void analyzeNetwork();
         void calculateComponentStats();
         void calculateTransitivity();
         void calculateDistances();
         void stopBackgroundThread();
+        bool validateParameters();
  
     protected:
 
@@ -196,11 +199,14 @@ class MainWindow : public QMainWindow
         //QWidget* dockWidget1;
         //QWidget* dockWidget2;
 
-        QDoubleValidator* probValidator;
         QMenu* fileMenu;
-        QMenu* plotMenu;
         QAction* exitAction;
         QAction* openAction;
+        
+        QMenu* plotMenu;
+        QAction* showStatePlot;
+        QAction* showEpiPlot;
+        QAction* showHistPlot;
         
         QLineEdit* nodeCountEdit;
         QLineEdit* edgeCountEdit;

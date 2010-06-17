@@ -73,7 +73,6 @@ MainWindow::MainWindow() {
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(updateNetworkPlot()));
     connect(this, SIGNAL(progressUpdated(int)),progressDialog,SLOT(setValue(int)));
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
-    //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
 }
 
 
@@ -102,18 +101,31 @@ void MainWindow::createMenu() {
  
     //Create 'Plot' menu
     QMenu* plotMenu = new QMenu(tr("&Plot"), this);
-    QAction* showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
-    QAction* showStatePlot = plotMenu->addAction("Show state plot");
+    QAction* showNetworkPlot = plotMenu->addAction("Show network plot");
+    plotMenu->addSeparator();
+    
+    showStatePlot = plotMenu->addAction("Show node state plot");
+    showStatePlot->setCheckable(true);
+    showStatePlot->setChecked(true);
+    
+    showEpiPlot = plotMenu->addAction("Show epidemic curve plot");
+    showEpiPlot->setCheckable(true);
+    showEpiPlot->setChecked(true);
+    
+    showHistPlot = plotMenu->addAction("Show histogram");
+    showHistPlot->setCheckable(true);
+    showHistPlot->setChecked(true);
 
+    connect(showNetworkPlot, SIGNAL(triggered()), this, SLOT(plotNetwork()));
+    connect(showStatePlot, SIGNAL(triggered()), this, SLOT( showHideStatePlot() ));
+    connect(showEpiPlot, SIGNAL(triggered()), this, SLOT( showHideEpiCurvePlot() ));
+    connect(showHistPlot, SIGNAL(triggered()), this, SLOT( showHideHistPlot() ));
+    connect(rightBox, SIGNAL(splitterMoved(int, int)), this, SLOT( updatePlotMenuFlags() ));
 
     //Create 'Data' menu
     QMenu* dataMenu = new QMenu(tr("&Data"), this);
-    QAction* showNetworkPlot = dataMenu->addAction("Plot network");
     QAction* showNetworkAnalysis = dataMenu->addAction("Network analysis");
-    connect(showNetworkPlot, SIGNAL(triggered()), this, SLOT(showNetworkPlot()));
-    connect(showNetworkAnalysis, SIGNAL(triggered()), this, SLOT(showNetworkAnalysis()));
-    //connect(showStatePlot, SIGNAL(triggered()), dockWidget1, SLOT(show()));
-    //connect(showEpiPlot, SIGNAL(triggered()), dockWidget2, SLOT(show()));
+    connect( showNetworkAnalysis, SIGNAL(triggered()), this, SLOT(analyzeNetwork()));
     
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(plotMenu);
@@ -146,10 +158,14 @@ void MainWindow::createNetworkSettingsBox() {
     // Define text boxes
     numnodesLine = new QLineEdit();
     numnodesLine->setAlignment(Qt::AlignRight);
+    numnodesLine->setValidator( new QIntValidator(2,INT_MAX,numnodesLine) );
+
     param1Line = new QLineEdit();
     param1Line->setAlignment(Qt::AlignRight);
+    param1Line->setValidator( new QDoubleValidator(param1Line) );
     param2Line = new QLineEdit();
     param2Line->setAlignment(Qt::AlignRight);
+    param2Line->setValidator( new QDoubleValidator(param2Line) );
     
     netsourceLabel = new QLabel(tr("Network source:"));
     netfileLabel = new QLabel(tr("Filename"));
@@ -217,16 +233,22 @@ void MainWindow::createSimulatorSettingsBox() {
     QLabel *numrunsLabel = new QLabel(tr("Number of runs:"));
     numrunsLine = new QLineEdit();
     numrunsLine->setAlignment(Qt::AlignRight);
+    numrunsLine->setValidator( new QIntValidator(1,10000,numrunsLine) );
     rzeroLine = new QLineEdit();
     makeReadonly(rzeroLine);
     rzeroLine->setAlignment(Qt::AlignRight);
+    
     transLine = new QLineEdit();
     transLine->setAlignment(Qt::AlignRight);
-//    transLine->setValidator(probValidator);
+    transLine->setValidator( new QDoubleValidator(0.0,1.0,20,transLine) );
+    
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
+    pzeroLine->setValidator( new QIntValidator(1,INT_MAX,numrunsLine) );
+
     infectiousPeriodLine = new QLineEdit();
     infectiousPeriodLine->setAlignment(Qt::AlignRight);
+    infectiousPeriodLine->setValidator( new QIntValidator(1,INT_MAX,infectiousPeriodLine) );
 
     QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
     QLabel *rzeroLabel = new QLabel(tr("Expected R-zero:"));
@@ -356,7 +378,11 @@ void MainWindow::appendOutput(QString s) {
 
 
 // Used to append new 'paragraph' to the main textbox
-void MainWindow::appendOutputLine(QString s) { logEditor->append(s); }
+void MainWindow::appendOutputLine(QString s) { 
+    logEditor->append(s); 
+    logEditor->moveCursor( QTextCursor::End) ;
+}
+
 
 
 void MainWindow::makeReadonly(QLineEdit* lineEdit) {
@@ -514,9 +540,18 @@ void MainWindow::clear_network() {
     statusBar()->showMessage(clearedNetMsg, 1000);
 }
 
+bool MainWindow::validateParameters() { 
+    double T = (transLine->text()).toDouble();
+    if (T < 0 || T > 1.0) {
+        appendOutputLine("Transmissibility must be between 0.0 and 1.0"); 
+        return false;
+    }
+   return true; 
+}
+
 
 void MainWindow::updateRZero() {
-    if (!network || network->size() == 0) {
+    if (!network || network->size() == 0 || !validateParameters()) {
         rzeroLine->setText( "Undefined" );
         return;
     }
@@ -595,14 +630,94 @@ void MainWindow::addStateData() {
     statePlot->addData(node_states);
 }
 
+void MainWindow::updatePlotMenuFlags() {
+    QList<int> sizes = rightBox->sizes();
+
+    if (sizes[0] == 0) { showStatePlot->setChecked(false); } 
+    else { showStatePlot->setChecked(true); }
+
+    if (sizes[1] == 0) { showEpiPlot->setChecked(false); }
+    else { showEpiPlot->setChecked(true); }
+
+    if (sizes[2] == 0) { showHistPlot->setChecked(false); }
+    else { showHistPlot->setChecked(true); }
+}
+
+void MainWindow::showHideStatePlot() {
+    QList<int> old = rightBox->sizes();
+    QList<int> newSizes;
+    int H = old[0] + old[1] + old[2];
+    if (H == old[0]) { // means we're trying to close the only pane that's open
+        showStatePlot->setChecked(true);
+        return;
+    }
+    
+    if (old[0] == 0) { 
+        newSizes << H/3 << 2*old[1]/3 << 2*old[2]/3;
+        showStatePlot->setChecked(true);
+    } else {
+        newSizes << 0 << H * old[1]/(H-old[0]) << H * old[2]/(H-old[0]);
+        showStatePlot->setChecked(false);
+    }
+
+    rightBox->setSizes(newSizes);
+}
+
+void MainWindow::showHideEpiCurvePlot() {
+    QList<int> old = rightBox->sizes();
+    QList<int> newSizes;
+    int H = old[0] + old[1] + old[2];
+    if (H == old[1]) { // means we're trying to close the only pane that's open
+        showEpiPlot->setChecked(true);
+        return;
+    }
+        
+    if (old[1] == 0) {
+        newSizes << 2*old[0]/3 << H/3 << 2*old[2]/3;
+        showEpiPlot->setChecked(true);
+    } else {
+        newSizes << H * old[0]/(H-old[1]) << 0 << H * old[2]/(H-old[1]);
+        showEpiPlot->setChecked(false);
+    }
+
+    rightBox->setSizes(newSizes);
+}
+
+void MainWindow::showHideHistPlot() {
+    QList<int> old = rightBox->sizes();
+    QList<int> newSizes;
+    int H = old[0] + old[1] + old[2];
+    if (H == old[2]) { // means we're trying to close the only pane that's open
+        showHistPlot->setChecked(true);
+        return;
+    }
+    
+    if (old[2] == 0) {
+        newSizes << 2*old[0]/3 << 2*old[1]/3 << H/3 ;
+        showHistPlot->setChecked(true);
+    } else {
+        newSizes << H * old[0]/(H-old[2]) << H * old[1]/(H-old[2]) << 0;
+        showHistPlot->setChecked(false);
+    }
+
+    rightBox->setSizes(newSizes);
+}
 
 void MainWindow::updateNetworkPlot() {
     if(graphWidget->isVisible() == false) return;
-    showNetworkPlot();
+    plotNetwork();
 }
 
 
-void MainWindow::showNetworkPlot() { 
+void MainWindow::plotNetwork() { 
+    if (!network || network->size() == 0) {
+        appendOutputLine("Please generate network first");
+        return;
+    } else if ( network->size() > 500 ) {
+        appendOutputLine("Network is too large to draw (500 node limit; < 100 nodes is recommended)");
+        return;
+    }
+
     graphWidget->clear();
     vector<Edge*> edges = network->get_edges();
     map<Edge*, bool> seen;
@@ -710,7 +825,7 @@ void MainWindow::calculateComponentStats() {
 }
 
 
-void MainWindow::showNetworkAnalysis() {
+void MainWindow::analyzeNetwork() {
     if (!network or network->size() == 0) {
         QMessageBox msgBox;
         msgBox.setText("Please generate or import a network first.");
