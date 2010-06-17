@@ -106,6 +106,7 @@ class MainWindow : public QMainWindow
         bool connect_network (Network* net, DistType dist, double param1, double param2);
         void netDoneUpdate(bool success);
         void saveEdgeList();
+        void updateNetworkPlot();
         void showNetworkPlot();
         void showNetworkAnalysis();
         void calculateComponentStats();

@@ -70,6 +70,7 @@ MainWindow::MainWindow() {
 
     backgroundThread = new BackgroundThread(this);
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
+    connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(updateNetworkPlot()));
     connect(this, SIGNAL(progressUpdated(int)),progressDialog,SLOT(setValue(int)));
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
     //probValidator = new QDoubleValidator(0.0, 1.0, 20, this);
@@ -284,6 +285,7 @@ void MainWindow::createControlButtonsBox() {
 
     generateNetButton = new QPushButton("Generate Network");
     connect(generateNetButton, SIGNAL(clicked()), this, SLOT(generate_network_thread()));
+    //connect(generateNetButton, SIGNAL(clicked()), this, SLOT(updateNetworkPlot()));
     layout->addWidget(generateNetButton, 0, 2);
 
     clearDataButton = new QPushButton("Clear data");
@@ -594,9 +596,14 @@ void MainWindow::addStateData() {
 }
 
 
+void MainWindow::updateNetworkPlot() {
+    if(graphWidget->isVisible() == false) return;
+    showNetworkPlot();
+}
+
+
 void MainWindow::showNetworkPlot() { 
     graphWidget->clear();
-
     vector<Edge*> edges = network->get_edges();
     map<Edge*, bool> seen;
     for( int i=0; i < edges.size(); i++ ) {
