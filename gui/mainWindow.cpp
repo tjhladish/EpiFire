@@ -408,7 +408,7 @@ void MainWindow::defaultSettings() {
     numnodesLine->setText(default_network_size);
 
     simBox->setCurrentIndex(0);
-    changeSimType(0);
+    if (simBox->currentIndex() == 1) changeSimType(0);
     infectiousPeriodLine->setText(default_infectious_pd);
     transLine->setText(default_T);
     numrunsLine->setText(default_num_runs);
@@ -833,7 +833,9 @@ void MainWindow::analyzeNetwork() {
         return;
     }
     nodeCountEdit        ->setText(QString::number( network->size() ));
-    edgeCountEdit        ->setText(QString::number( network->get_edges().size() ));
+    int edge_ct = network->get_edges().size();
+    edge_ct = network->is_directed() ? edge_ct : edge_ct / 2;
+    edgeCountEdit        ->setText(QString::number( edge_ct ));
     meanDegreeEdit       ->setText(QString::number( network->mean_deg() ));
     componentCountEdit   ->clear();
     maxComponentSizeEdit ->clear();
@@ -1033,7 +1035,7 @@ double MainWindow::guessEpiSize(double R0, double P0) {
 double MainWindow::guessEpiSize(double R0, double P0, double guess) {
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
-    cerr << "r: " << guess << endl;
+    //cerr << "r: " << guess << endl;
     double S0 = 1.0 - P0;
     double p = S0*(1-exp(-R0 * guess));
     if (fabs(p-guess) < 0.0001) {return p;}

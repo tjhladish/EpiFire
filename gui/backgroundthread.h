@@ -28,6 +28,7 @@ Q_OBJECT
         void setProgressValue(int);
         void showProgressDialog();
         void hideProgressDialog();
+        void appendOutputLine(QString);
 
     protected:
         void run(void);

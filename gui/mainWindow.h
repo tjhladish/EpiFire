@@ -65,8 +65,6 @@ class MainWindow : public QMainWindow
 
         public:
         MainWindow();
-        void appendOutput(QString);
-        void appendOutputLine(QString);
 
         Network* network;
         Simulator* simulator;
@@ -95,6 +93,8 @@ class MainWindow : public QMainWindow
         void readEdgeList();
         void clear_network();
         void clear_data();
+        void appendOutput(QString);
+        void appendOutputLine(QString);
         bool generate_network();
         void generate_sim_thread();
         void generate_network_thread();

@@ -17,6 +17,7 @@ BackgroundThread::BackgroundThread(MainWindow* w) {
 
      connect(this, SIGNAL(showProgressDialog()), mw->progressDialog, SLOT(show())); 
      connect(this, SIGNAL(hideProgressDialog()), mw->progressDialog, SLOT(hide())); 
+     connect(this, SIGNAL(appendOutputLine(QString)), mw, SLOT(appendOutputLine(QString))); 
 }
 
 void BackgroundThread::stop() {
@@ -96,16 +97,16 @@ void BackgroundThread::runSimulation() {
 
         while (mw->simulator->count_infected() > 0 && ! _stopped) {
             emit setProgressValue(mw->percent_complete(currentSize, predictedSize));
-                mw->simulator->step_simulation();
-                epi_curve.push_back(mw->simulator->count_infected());
-                currentSize = mw->simulator->epidemic_size();
-                if (j == j_max - 1) mw->addStateData();
+            mw->simulator->step_simulation();
+            epi_curve.push_back(mw->simulator->count_infected());
+            currentSize = mw->simulator->epidemic_size();
+            if (j == j_max - 1) mw->addStateData();
         }
         emit setProgressValue(100);
         int epi_size = mw->simulator->epidemic_size();
 
         QString status = "Rep: " + rep_str + ", Total infected: " + QString::number(epi_size,10);
-        mw->appendOutputLine(status);
+        emit appendOutputLine(status);
         cerr << "Rep: " << mw->rep_ct << "    Total: " << epi_size << "\n\n";
 
         if (_stopped) {
