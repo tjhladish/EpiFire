@@ -41,16 +41,23 @@ MainWindow::MainWindow() {
     QVBoxLayout *rightLayout = new QVBoxLayout;
 
     createControlButtonsBox();
-    createSettingsBox();
-    leftLayout->addWidget(settingsGroupBox, Qt::AlignCenter);
+    createNetworkSettingsBox();
+    createSimulatorSettingsBox();
+    defaultSettings();
+    
+    leftLayout->addWidget(networkSettingsGroupBox, Qt::AlignCenter);    
+    leftLayout->addWidget(simulatorSettingsGroupBox, Qt::AlignCenter);    
     leftLayout->addWidget(logEditor);
     leftLayout->addWidget(controlButtonsGroupBox);
+    
     leftBox->setLayout(leftLayout);
     leftBox->setFlat(true);
+    leftBox->setContentsMargins(0,0,0,0);
 
     rightLayout->addWidget(statePlot);
     rightLayout->addWidget(epiCurvePlot);
     rightLayout->addWidget(histPlot);
+    
     rightBox->setLayout(rightLayout);     
     setWindowTitle(tr("EpiFire"));
 
@@ -136,22 +143,6 @@ void MainWindow::updateProgress(int x) {
      emit progressUpdated(x);
 }
 
-void MainWindow::createSettingsBox() {
-    createNetworkSettingsBox();
-    createSimulatorSettingsBox();
-    
-    settingsGroupBox = new QGroupBox;
-    settingsGroupBox->setFlat(true);
-    QVBoxLayout* settingsLayout = new QVBoxLayout;
-    settingsLayout->addWidget(networkSettingsGroupBox);    
-    settingsLayout->addWidget(simulatorSettingsGroupBox);    
-
-    settingsGroupBox->setLayout(settingsLayout);
-    settingsGroupBox->setMaximumHeight(500);
-
-    defaultSettings();
-};
-
 void MainWindow::createNetworkSettingsBox() {
 // Creates the main input forms and their labels
 
@@ -200,8 +191,8 @@ void MainWindow::createNetworkSettingsBox() {
 
     // Put everything together
     networkSettingsGroupBox = new QGroupBox(tr("Step 1: Choose a network"));
+    networkSettingsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     QGridLayout *layout = new QGridLayout;
-    layout->setVerticalSpacing(1);
 
     //FIRST COLUMN -- Network stuff
     layout->addWidget(netsourceLabel, 0, 0);
@@ -241,6 +232,7 @@ void MainWindow::createSimulatorSettingsBox() {
     transLine = new QLineEdit();
     transLine->setAlignment(Qt::AlignRight);
     transLine->setValidator( new QDoubleValidator(0.0,1.0,20,transLine) );
+    transLine->setToolTip("Duration of infectious state (units = time steps)\nRange: positive integers");
     
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
@@ -264,8 +256,8 @@ void MainWindow::createSimulatorSettingsBox() {
 
     // Put everything together
     simulatorSettingsGroupBox = new QGroupBox(tr("Step 2: Design a simulation"));
+    simulatorSettingsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     QGridLayout *layout = new QGridLayout;
-    layout->setVerticalSpacing(1);
 
     //SECOND COLUMN -- Simulation stuff
     layout->addWidget(simLabel, 0, 1);

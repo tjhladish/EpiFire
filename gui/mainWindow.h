@@ -122,7 +122,6 @@ class MainWindow : public QMainWindow
     private:
 
         void createMenu();
-        void createSettingsBox();
         void createNetworkSettingsBox();
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
@@ -150,7 +149,6 @@ class MainWindow : public QMainWindow
         QSplitter* rightBox;
 
         QMenuBar* menuBar;
-        QGroupBox* settingsGroupBox;
         QGroupBox* networkSettingsGroupBox;
         QGroupBox* simulatorSettingsGroupBox;
         QGroupBox* controlButtonsGroupBox;
