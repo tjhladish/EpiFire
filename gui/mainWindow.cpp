@@ -15,30 +15,22 @@ MainWindow::MainWindow() {
     // Allow the leftBox to expand vertically, but not horizontally
     leftBox->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding));
     rightBox      = new QSplitter(Qt::Vertical, this);
+    createPlotPanel();
 
     network = new Network("mynetwork",false);
     simulator = NULL;
-    graphWidget = new GraphWidget();
+    networkPlot = new GraphWidget();
     netAnalysisDialog = new QDialog(this);
     netAnalysisDialog->setWindowTitle("Analysis of current network");
     rep_ct = 0;
 
+    
     logEditor = new QTextEdit();
     logEditor->setReadOnly(true);
     logEditor->setPlainText(tr("No output yet"));
-
-    epiCurvePlot = new PlotArea(this, "Epidemic curves");
-    epiCurvePlot->setPlotType(PlotArea::EPICURVE);
-
-    statePlot = new PlotArea(this, "Node state evolution");
-    statePlot->setPlotType(PlotArea::STATEPLOT);
-
-    histPlot = new PlotArea(this, "Histogram of epidemic sizes");
-    histPlot->setPlotType(PlotArea::HISTPLOT);
-    
+   
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *leftLayout = new QVBoxLayout;
-    QVBoxLayout *rightLayout = new QVBoxLayout;
 
     createControlButtonsBox();
     createNetworkSettingsBox();
@@ -54,14 +46,11 @@ MainWindow::MainWindow() {
     leftBox->setFlat(true);
     leftBox->setContentsMargins(0,0,0,0);
 
-    rightLayout->addWidget(statePlot);
-    rightLayout->addWidget(epiCurvePlot);
-    rightLayout->addWidget(histPlot);
-    
-    rightBox->setLayout(rightLayout);     
     setWindowTitle(tr("EpiFire"));
 
     createMenu();
+    
+
     mainLayout->setMenuBar(menuBar);
     mainLayout->addWidget(leftBox);
     mainLayout->addWidget(rightBox);
@@ -83,6 +72,25 @@ MainWindow::MainWindow() {
 }
 
 
+void MainWindow::createPlotPanel() {
+    epiCurvePlot = new PlotArea(this, "Epidemic curves");
+    epiCurvePlot->setPlotType(PlotArea::CURVEPLOT);
+
+    statePlot = new PlotArea(this, "Node state evolution");
+    statePlot->setPlotType(PlotArea::STATEPLOT);
+
+    histPlot = new PlotArea(this, "Histogram of epidemic sizes");
+    histPlot->setPlotType(PlotArea::HISTPLOT);
+ 
+    QVBoxLayout *rightLayout = new QVBoxLayout;
+    rightLayout->addWidget(statePlot);
+    rightLayout->addWidget(epiCurvePlot);
+    rightLayout->addWidget(histPlot);
+    
+    rightBox->setLayout(rightLayout);     
+}
+
+
 void MainWindow::createMenu() {
     //Create 'File' menu
     menuBar = new QMenuBar;
@@ -97,14 +105,14 @@ void MainWindow::createMenu() {
 
     QAction* saveNetwork = fileMenu->addAction("Save network as edgelist");
     QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
-    QAction* savePictureAction = fileMenu->addAction("Save epidemic curve plot");
+    QAction* savePlotAction = fileMenu->addAction("Save epidemic curve plot");
 
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
     connect(openAction, SIGNAL(triggered()), this, SLOT(readEdgeList()));
     connect(simulateAction, SIGNAL(triggered()), this, SLOT(simulatorWrapper()));
     connect(saveNetwork, SIGNAL(triggered()), this, SLOT(saveEdgeList()));
     connect(saveDataAction, SIGNAL(triggered()), epiCurvePlot, SLOT(saveData()));
-    connect(savePictureAction, SIGNAL(triggered()), epiCurvePlot, SLOT(savePicture()));
+    connect(savePlotAction, SIGNAL(triggered()), epiCurvePlot, SLOT(savePlot()));
  
     //Create 'Plot' menu
     QMenu* plotMenu = new QMenu(tr("&Plot"), this);
@@ -696,7 +704,7 @@ void MainWindow::showHideHistPlot() {
 }
 
 void MainWindow::updateNetworkPlot() {
-    if(graphWidget->isVisible() == false) return;
+    if(networkPlot->isVisible() == false) return;
     plotNetwork();
 }
 
@@ -710,7 +718,7 @@ void MainWindow::plotNetwork() {
         return;
     }
 
-    graphWidget->clear();
+    networkPlot->clear();
     vector<Edge*> edges = network->get_edges();
     map<Edge*, bool> seen;
     for( int i=0; i < edges.size(); i++ ) {
@@ -720,13 +728,13 @@ void MainWindow::plotNetwork() {
         int id2 = edges[i]->get_end()->get_id();
         string name1 = QString::number(id1).toStdString();
         string name2 = QString::number(id2).toStdString();
-        GNode* n1 = graphWidget->addGNode(name1,0);
-        GNode* n2 = graphWidget->addGNode(name2,0);
-        GEdge* e = graphWidget->addGEdge(n1,n2,"edgeTag",0);
+        GNode* n1 = networkPlot->addGNode(name1,0);
+        GNode* n2 = networkPlot->addGNode(name2,0);
+        GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
     }
-    graphWidget->setLayoutAlgorithm(GraphWidget::Circular);
-    graphWidget->newLayout();
-    graphWidget->show();
+    networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
+    networkPlot->newLayout();
+    networkPlot->show();
 }
 
 void MainWindow::_addAnalysisRow(QGridLayout* layout, QString text, QLineEdit* box, QPushButton* button) {
@@ -793,7 +801,7 @@ void MainWindow::createNetworkAnalysis() {
     netAnalysisTop->setLayout(netTopLayout);
 
     degDistPlot = new PlotArea(this, "Degree distribution");
-    degDistPlot->setPlotType(PlotArea::HISTPLOT);
+    degDistPlot->setPlotType(PlotArea::DEGPLOT);
 
     netAnalysisLayout->addWidget(netAnalysisTop);
     netAnalysisLayout->addWidget(degDistPlot);

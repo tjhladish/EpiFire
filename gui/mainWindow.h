@@ -68,7 +68,7 @@ class MainWindow : public QMainWindow
 
         Network* network;
         Simulator* simulator;
-        GraphWidget* graphWidget;
+        GraphWidget* networkPlot;
         BackgroundThread* backgroundThread;
         QDialog* netAnalysisDialog;
         QTextEdit* logEditor;
@@ -125,6 +125,7 @@ class MainWindow : public QMainWindow
         void createNetworkSettingsBox();
         void createSimulatorSettingsBox();
         void createControlButtonsBox();
+        void createPlotPanel();
         void createNetworkAnalysis();
         void _addAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
 

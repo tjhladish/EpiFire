@@ -21,7 +21,7 @@ HEADERS     = mainWindow.h \
                edge.cpp \
                graphwidget.cpp \
                debug.cpp \
-             backgroundthread.cpp
+               backgroundthread.cpp
 
 
 
