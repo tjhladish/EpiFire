@@ -158,13 +158,22 @@ void MainWindow::createNetworkSettingsBox() {
     numnodesLine = new QLineEdit();
     numnodesLine->setAlignment(Qt::AlignRight);
     numnodesLine->setValidator( new QIntValidator(2,INT_MAX,numnodesLine) );
-
-    param1Line = new QLineEdit();
-    param1Line->setAlignment(Qt::AlignRight);
-    param1Line->setValidator( new QDoubleValidator(param1Line) );
-    param2Line = new QLineEdit();
-    param2Line->setAlignment(Qt::AlignRight);
-    param2Line->setValidator( new QDoubleValidator(param2Line) );
+        
+    poiLambdaLine = new QLineEdit();
+    poiLambdaLine->setAlignment(Qt::AlignRight);
+    poiLambdaLine->setValidator( new QDoubleValidator(0.0, numeric_limits<double>::max(), 20, poiLambdaLine) );
+    expBetaLine = new QLineEdit();
+    expBetaLine->setAlignment(Qt::AlignRight);
+    expBetaLine->setValidator( new QDoubleValidator(expBetaLine) );
+    powAlphaLine = new QLineEdit();
+    powAlphaLine->setAlignment(Qt::AlignRight);
+    powAlphaLine->setValidator( new QDoubleValidator(powAlphaLine) );
+    conValueLine = new QLineEdit();
+    conValueLine->setAlignment(Qt::AlignRight);
+    conValueLine->setValidator( new QIntValidator(0.0,INT_MAX,conValueLine) );
+    powKappaLine = new QLineEdit();
+    powKappaLine->setAlignment(Qt::AlignRight);
+    powKappaLine->setValidator( new QDoubleValidator(0.0, numeric_limits<double>::max(), 20, powKappaLine) );
     
     netsourceLabel = new QLabel(tr("Network source:"));
     netfileLabel = new QLabel(tr("Filename"));
@@ -178,8 +187,8 @@ void MainWindow::createNetworkSettingsBox() {
 
     QLabel *numnodesLabel = new QLabel(tr("Number of nodes:"));
     distLabel = new QLabel(tr("Degree distribution:"));
-    param1Label = new QLabel(tr("Parameter 1 value:"));
-    param2Label = new QLabel(tr("Parameter 2 value:"));
+    param1Label = new QLabel(tr(""));
+    param2Label = new QLabel(tr(""));
 
     // Build degree distribution dropdown box
     distBox = new QComboBox;
@@ -190,19 +199,18 @@ void MainWindow::createNetworkSettingsBox() {
     distBox->addItem("Constant");
 
     // Initialize layout to parameters for first distribution listed, and listen for changes
-    changeParameterLabels(0);
-    connect(distBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeParameterLabels(int)));
+    defaultNetworkParameters();
+    connect(distBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeNetworkParameters(int)));
 
     changeNetSource(0);
     connect(netsourceBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeNetSource(int)));
-
 
     // Put everything together
     networkSettingsGroupBox = new QGroupBox(tr("Step 1: Choose a network"));
     networkSettingsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     QGridLayout *layout = new QGridLayout;
 
-    //FIRST COLUMN -- Network stuff
+    //Network source
     layout->addWidget(netsourceLabel, 0, 0);
     layout->addWidget(netsourceBox, 0, 1);
     
@@ -216,9 +224,12 @@ void MainWindow::createNetworkSettingsBox() {
     layout->addWidget(distLabel, 2, 0);
     layout->addWidget(distBox, 2, 1);
     layout->addWidget(param1Label, 3, 0);
-    layout->addWidget(param1Line, 3, 1);
+    layout->addWidget(poiLambdaLine, 3, 1);
+    layout->addWidget(expBetaLine, 3, 1);
+    layout->addWidget(powAlphaLine, 3, 1);
+    layout->addWidget(conValueLine, 3, 1);
     layout->addWidget(param2Label, 4, 0);
-    layout->addWidget(param2Line, 4, 1);
+    layout->addWidget(powKappaLine, 4, 1);
     
     networkSettingsGroupBox->setLayout(layout);
 }
@@ -315,9 +326,14 @@ void MainWindow::createControlButtonsBox() {
     layout->addWidget(clearDataButton, 1, 0);
     clearDataButton->setEnabled(false);
 
-    helpButton = new QPushButton("Help");
+    //helpButton = new QPushButton("Help");
     //connect(helpButton, SIGNAL(clicked()), this, SLOT(open_help()));
-    layout->addWidget(helpButton, 1, 1);
+    //layout->addWidget(helpButton, 1, 1);
+
+    analyzeNetButton = new QPushButton("Analyze network");
+    connect(analyzeNetButton, SIGNAL(clicked()), this, SLOT(analyzeNetwork()) );
+    layout->addWidget(analyzeNetButton, 1, 1);
+
 
     runSimulationButton = new QPushButton("Run &Simulation");
     connect(runSimulationButton, SIGNAL(clicked()), this, SLOT(simulatorWrapper()));
@@ -352,21 +368,30 @@ void MainWindow::saveEdgeList() {
 
 void MainWindow::readEdgeList() {
 
+
     QString startdir = ".";
     QStringList filelist = QFileDialog::getOpenFileNames(
         this, "Select edge list file to load:", startdir, "All Files(*.*)");
 
-    if (filelist.size() == 0) return;
+    if (filelist.size() == 0) { 
+        appendOutputLine("Error: edge list file is empty");
+        return;
+    }
     QString fileName = filelist[0];
 
     if(network) { delete(network); }
+    netComponents.clear();
 
+    setCursor(Qt::WaitCursor);
+    appendOutputLine("Importing network . . . ");
     network = new Network("mynetwork", false);
     network->read_edgelist(fileName.toStdString());
-    network->dumper();
+    //network->dumper();
     netfileLine->setText(fileName);
     numnodesLine->setText(QString::number(network->size()));
-    updateRZero();
+    netDoneUpdate(true);
+    //updateRZero();
+    //setCursor(Qt::ArrowCursor);
 }
 
 
@@ -404,7 +429,7 @@ void MainWindow::defaultSettings() {
 //Resets GUI to its default settings (as specified in .h file)
     netsourceBox->setCurrentIndex(0);
     distBox->setCurrentIndex(0);
-    changeParameterLabels(0);
+    defaultNetworkParameters();
     numnodesLine->setText(default_network_size);
 
     simBox->setCurrentIndex(0);
@@ -424,10 +449,16 @@ void MainWindow::changeNetSource(int source) {
         makeReadonly(netfileLine);
         loadNetButton->show();
         generateNetButton->hide();
-        numnodesLine->setText("0");
+        if (netfileLine->text() == "") { // it would be better if we had a flag to check
+            numnodesLine->setText("0");  // whether the network had been read from a file
+            statusBar()->showMessage(loadNetMsg);
+        } else {
+            numnodesLine->setText(QString::number(network->size()));
+            statusBar()->showMessage(simulateMsg);
+        }
         distBox->hide();
         distLabel->hide();
-        changeParameterLabels(3);
+        changeNetworkParameters(3);
     }                            // generate random net
     else {
         netfileLabel->hide();
@@ -439,57 +470,93 @@ void MainWindow::changeNetSource(int source) {
         distLabel->show();
         numnodesLine->setText(default_network_size);
 
-        param1Label->show();
-        param2Label->show();
-        changeParameterLabels(0);
+        changeNetworkParameters(distBox->currentIndex());
+        if (netfileLine->text() == "" and network->size() > 0) { // it would be better if we had a flag to check
+            statusBar()->showMessage(simulateMsg);
+        } else {
+            statusBar()->showMessage(generateNetMsg);
+        }
     }
 }
+// parameter line edits should not be recycled.  it's the only way to remember what users were doing before.
 
-
-void MainWindow::changeParameterLabels(int dist_type) {
+void MainWindow::defaultNetworkParameters() {
 //Changes the labels for the parameter boxes, and grays them out as appropriate
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        conValueLine->hide();
+        expBetaLine->setText(default_exp_param1);
+        powAlphaLine->setText(default_pow_param1);
+        conValueLine->setText(default_con_param1);
 
-    if (dist_type == 0) {
-        param1Line->setVisible(1);
-        param1Label->setText("Lambda:");
-	param1Label->show();
-        param1Line->setText("3.0");
+        param2Label->setText("Kappa:");
         param2Label->hide();
-        param2Line->hide();
+        powKappaLine->hide();
+        powKappaLine->setText(default_pow_param2);
+        
+        param1Label->setText("Lambda:");
+        param1Label->show();
+        poiLambdaLine->setText(default_poi_param1);
+        poiLambdaLine->show();
+}
+
+void MainWindow::changeNetworkParameters(int dist_type) {
+//Changes the labels for the parameter boxes, and shows/hides them out as appropriate
+
+    if (dist_type == 0) { // Poisson
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        conValueLine->hide();
+        param2Label->hide();
+        powKappaLine->hide();
+        
+        param1Label->setText("Lambda:");
+        param1Label->show();
+        poiLambdaLine->show();
     }
-    else if (dist_type == 1) {
-        param1Line->setVisible(1);
+    else if (dist_type == 1) { // Exponential
+        poiLambdaLine->hide();
+        powAlphaLine->hide();
+        conValueLine->hide();
+        param2Label->hide();
+        powKappaLine->hide();
+
         param1Label->setText("Beta:");
         param1Label->show();
-	param1Line->setText("0.3");
-        param2Label->hide();
-        param2Line->hide();
-    }
-    else if (dist_type == 2) {
-        param1Line->show();
-	param1Label->show();
-        param1Line->setText("1.0");
-        param1Label->setText("Alpha:");
-        param2Line->show();
-        param2Label->show();
-        param2Label->setText("Kappa:");
-        param2Line->setText("2.0");
-    }
-    else if (dist_type == 3) {
-        param1Line->hide();
-        param1Label->hide();
-        param2Line->hide();
-        param2Label->hide();
-    }
-    else if (dist_type == 4) {
-        param1Line->setVisible(1);
-        param1Line->setText("3");
-	param1Label->show();
-        param1Label->setText("Fixed degree:");
-        param2Line->hide();
-        param2Label->hide();
-    }
+        expBetaLine->show();
+     }
+    else if (dist_type == 2) { // Power law
+        poiLambdaLine->hide();
+        expBetaLine->hide();
+        conValueLine->hide();
 
+        param1Label->setText("Alpha:");
+        param1Label->show();
+        powAlphaLine->show();
+        param2Label->setText("Kappa:");
+        param2Label->show();
+        powKappaLine->show();
+    }
+    else if (dist_type == 3) { // Urban
+        param1Label->hide();
+        poiLambdaLine->hide();
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        conValueLine->hide();
+        param2Label->hide();
+        powKappaLine->hide();
+    }
+    else if (dist_type == 4) { // Constant
+        poiLambdaLine->hide();
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        param2Label->hide();
+        powKappaLine->hide();
+
+        param1Label->setText("Fixed degree:");
+        param1Label->show();
+        conValueLine->show();
+    }
 }
 
 
@@ -536,6 +603,7 @@ void MainWindow::clear_network() {
     updateRZero();
     appendOutputLine("Network deleted");
     runSimulationButton->setEnabled(false);
+    netfileLine->setText("");
     clearNetButton->setEnabled(false);
     statusBar()->showMessage(clearedNetMsg, 1000);
 }
@@ -781,13 +849,6 @@ void MainWindow::createNetworkAnalysis() {
     connect(diameterButton,     SIGNAL(clicked()), this, SLOT(generate_dist_thread()));
     connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(generate_dist_thread()));
 
-/*
-    connect(componentButton1, SIGNAL(clicked()), this, SLOT(calculateComponentStats()));
-    connect(componentButton2, SIGNAL(clicked()), this, SLOT(calculateComponentStats()));
-    connect(transitivityButton, SIGNAL(clicked()), this, SLOT(calculateTransitivity()));
-    connect(diameterButton, SIGNAL(clicked()), this, SLOT(calculateDistances()));
-    connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(calculateDistances()));
-*/
     _addAnalysisRow(netTopLayout, "Node count:",         nodeCountEdit);
     _addAnalysisRow(netTopLayout, "Edge count:",         edgeCountEdit);
     _addAnalysisRow(netTopLayout, "Mean degree:",        meanDegreeEdit);
@@ -903,12 +964,12 @@ void MainWindow::generate_network_thread() {
 
     if(network) delete(network);
     netComponents.clear();
+    netfileLine->setText("");
 
     int n = (numnodesLine->text()).toInt();
     network = new Network("mynetwork", false);
     network->populate(n);
 
-    //backgroundThread->setThreadType(BackgroundThread::SIMULATENET);
     backgroundThread->setThreadType(BackgroundThread::GENERATE_NET);
 
     progressDialog->setLabelText("Generating network");
@@ -951,18 +1012,28 @@ void MainWindow::generate_dist_thread() {
 
 void MainWindow::stopBackgroundThread() {
      if (backgroundThread) backgroundThread->stop();
-     cerr << "thread supposedly stopped\n";
+     //cerr << "thread supposedly stopped\n";
      appendOutputLine("Process interrupted.");
 }
 
 bool MainWindow::generate_network() {
-    //int n = (numnodesLine->text()).toInt();
     DistType dist_type = (DistType) distBox->currentIndex();
-    double param1 = (param1Line->text()).toDouble();
-    double param2 = (param2Line->text()).toDouble();
+    double par1 = 0.0;
+    double par2 = 0.0;
+
+    if (dist_type == POI) {
+        par1 = (poiLambdaLine->text()).toDouble();
+    } else if (dist_type == EXP) {
+        par1 = (expBetaLine->text()).toDouble();
+    } else if (dist_type == POW) {
+        par1 = (powAlphaLine->text()).toDouble();
+        par2 = (powKappaLine->text()).toDouble();
+    } else if (dist_type == CON) {
+        par1 = (conValueLine->text()).toDouble();
+    } 
 
     // 'true' on success, 'false' if interrupted or impossible
-    return connect_network(network, dist_type, param1, param2);
+    return connect_network(network, dist_type, par1, par2);
 
 }
 
@@ -985,12 +1056,15 @@ void MainWindow::netDoneUpdate(bool success) {
 
 bool MainWindow::connect_network (Network* net, DistType dist, double param1, double param2) {
     if (dist == POI) {
+        if (param1 <= 0) { appendOutputLine("Poisson distribution parameter must be > 0"); return false; }
         return net->fast_random_graph(param1);
     }
     else if (dist == EXP) {
+        if (param1 <= 0) { appendOutputLine("Exponential distribution parameter must be > 0"); return false; }
         return net->rand_connect_exponential(param1);
     }
     else if (dist == POW) {
+        if (param2 <= 0) { appendOutputLine("Exponential distribution kappa parameter must be > 0"); return false; }
         return net->rand_connect_powerlaw(param1, param2);
     }
     else if (dist == URB) {
@@ -1001,6 +1075,10 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
         return net->rand_connect_user(dist);
     }
     else if (dist == CON) {
+        if (( (int) param1 * net->size()) % 2 == 1) {
+            appendOutputLine("The sum of all degrees must be even\nThis is not possible with the network parameters you have specified");
+            return false;
+        }
         vector<double> dist(param1+1, 0);
         dist[param1] = 1;
         return net->rand_connect_user(dist);

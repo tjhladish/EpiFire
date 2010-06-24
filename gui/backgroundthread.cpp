@@ -41,7 +41,7 @@ void BackgroundThread::run(void) {
         emit setProgressValue(0);
         bool success = mw->generate_network();
         emit setProgressValue(100);
-        if (! success) mw->appendOutput("Unsuccessful.\nIt may be difficult (or impossible) to generate a network using these parameters."); 
+        if (! success) emit appendOutputLine("Network generation was unsuccessful.\nIt may be difficult (or impossible) to generate a network using these parameters."); 
         emit completed(success);
         //mw->network->reset_progress();
     } else if (type == COMPONENTS ) {

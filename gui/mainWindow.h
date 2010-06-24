@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <iostream>
 
-//Set default values that are not related to distribution
+//Set default parameter values
 
 const QString default_num_runs="1";
 const QString default_network_size="10000";
@@ -30,7 +30,14 @@ const QString default_P0="10";
 const QString default_T ="0.1";
 const QString default_infectious_pd ="5";
 
+const QString default_poi_param1 = "5.0";
+const QString default_exp_param1 = "0.3";
+const QString default_pow_param1 = "1.5";
+const QString default_pow_param2 = "10.0";
+const QString default_con_param1 = "5";
+
 const QString generateNetMsg = "Click Generate network to begin";
+const QString loadNetMsg = "Click Import edge list to begin";
 const QString clearedNetMsg = "Network deleted";
 const QString clearedDataMsg = "All data deleted";
 const QString simulateMsg = "Click Run simulation to generate data";
@@ -83,121 +90,58 @@ class MainWindow : public QMainWindow
         void progressUpdated(int);
     
     public slots:
-
-        void simulatorWrapper();
-        void changeParameterLabels(int dist_type);
+        // Parameter slots 
         void changeNetSource(int source);
+        void defaultNetworkParameters();
+        void changeNetworkParameters(int dist_type);
         void changeSimType(int type);
+        bool validateParameters(); // currently only transmissibility
         void updateRZero();
         void defaultSettings();
-        void readEdgeList();
-        void clear_network();
-        void clear_data();
-        void appendOutput(QString);
-        void appendOutputLine(QString);
-        bool generate_network();
-        void generate_sim_thread();
+
+        // Network creation/deletion slots
         void generate_network_thread();
-        void generate_comp_thread();
-        void generate_trans_thread();
-        void generate_dist_thread();
+        bool generate_network();
         bool connect_network (Network* net, DistType dist, double param1, double param2);
         void netDoneUpdate(bool success);
+        void readEdgeList();
         void saveEdgeList();
+        void clear_network();
+
+        // Simulation slots
+        void simulatorWrapper();
+        void clear_data();
+        void generate_sim_thread();
+
+        // Plot update slots
         void updateNetworkPlot();
         void updatePlotMenuFlags();
         void showHideStatePlot();
         void showHideEpiCurvePlot();
         void showHideHistPlot();
         void plotNetwork();
+
+        // Network analysis slots
         void analyzeNetwork();
+        void generate_comp_thread();
         void calculateComponentStats();
+        void generate_trans_thread();
         void calculateTransitivity();
+        void generate_dist_thread();
         void calculateDistances();
+
+        void appendOutput(QString);
+        void appendOutputLine(QString);
         void stopBackgroundThread();
-        bool validateParameters();
  
     protected:
 
     private:
 
-        void createMenu();
-        void createNetworkSettingsBox();
-        void createSimulatorSettingsBox();
-        void createControlButtonsBox();
-        void createPlotPanel();
-        void createNetworkAnalysis();
-        void _addAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
+       // void updateNetProcessProgress();
 
-        double guessEpiSize(double R0, double P0_frac, double guess);
-        void updateNetProcessProgress();
-
-        void makeReadonly(QLineEdit* lineEdit);
-        void addStateData();
-
-        QWidget* centralWidget;
-
-        QLabel* distLabel;
-        QLabel* param1Label;
-        QLabel* param2Label;
-        QLabel* netsourceLabel;
-        QLabel* netfileLabel;
-        QLabel* simLabel;
-        QLabel* infectiousPeriodLabel;
-
-        QGroupBox* mainBox;
-        QGroupBox* leftBox;
-        QSplitter* rightBox;
-
-        QMenuBar* menuBar;
-        QGroupBox* networkSettingsGroupBox;
-        QGroupBox* simulatorSettingsGroupBox;
-        QGroupBox* controlButtonsGroupBox;
-
-        QComboBox* distBox;
-        QComboBox* netsourceBox;
-        QComboBox* simBox;
-
-        QCheckBox* retainDataCheckBox;
-    
-        QPushButton* clearNetButton;
-        QPushButton* defaultSettingsButton;
-        QPushButton* loadNetButton;
-        QPushButton* generateNetButton;
-        QPushButton* clearDataButton;
-        QPushButton* helpButton;
-        QPushButton* runSimulationButton;
-     
-        QMainWindowButtonBox* buttonBox;
-
-        double calculate_T_crit();
-        double convertR0toT(double R0);
-        double convertTtoR0(double T);
-        double convertTtoTCB (double T, int d);
-        double convertTCBtoT (double TCB, int d);
-        int percent_complete(int current, double predicted);
-
-
-        // Define textboxes and other main menu items
-
-        QLineEdit* numrunsLine;
-        QLineEdit* numnodesLine;
-        QLineEdit* param1Line;
-        QLineEdit* param2Line;
-        QLineEdit* pzeroLine;
-        QLineEdit* transLine;
-        QLineEdit* rzeroLine;
-        QLineEdit* infectiousPeriodLine;
-        QLineEdit* netfileLine;
-
-        PlotArea* epiCurvePlot;
-        PlotArea* statePlot;
-        PlotArea* histPlot;
-        PlotArea* degDistPlot;
-
-        //QWidget* dockWidget1;
-        //QWidget* dockWidget2;
-
+        
+        // Menu bar
         QMenu* fileMenu;
         QAction* exitAction;
         QAction* openAction;
@@ -206,7 +150,74 @@ class MainWindow : public QMainWindow
         QAction* showStatePlot;
         QAction* showEpiPlot;
         QAction* showHistPlot;
+
+        // Central widget
+        QWidget* centralWidget;
+        QGroupBox* mainBox;
+        QMenuBar* menuBar;
+        void createMenu();
+        QGroupBox* leftBox;
+        QSplitter* rightBox;
+
+        // Network settings
+        QGroupBox* networkSettingsGroupBox;
+        void createNetworkSettingsBox();
+        QLabel* netsourceLabel;
+        QComboBox* netsourceBox;
+        QLabel* distLabel;
+        QComboBox* distBox;
+
+        QLabel* param1Label;
+        QLineEdit* poiLambdaLine;
+        QLineEdit* expBetaLine;
+        QLineEdit* powAlphaLine;
+        QLineEdit* conValueLine;
+
+        QLabel* param2Label;
+        QLineEdit* powKappaLine;
+
+        QLabel* netfileLabel;
+        QLineEdit* netfileLine;
+        QLineEdit* numnodesLine;
+
+
+        // Simulator settings
+        QGroupBox* simulatorSettingsGroupBox;
+        void createSimulatorSettingsBox();
+        QLabel* simLabel;
+        QComboBox* simBox;
+        QLabel* infectiousPeriodLabel;
+        QLineEdit* pzeroLine;
+        QLineEdit* transLine;
+        QLineEdit* rzeroLine;
+        QLineEdit* infectiousPeriodLine;
+        QLineEdit* numrunsLine;
+        QCheckBox* retainDataCheckBox;
         
+        // Control panel
+        QGroupBox* controlButtonsGroupBox;
+        void createControlButtonsBox();
+        QPushButton* clearNetButton;
+        QPushButton* defaultSettingsButton;
+        QPushButton* loadNetButton;
+        QPushButton* generateNetButton;
+        QPushButton* clearDataButton;
+        //QPushButton* helpButton;
+        QPushButton* analyzeNetButton;
+        QPushButton* runSimulationButton;
+
+        // Main plots
+        void createPlotPanel();
+        PlotArea* epiCurvePlot;
+        PlotArea* statePlot;
+        PlotArea* histPlot;
+        
+        void addStateData();
+
+        // Network analysis dialog
+        void createNetworkAnalysis();
+        void _addAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
+
         QLineEdit* nodeCountEdit;
         QLineEdit* edgeCountEdit;
         QLineEdit* meanDegreeEdit;
@@ -221,6 +232,27 @@ class MainWindow : public QMainWindow
         QPushButton* transitivityButton;
         QPushButton* diameterButton;
         QPushButton* meanDistanceButton;
+
+        PlotArea* degDistPlot;
+
+        // Network plot
+    
+        //QMainWindowButtonBox* buttonBox;
+     
+
+        // Helper functions
+        double calculate_T_crit();
+        double convertR0toT(double R0);
+        double convertTtoR0(double T);
+        double convertTtoTCB (double T, int d);
+        double convertTCBtoT (double TCB, int d);
+        double guessEpiSize(double R0, double P0_frac, double guess);
+        
+        void makeReadonly(QLineEdit* lineEdit);
+        int percent_complete(int current, double predicted);
+
+
+        
 
 };
 #endif
