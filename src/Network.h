@@ -213,7 +213,7 @@ class Network
         /***************************************************************************
          * Network Properties
          **************************************************************************/
-        void gen_deg_series(vector<int> &deg_series);
+        bool gen_deg_series(vector<int> &deg_series);
         vector<int> get_states();// get the states of all nodes
                                  // get the state sequences, indexed by degree
         vector< vector<int> > get_states_by_degree();
@@ -260,7 +260,7 @@ class Network
         bool _topology_altered;  //has the network topology changed?
         int node_id_counter;
         int edge_id_counter;
-        void _assign_deg_series();
+        bool _assign_deg_series();
 
         // The network has no stubs, but gen_deg_dist (a normalized degree distribution
         // to draw deviates from) has already been stored.

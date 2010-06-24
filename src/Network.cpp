@@ -270,15 +270,17 @@ bool Network::rand_connect_explicit(vector<int> degree_series) {
 bool Network::rand_connect_user(vector<double> dist) {
     if (is_stopped()) return false;
     gen_deg_dist = dist;
-    _assign_deg_series();
-    return rand_connect_stubs( get_edges() );
+    return _rand_connect();
 }
 
 
 // use this only if the generating degree dist has already been stored
 bool Network::_rand_connect() {
-    _assign_deg_series();
-    return rand_connect_stubs( get_edges() );
+    if (_assign_deg_series()) {
+        return rand_connect_stubs( get_edges() );
+    } else {
+        return false;
+    }
 }
 
 
@@ -511,21 +513,28 @@ vector<Node*> Network::get_component(Node* node) {
 }
 
 
-void Network::_assign_deg_series() {
+bool Network::_assign_deg_series() {
     int n = this->node_list.size();
     vector<int> deg_series(n);
 
-    gen_deg_series(deg_series);
+    if ( ! gen_deg_series(deg_series) ||  is_stopped() ) return false;
 
-    if ( is_stopped() ) return;
     for (int i = 0; i < n; i++ ) {
         this->node_list[i]->add_stubs(deg_series[i]);
         PROG( (int) (25.0 * i / n));
     }
+    return true;
 }
 
 
-void Network::gen_deg_series(vector<int> &deg_series) {
+bool Network::gen_deg_series(vector<int> &deg_series) {
+    double dist_sum = sum(gen_deg_dist);
+    if (dist_sum < 1 - 1e-14 || dist_sum > 1 + 1e-14) {
+        //cerr << "Sum: " << setprecision(50) << (double) sum(gen_deg_dist) << endl;
+        cerr << "Degree distribution does not sum to 1\n";
+        return false;
+    }
+
     for (unsigned int i = 0; i < deg_series.size(); i++ ) {
         deg_series[i] = rand_nonuniform_int(gen_deg_dist, &mtrand);
     }
@@ -534,6 +543,7 @@ void Network::gen_deg_series(vector<int> &deg_series) {
         int idx = mtrand.randInt( deg_series.size() - 1 );
         deg_series[idx] = rand_nonuniform_int(gen_deg_dist, &mtrand);
     }
+    return true;
 }
 
 
@@ -809,41 +819,52 @@ void Network::read_edgelist(string filename) {
             //split string based on "," and store results into vector
             vector<string>fields;
             split(line,',', fields);
+            const char whitespace[] = " \n\t\r";
 
             //format check
-            if (fields.size() != 2 ) {
+            if (fields.size() > 2 ) {
                 cerr << "problem with line " << line << endl;
                 continue;
-            }
-
-            const char whitespace[] = " \n\t\r";
-            string name1 = strip(fields[0],whitespace);
-            string name2 = strip(fields[1],whitespace);
-
-            cerr << line << endl;
-            if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
-            if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
-            cerr << "---" << endl;
-
-                                 //new node;
-            if(idmap.count(name1)==0) {
-                                 //allocate memory for new node
+            } else if (fields.size() == 1) {
                 Node* node = this->add_new_node();
+                string name1 = strip(fields[0],whitespace);
+                cerr << "Found single node " << name1 << endl;
                 node->name = name1;
                 idmap[name1] = node;
-            }
+                continue;
+            } else if (fields.size() < 1) {
+                continue;
+            } else { // there are exactly 2 nodes
+            
+                string name1 = strip(fields[0],whitespace);
+                string name2 = strip(fields[1],whitespace);
 
-                                 //new node;
-            if(idmap.count(name2)==0) {
-                                 //allocate memory for new node
-                Node* node = this->add_new_node();
-                node->name = name2;
-                idmap[name2]=node;
-            }
+                cerr << line << endl;
+                if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
+                if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
+                cerr << "---" << endl;
 
-            Node *n1 = idmap[name1];
-            Node *n2 = idmap[name2];
-            n1->connect_to(n2);
+                                     //new node;
+                if(idmap.count(name1)==0) {
+                                     //allocate memory for new node
+                    Node* node = this->add_new_node();
+                    node->name = name1;
+                    idmap[name1] = node;
+                }
+
+                                     //new node;
+                if(idmap.count(name2)==0) {
+                                     //allocate memory for new node
+                    Node* node = this->add_new_node();
+                    node->name = name2;
+                    idmap[name2]=node;
+                }
+
+                idmap[name1]->connect_to(idmap[name2]);
+                //Node *n1 = idmap[name1];
+                //Node *n2 = idmap[name2];
+                //n1->connect_to(n2);
+            }
         }
     }
 }
@@ -853,12 +874,18 @@ void Network::write_edgelist(string filename) {
     if (filename == "") filename = "edgelist.out";
 
     ofstream pipe(filename.c_str(), ios::out);
-    vector<Edge*> edges = get_edges();
-    for (unsigned int i = 0; i < edges.size(); i++) {
-        int start_id = edges[i]->start->id;
-        int end_id   = edges[i]->end->id;
-        if (start_id > end_id) continue;
-        pipe << start_id << "," << end_id << endl;
+    //vector<Edge*> edges = get_edges();
+    //for (unsigned int i = 0; i < edges.size(); i++) {
+    vector<Edge*> edges;
+    for (unsigned int i = 0; i < node_list.size(); i++) {
+        edges = node_list[i]->get_edges_out();
+        for (unsigned int e = 0; e < edges.size(); e++) {
+            int start_id = edges[e]->start->id;
+            int end_id   = edges[e]->end->id;
+            if (!is_directed() and start_id > end_id) continue;
+            pipe << start_id << "," << end_id << endl;
+        }
+        if (node_list[i]->deg() == 0) pipe << node_list[i]->id << endl;
     }
     pipe.close();
 
