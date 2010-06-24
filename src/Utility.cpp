@@ -79,6 +79,10 @@ vector<double> gen_trunc_powerlaw(double alpha, double kappa, int min, int max) 
 
 vector<double> gen_trunc_exponential(double lambda, int min, int max) {
     vector<double> dist(max + 1);
+    if (lambda <= 0) {
+        cerr << "Exponential distribution must have a positive parameter value\n";
+        return dist;
+    }
     double sum = 0;
 
     for (int k = min; k <= max; k++) {
@@ -120,7 +124,7 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
         }
     }
     if (last != 1) {
-        cerr << "rand_uniform_integer() expects a normed distribution.  "
+        cerr << "rand_nonuniform_int() expects a normed distribution.  "
             << "Your probabilities sum to " << setprecision(15) << last
             << ".  Fix this using Utilities::normalize_dist()\n";
         exit(1);
@@ -259,9 +263,8 @@ void split(const string& s, char c, vector<string>& v) {
         v.push_back(s.substr(i, j-i));
         i = ++j;
         j = s.find(c, j);
-
-        if (j == string::npos) v.push_back(s.substr(i, s.length( )));
     }
+    if (j == string::npos) v.push_back(s.substr(i, s.length( )));
 }
 
 
