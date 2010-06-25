@@ -248,6 +248,7 @@ class MainWindow : public QMainWindow
         double convertTCBtoT (double TCB, int d);
         double guessEpiSize(double R0, double P0_frac, double guess);
         
+        void makeEditable(QLineEdit* lineEdit);
         void makeReadonly(QLineEdit* lineEdit);
         int percent_complete(int current, double predicted);
 

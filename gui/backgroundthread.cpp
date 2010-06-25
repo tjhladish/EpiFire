@@ -80,6 +80,12 @@ void BackgroundThread::runSimulation() {
     int currentSize = patient_zero_ct;
 
     vector<int> epi_sizes (j_max);
+    
+    if (mw->retainDataCheckBox->isChecked() == false) {
+        mw->epiCurvePlot->clearData();
+        mw->histPlot->clearData();
+    }
+    
     for ( int j = 0; j < j_max; j++) {
         if (_stopped) break;
         QString rep_str = QString::number(++(mw->rep_ct), 10);
@@ -88,6 +94,7 @@ void BackgroundThread::runSimulation() {
 
         vector<int> epi_curve;
         epi_curve.push_back(mw->simulator->count_infected());
+        
 
         if (j == j_max - 1) {
             mw->statePlot->clearData();

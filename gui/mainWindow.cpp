@@ -409,6 +409,13 @@ void MainWindow::appendOutputLine(QString s) {
 }
 
 
+void MainWindow::makeEditable(QLineEdit* lineEdit) {
+    lineEdit->setReadOnly(false);
+    QPalette pal = lineEdit->palette();
+    pal.setColor(lineEdit->backgroundRole(), Qt::white);
+    lineEdit->setPalette(pal);
+}
+
 
 void MainWindow::makeReadonly(QLineEdit* lineEdit) {
     lineEdit->setReadOnly(true);
@@ -447,6 +454,7 @@ void MainWindow::changeNetSource(int source) {
         netfileLabel->show();
         netfileLine->show();
         makeReadonly(netfileLine);
+        makeReadonly(numnodesLine);
         loadNetButton->show();
         generateNetButton->hide();
         if (netfileLine->text() == "") { // it would be better if we had a flag to check
@@ -469,6 +477,7 @@ void MainWindow::changeNetSource(int source) {
         distBox->show();
         distLabel->show();
         numnodesLine->setText(default_network_size);
+        makeEditable(numnodesLine);
 
         changeNetworkParameters(distBox->currentIndex());
         if (netfileLine->text() == "" and network->size() > 0) { // it would be better if we had a flag to check
@@ -667,8 +676,10 @@ void MainWindow::simulatorWrapper() {
     }
 
     bool retain_data = retainDataCheckBox->isChecked();
+    
     if (! retain_data) {
         epiCurvePlot->clearData();
+        epiCurvePlot->replot(); // a bit clumsy, but it works
     }
 
     //RUN SIMULATION
