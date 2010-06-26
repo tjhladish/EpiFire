@@ -11,7 +11,7 @@ MainWindow::MainWindow() {
 // Constructor for the main interface
 
     centralWidget = new QWidget(this);
-    leftBox       = new QGroupBox(this);
+    leftBox       = new QWidget(this);
     // Allow the leftBox to expand vertically, but not horizontally
     leftBox->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding));
     rightBox      = new QSplitter(Qt::Vertical, this);
@@ -43,7 +43,6 @@ MainWindow::MainWindow() {
     leftLayout->addWidget(controlButtonsGroupBox);
     
     leftBox->setLayout(leftLayout);
-    leftBox->setFlat(true);
     leftBox->setContentsMargins(0,0,0,0);
 
     setWindowTitle(tr("EpiFire"));
@@ -887,9 +886,20 @@ void MainWindow::createNetworkAnalysis() {
 
     degDistPlot = new PlotArea(this, "Degree distribution");
     degDistPlot->setPlotType(PlotArea::DEGPLOT);
+    
+    // add a close window button
+    QPushButton* closeButton = new QPushButton("Close analysis", netAnalysisDialog);
+    connect(closeButton,  SIGNAL(clicked()), netAnalysisDialog, SLOT(close()));
+    QHBoxLayout* buttonBoxLayout   = new QHBoxLayout();
+    QWidget* buttonBox = new QWidget();
+    buttonBoxLayout->addStretch(1);
+    buttonBoxLayout->addWidget(closeButton);
+    buttonBox->setLayout(buttonBoxLayout);
 
     netAnalysisLayout->addWidget(netAnalysisTop);
     netAnalysisLayout->addWidget(degDistPlot);
+    netAnalysisLayout->addWidget(buttonBox);
+    
     netAnalysisDialog->setLayout(netAnalysisLayout);
 }
 

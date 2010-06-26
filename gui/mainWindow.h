@@ -160,7 +160,7 @@ class MainWindow : public QMainWindow
         QGroupBox* mainBox;
         QMenuBar* menuBar;
         void createMenu();
-        QGroupBox* leftBox;
+        QWidget* leftBox;
         QSplitter* rightBox;
 
         // Network settings
