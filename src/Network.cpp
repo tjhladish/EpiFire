@@ -647,7 +647,25 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
 
 // if node_set is not provided, default is all nodes.  node_set would generally be
 // all nodes within a single component
-vector< vector<double> > Network::calculate_distances(vector<Node*> node_set) {
+vector< vector<int> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
+    if (node_set.size() == 0) node_set = node_list;
+    vector< vector<int> > dist( node_set.size() );
+    for(unsigned int i = 0; i < node_set.size(); i++ ) {
+        if (is_stopped() ) {
+            vector< vector<int> > empty;
+            return empty;
+        }
+        PROG(100*(i-1)/node_set.size());
+            dist[i] = node_set[i]->min_unweighted_paths(node_set);
+    }
+    return dist;
+}
+
+
+
+// if node_set is not provided, default is all nodes.  node_set would generally be
+// all nodes within a single component
+vector< vector<double> > Network::calculate_distances(vector<Node*> node_set)  {
     if (node_set.size() == 0) node_set = node_list;
     vector< vector<double> > dist( node_set.size() );
     for(unsigned int i = 0; i < node_set.size(); i++ ) {
@@ -656,7 +674,7 @@ vector< vector<double> > Network::calculate_distances(vector<Node*> node_set) {
             return empty;
         }
         PROG(100*(i-1)/node_set.size());
-        dist[i] = node_set[i]->min_paths(node_set);
+            dist[i] = node_set[i]->min_paths(node_set);
     }
     return dist;
 }
@@ -823,7 +841,7 @@ void Network::read_edgelist(string filename) {
 
             //format check
             if (fields.size() > 2 ) {
-                cerr << "problem with line " << line << endl;
+                cerr << "Skipping line: too many fields: " << line << endl;
                 continue;
             } else if (fields.size() == 1) {
                 Node* node = this->add_new_node();
@@ -839,10 +857,10 @@ void Network::read_edgelist(string filename) {
                 string name1 = strip(fields[0],whitespace);
                 string name2 = strip(fields[1],whitespace);
 
-                cerr << line << endl;
-                if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
-                if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
-                cerr << "---" << endl;
+                //cerr << line << endl;
+                //if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
+                //if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
+                //cerr << "---" << endl;
 
                                      //new node;
                 if(idmap.count(name1)==0) {
@@ -1127,6 +1145,57 @@ double Node::min_path(Node* dest) {
 }
 
 
+vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
+    if (nodes.size() == 0) nodes = get_network()->node_list;
+    map <Node*, int> known_cost; 
+    queue<Node*> Q; // nodes to examine next
+    vector<int> distances(nodes.size(), -1);
+
+    map <Node*, int> hits; // checking for existence is faster with a map
+    for (unsigned int i = 0; i < nodes.size(); i++) {
+       hits[ nodes[i] ] = 1;
+    }
+
+    known_cost[this] = 0;  //We only know initially that there is no cost to get to the starting node
+    Q.push(this);
+
+    int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
+    while ( ! Q.empty() ) {
+        if (get_network()->process_stopped) {vector<int> empty; return empty;}
+        Node* known_node = Q.front();
+        Q.pop();
+
+        //Get the outbound edges for this known node
+        vector <Node*> neighbors = known_node->get_neighbors();
+        for (unsigned int i = 0; i < neighbors.size(); i++) {
+            Node* v = neighbors[i];
+
+            // if we've already done better, continue
+            if (known_cost.count(v) == 1) {
+                continue;
+            } else {
+                known_cost[v] = known_cost[known_node] + 1;
+                Q.push(v);
+                if (hits.count(v) == 1) {
+                    j++;
+                }
+                if (j == nodes.size()) { // we've found all the nodes we want
+                    for ( unsigned int i=0; i<nodes.size(); i++) distances[i] = known_cost[nodes[i]];
+                    return distances;
+                }
+            }
+        }
+    }
+
+    for ( unsigned int i=0; i<nodes.size(); i++) {
+        if (known_cost.count(nodes[i]) == 1) {
+            distances[i] = known_cost[nodes[i]];
+        }
+    }
+    return distances;
+}
+
+
 // Calculates length of the minimum path (if possible) between *this* and everything in *nodes*
 // If *nodes* is empty, default is all nodes
 vector<double> Node::min_paths(vector<Node*> nodes) {
@@ -1148,11 +1217,10 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
     int j = 0;
                                  //As long as there are nodes with uncertain min costs
     while ( j++ < (signed) nodes.size() ) {
-        //cerr << "stopped in min_paths? " << get_network()->process_stopped << endl;
         if (get_network()->process_stopped) {vector<double> empty; return empty;}
+                                 
+        Node* min = NULL;       
                                  //Loop through the nodes we know about.
-                                 //Initialize min to an arbitrary node in the "uncertain" map
-        Node* min = NULL;        //(*uncertain_cost.begin()).first;
         for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
                                  //key of the map is the node
             Node* known_node = (*itr).first;
@@ -1161,22 +1229,20 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
             vector <Edge*> edges = known_node->edges_out;
             for (unsigned int i = 0; i < edges.size(); i++) {
                                  //Get this neighbor
-                Node* end = edges[i]->end;
+                Node* neighbor = edges[i]->end;
                                  //Move on if this endpoint already has a known cost
-                if ( known_cost.count(end) > 0 ) continue;
+                if ( known_cost.count(neighbor) > 0 ) continue;
                                  //Otherwise, calculate a cost using this path
                 int cost = known_cost[known_node] + edges[i]->cost;
 
                 //Store the new cost as an uncertain cost
                 //if it's better than the others we've seen
-                if (uncertain_cost.count(end) > 0 && uncertain_cost[end] < cost) {
+                if (uncertain_cost.count(neighbor) > 0 && uncertain_cost[neighbor] < cost) {
                     continue;
-                }
-                else {
-
-                    if ( min == NULL ) min = end;
-                    uncertain_cost[end] = cost;
-                    if ( uncertain_cost[end] < uncertain_cost[min] ) min = end;
+                } else {
+                    if ( min == NULL ) min = neighbor;
+                    uncertain_cost[neighbor] = cost;
+                    if ( uncertain_cost[neighbor] < uncertain_cost[min] ) min = neighbor;
                 }
             }
         }

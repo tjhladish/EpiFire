@@ -945,8 +945,8 @@ void MainWindow::calculateDistances() {
     
     progressDialog->setLabelText("Finding shortest paths in component ...");
     // calculate the shortest path lengths within it
-    for(unsigned int t = 0; t< (*giant_comp).size(); t++) cerr << (*giant_comp)[t]->get_id() << endl;
-    vector< vector<double> > pathLengths = network->calculate_distances(*giant_comp);
+    //for(unsigned int t = 0; t< (*giant_comp).size(); t++) cerr << (*giant_comp)[t]->get_id() << endl;
+    vector< vector<int> > pathLengths = network->calculate_unweighted_distances(*giant_comp);
     double diam = 0.0;
     double mean = 0.0;
     for (unsigned int i = 0; i<pathLengths.size(); i++) {

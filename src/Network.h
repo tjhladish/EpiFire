@@ -4,6 +4,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include <queue>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -232,7 +233,11 @@ class Network
                                  // if node_set is empty, use all nodes
         double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
+                               
+                                 // distances == edge costs
         vector< vector<double> > calculate_distances( vector<Node*> destinations );
+                                 // edge lengths assumed to be 1
+        vector< vector<int> > calculate_unweighted_distances( vector<Node*> destinations );
 
 
 
@@ -242,9 +247,6 @@ class Network
         // Allows outside control of terminating some long-running network processes
         void stop_processing() { process_stopped = true; }
         void reset_processing_flag() { process_stopped = false; }
-        //float get_progress() { return progress; }
-        //void reset_progress() { progress = -1; }
-        //void set_progress(float pct_complete) { progress = pct_complete; } 
 
     private:
         bool is_stopped();       // checks process status, resets to false if true
@@ -261,7 +263,7 @@ class Network
         int node_id_counter;
         int edge_id_counter;
         bool _assign_deg_series();
-
+        
         // The network has no stubs, but gen_deg_dist (a normalized degree distribution
         // to draw deviates from) has already been stored.
         bool _rand_connect();
@@ -301,6 +303,9 @@ class Node
         inline void set_state(stateType s) { this->state = s; }
 
         double mean_min_path();
+
+        // if network edge lengths can be assumed to be 1, use min_unweighted_paths()
+        vector<int> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
         vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
