@@ -130,9 +130,13 @@ class MainWindow : public QMainWindow
         void generate_dist_thread();
         void calculateDistances();
 
+        // Misc
         void appendOutput(QString);
         void appendOutputLine(QString);
         void stopBackgroundThread();
+        void resetCursor();
+        void enableCentralWidget();
+        void disableCentralWidget();
  
     protected:
 

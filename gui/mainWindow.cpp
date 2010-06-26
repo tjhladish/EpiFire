@@ -61,14 +61,18 @@ MainWindow::MainWindow() {
 
     createNetworkAnalysis();
 
-    progressDialog = new QProgressDialog("", "Cancel", 0, 100, this);
+    progressDialog = new QProgressDialog("", "Cancel", 0, 100);
+    //progressDialog = new QProgressDialog("", "Cancel", 0, 100, this);
     progressDialog->setWindowModality(Qt::WindowModal);
 
     backgroundThread = new BackgroundThread(this);
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(updateNetworkPlot()));
+    connect(backgroundThread,SIGNAL(finished()), this, SLOT(resetCursor()));
     connect(this, SIGNAL(progressUpdated(int)),progressDialog,SLOT(setValue(int)));
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
+    connect(progressDialog,SIGNAL(accepted()),this,SLOT(disableCentralWidget()));
+    connect(progressDialog,SIGNAL(rejected()),this,SLOT(enableCentralWidget()));
 }
 
 
@@ -367,8 +371,6 @@ void MainWindow::saveEdgeList() {
 
 
 void MainWindow::readEdgeList() {
-
-
     QString startdir = ".";
     QStringList filelist = QFileDialog::getOpenFileNames(
         this, "Select edge list file to load:", startdir, "All Files(*.*)");
@@ -684,9 +686,20 @@ void MainWindow::simulatorWrapper() {
 
     //RUN SIMULATION
     generate_sim_thread();
+
+    // it would be nice to replace disabling buttons with an event handler
+    runSimulationButton->setEnabled(false);
+    generateNetButton->setEnabled(false);
+    loadNetButton->setEnabled(false);
+
     while (backgroundThread->isRunning()) {
-        qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
+        qApp->processEvents();
+        //  qApp->processEvents(QEventLoop::ExcludeUserInputEvents);
     }
+    runSimulationButton->setEnabled(true);
+    generateNetButton->setEnabled(true);
+    loadNetButton->setEnabled(true);
+
     setCursor(Qt::ArrowCursor);
     clearDataButton->setEnabled(true);
     statusBar()->showMessage(simDoneMsg, 1000);
@@ -894,10 +907,12 @@ void MainWindow::calculateComponentStats() {
 
     componentCountEdit   ->setText(QString::number( count ));
     maxComponentSizeEdit ->setText(QString::number( biggest ));
+    //setCursor(Qt::ArrowCursor);
 }
 
 
 void MainWindow::analyzeNetwork() {
+    //progressDialog->setParent(netAnalysisDialog);
     if (!network or network->size() == 0) {
         QMessageBox msgBox;
         msgBox.setText("Please generate or import a network first.");
@@ -967,6 +982,11 @@ void MainWindow::calculateDistances() {
     meanDistanceEdit->setText(QString::number( mean ));
 }
 
+void MainWindow::resetCursor() { setCursor(Qt::ArrowCursor); }
+
+void MainWindow::enableCentralWidget() { centralWidget->setEnabled(true); }
+
+void MainWindow::disableCentralWidget() { centralWidget->setEnabled(false); }
 
 void MainWindow::generate_network_thread() {
     statusBar()->showMessage(busyNetMsg);
@@ -1017,8 +1037,6 @@ void MainWindow::generate_dist_thread() {
     progressDialog->setLabelText("Beginning shortest path calculation ...");
     backgroundThread->start();
 }
-
-
 
 
 void MainWindow::stopBackgroundThread() {
