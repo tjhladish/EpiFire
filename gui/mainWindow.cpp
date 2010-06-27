@@ -61,6 +61,7 @@ MainWindow::MainWindow() {
     createNetworkAnalysis();
 
     progressDialog = new QProgressDialog("", "Cancel", 0, 100);
+    progressDialog->setWindowTitle("EpiFire status");
     //progressDialog = new QProgressDialog("", "Cancel", 0, 100, this);
     progressDialog->setWindowModality(Qt::WindowModal);
 
@@ -78,12 +79,15 @@ MainWindow::MainWindow() {
 void MainWindow::createPlotPanel() {
     epiCurvePlot = new PlotArea(this, "Epidemic curves");
     epiCurvePlot->setPlotType(PlotArea::CURVEPLOT);
+    epiCurvePlot->setToolTip("Absolute frequency of infectious nodes vs. time\nDouble-click plot to save image\nRight-click to save data");
 
     statePlot = new PlotArea(this, "Node state evolution");
     statePlot->setPlotType(PlotArea::STATEPLOT);
+    statePlot->setToolTip("Progression of node states over time for 100 nodes\nBlue = susceptible, Red = infectious, Yellow = Recovered\nDouble-click plot to save image\nRight-click to save data");
 
     histPlot = new PlotArea(this, "Histogram of epidemic sizes");
     histPlot->setPlotType(PlotArea::HISTPLOT);
+    histPlot->setToolTip("Distribution of final epidemic sizes\nDouble-click plot to save image\nRight-click to save data");
  
     QVBoxLayout *rightLayout = new QVBoxLayout;
     rightLayout->addWidget(statePlot);
@@ -250,19 +254,22 @@ void MainWindow::createSimulatorSettingsBox() {
     rzeroLine = new QLineEdit();
     makeReadonly(rzeroLine);
     rzeroLine->setAlignment(Qt::AlignRight);
+    rzeroLine->setToolTip("Expected number of secondary infections caused\nby each infection early in the epidemic");
     
     transLine = new QLineEdit();
     transLine->setAlignment(Qt::AlignRight);
     transLine->setValidator( new QDoubleValidator(0.0,1.0,20,transLine) );
-    transLine->setToolTip("Duration of infectious state (units = time steps)\nRange: positive integers");
+    transLine->setToolTip("Probability of transmission from infectious to susceptible neighbor\nRange: 0 to 1");
     
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
     pzeroLine->setValidator( new QIntValidator(1,INT_MAX,numrunsLine) );
+    pzeroLine->setToolTip("Number of randomly chosen individuals to start epidemic\nRange: positive integers");
 
     infectiousPeriodLine = new QLineEdit();
     infectiousPeriodLine->setAlignment(Qt::AlignRight);
     infectiousPeriodLine->setValidator( new QIntValidator(1,INT_MAX,infectiousPeriodLine) );
+    infectiousPeriodLine->setToolTip("Duration of infectious state (units = time steps)\nRange: positive integers");
 
     QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
     QLabel *rzeroLabel = new QLabel(tr("Expected R-zero:"));
