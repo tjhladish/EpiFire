@@ -144,14 +144,17 @@ void MainWindow::createMenu() {
     connect(showHistPlot, SIGNAL(triggered()), this, SLOT( showHideHistPlot() ));
     connect(rightBox, SIGNAL(splitterMoved(int, int)), this, SLOT( updatePlotMenuFlags() ));
 
-    //Create 'Data' menu
-    QMenu* dataMenu = new QMenu(tr("&Data"), this);
-    QAction* showNetworkAnalysis = dataMenu->addAction("Network analysis");
+    //Create 'Network' menu
+    QMenu* networkMenu = new QMenu(tr("&Network"), this);
+    QAction* showNetworkAnalysis = networkMenu->addAction("Network analysis");
+    QAction* reduceToGiantComponent = networkMenu->addAction("Remove all minor components");
+
     connect( showNetworkAnalysis, SIGNAL(triggered()), this, SLOT(analyzeNetwork()));
-    
+    connect( reduceToGiantComponent, SIGNAL(triggered()), this, SLOT(removeMinorComponents()));
+
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(plotMenu);
-    menuBar->addMenu(dataMenu);
+    menuBar->addMenu(networkMenu);
 }
 
 void MainWindow::updateProgress(int x) {
@@ -927,6 +930,54 @@ void MainWindow::calculateComponentStats() {
     //setCursor(Qt::ArrowCursor);
 }
 
+
+void MainWindow::removeMinorComponents() {
+    generate_comp_thread();
+    // this block should instead call a wait function
+    // or something similarly concise
+    runSimulationButton->setEnabled(false);
+    generateNetButton->setEnabled(false);
+    loadNetButton->setEnabled(false);
+
+    while (backgroundThread->isRunning()) {
+        qApp->processEvents();
+    }
+    runSimulationButton->setEnabled(true);
+    generateNetButton->setEnabled(true);
+    loadNetButton->setEnabled(true);
+    // end block
+
+
+    vector<Node*> giant;
+    unsigned int i;
+    cerr << "num componenets: " << netComponents.size() << endl;
+    for (i = 0; i < netComponents.size(); i++) {
+cerr << "i, size: " << i << ", " << netComponents[i].size() << endl;
+        if (netComponents[i].size() > network->size()/2) {
+            giant = netComponents[i];
+cerr << "giant (i): " << i << endl;
+            break;
+        }
+    }
+    if (giant.empty()) {
+        appendOutputLine("Network was not reduced: no giant component");
+    } else {
+        for (unsigned int j = 0; j < netComponents.size(); j++) {
+            if (j == i) continue;
+cerr << "deleting " << j << ", size " << netComponents[j].size() << endl;
+            foreach (Node* n, netComponents[j]) {
+                network->delete_node(n);
+            }
+        }
+        netComponents.clear();
+        netComponents.push_back(giant);
+
+        numnodesLine->setText(QString::number(network->size()));
+        updateRZero();
+    }
+
+
+}
 
 void MainWindow::analyzeNetwork() {
     //progressDialog->setParent(netAnalysisDialog);
