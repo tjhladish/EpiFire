@@ -97,7 +97,7 @@ void Network::delete_node(Node* node) {
     vector<Node*>::iterator itr;
     itr = find(node_list.begin(), node_list.end(), node);
     node_list.erase(itr);
-    delete this;
+    delete node;
     set_topology_altered(true);
 }
 
