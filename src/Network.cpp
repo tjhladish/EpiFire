@@ -26,6 +26,8 @@ Network::Network( string name, bool directed) {
     this->edge_id_counter = 0;
     this->_topology_altered=false;
     this->mtrand = mtrand;
+    this->process_stopped = false;
+    this->known_nodes = 0;
 }
 
 
@@ -67,7 +69,6 @@ Network* Network::duplicate() {
 
 
 Network::~Network() {
-cerr << node_list.size() << endl;
     for (unsigned int i = 0; i < node_list.size(); i++) {
         delete node_list[i];
     }
@@ -96,7 +97,7 @@ void Network::delete_node(Node* node) {
     vector<Node*>::iterator itr;
     itr = find(node_list.begin(), node_list.end(), node);
     node_list.erase(itr);
-    delete this;
+    delete node;
     set_topology_altered(true);
 }
 
@@ -118,21 +119,30 @@ Node* Network::get_node(int node_id) {
 }
 
 
-void Network::ring_lattice(int k) {
+bool Network::ring_lattice(int k) {
+    if (k > (size() - 1) / 2) {
+        cerr << "Cannot construct a ring lattice with k-nearest neighbors where k > (network size - 1) / 2\n";
+        return false;
+    }
     for (unsigned int i = 0; i < node_list.size(); i++) {
         for (int j = 1; j <= k; j++) {
             int dest = (i+j) % node_list.size();
             node_list[i]->connect_to(node_list[dest]);
         }
     }
+    return true;
 }
 
 
 // Assumes undirected network
-void Network::square_lattice(int R, int C, bool diag) {
+bool Network::square_lattice(int R, int C, bool diag) {
+    if (R < 1 or C < 1) {
+        cerr << "Square lattice must have at least one row and one column.\n";
+        return false;
+    }
     clear_nodes();
-    for (int i=0; i < R; i++) {
-        for (int j=0; j<C; j++) {
+    for (int i = 0; i < R; i++) {
+        for (int j = 0; j < C; j++) {
             Node* node = add_new_node();
             int id = node->get_id();
                                  // if we're not in the first row or column
@@ -159,31 +169,39 @@ void Network::square_lattice(int R, int C, bool diag) {
             }
         }
     }
+    return true;
 }
 
 
 //void Network::small_world(double p) {}
 
 // generates a poisson network vi the Erdos & Renyi algorithm
-void Network::erdos_renyi(double lambda) {
+bool Network::erdos_renyi(double lambda) {
     int n = size();
+    if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
-    for (unsigned int a = 0; a < nodes.size() - 1; a++) {
-        for (unsigned int b = a; b < nodes.size(); b++) {
+    for (int a = 0; a < n - 1; a++) {
+        if (is_stopped() ) { return false; }
+        for (unsigned int b = a + 1; b < nodes.size(); b++) {
             if ( mtrand.rand() < p) {
                 nodes[a]->connect_to(nodes[b]);
             }
         }
+        //set_progress( (double) a / n );
+        PROG( (int) 100 * (1 - (double)(n-a)*(n-a-1) / (n*(n-1))) );
+        //cerr <<  1 - (double)(n-a)*(n-a-1) / (n*(n-1))  << endl;
     }
+    return true;
 }
 
 
 // generates a poisson network.  Faster than Erdos-Renyi for sparse graphs
-void Network::sparse_random_graph(double lambda) {
+bool Network::sparse_random_graph(double lambda) {
     int n = size();
-    double p = lambda / (n-1);
-    double sd = sqrt(n*(n-1)*p*(1-p));
+    long double p = lambda / (n-1);
+    long double sd = sqrtl(n*lambda*(1-p));
+    //sqrtl(n*(n-1)*p*(1-p)); // sometimes yields -nan (e.g. n=50000,lambda=5)
                                  // randNorm(mean, variance)
     double edge_ct = mtrand.randNorm(lambda * n, sd);
                                  // we're increasing the degree of 2 nodes!
@@ -193,33 +211,43 @@ void Network::sparse_random_graph(double lambda) {
                                  // for undirected graphs, this makes
         node_list[a]->connect_to(node_list[b]);
                                  // an undirected edge
+        PROG( (int) 50 * i/edge_ct );
     }
-    lose_loops();
+    return lose_loops();
 }
 
+bool Network::fast_random_graph(double lambda) {
+    // Testing networks of 10e3, 10e4, and 10e5 nodes, I found that the break-even point
+    // where the algorithms performance was comparable was when nodes were connected to
+    // between 1 and 2% of the network
+    if (lambda/size() > 0.01) {
+        return erdos_renyi(lambda);
+    } else {
+        return sparse_random_graph(lambda);
+    }
+}
 
-
-void Network::rand_connect_poisson(double lambda) {
+bool Network::rand_connect_poisson(double lambda) {
     int min = 0;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
     int max = node_list.size() - 1;
     vector<double> dist = gen_trunc_poisson(lambda, min, max);
-    rand_connect_user(dist);
+    return rand_connect_user(dist);
 }
 
 
-void Network::rand_connect_powerlaw(double alpha, double kappa) {
+bool Network::rand_connect_powerlaw(double alpha, double kappa) {
     int min = 1;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
     int max = node_list.size() - 1;
     vector<double> dist = gen_trunc_powerlaw(alpha, kappa, min, max);
-    rand_connect_user(dist);
+    return rand_connect_user(dist);
 }
 
 
-void Network::rand_connect_exponential(double lambda) {
+bool Network::rand_connect_exponential(double lambda) {
     int min = 1;                 // min and max are INCLUSIVE, i.e. the lowest and highest possible degrees
     int max = node_list.size() - 1;
     vector<double> dist = gen_trunc_exponential(lambda, min, max);
-    rand_connect_user(dist);
+    return rand_connect_user(dist);
 }
 
 
@@ -229,33 +257,37 @@ void Network::rand_connect_user(map<int,double>) {
 
 }*/
 
-void Network::rand_connect_explicit(vector<int> degree_series) {
+bool Network::rand_connect_explicit(vector<int> degree_series) {
     assert(degree_series.size() == node_list.size());
     assert(sum(degree_series) % 2 == 0);
     for (unsigned int i = 0; i < degree_series.size(); i++ ) {
         node_list[i]->add_stubs(degree_series[i]);
     }
-    rand_connect_stubs( get_edges() );
+    return rand_connect_stubs( get_edges() );
 }
 
 
-void Network::rand_connect_user(vector<double> dist) {
+bool Network::rand_connect_user(vector<double> dist) {
+    if (is_stopped()) return false;
     gen_deg_dist = dist;
-    _assign_deg_series();
-    rand_connect_stubs( get_edges() );
+    return _rand_connect();
 }
 
 
 // use this only if the generating degree dist has already been stored
-void Network::_rand_connect() {
-    _assign_deg_series();
-    rand_connect_stubs( get_edges() );
+bool Network::_rand_connect() {
+    if (_assign_deg_series()) {
+        return rand_connect_stubs( get_edges() );
+    } else {
+        return false;
+    }
 }
 
 
 // rand_connect_stubs() expects ONLY stubs in network, i.e. not some complete edges
 // and some stubs
-void Network::rand_connect_stubs(vector<Edge*> stubs) {
+bool Network::rand_connect_stubs(vector<Edge*> stubs) {
+    if ( is_stopped() ) return false;
                                  //get all edges in network
     vector<Edge*>::iterator itr;
     Edge* m;
@@ -275,14 +307,19 @@ void Network::rand_connect_stubs(vector<Edge*> stubs) {
         n  = stubs[i  + 1];
         m->define_end(n->start);
         n->define_end(m->start);
+        PROG( 25 + (int) (25 * i / stubs.size()) );
     }
-    lose_loops();
+    // if lose_loops() isn't successful, return false
+    if (! lose_loops()) { clear_edges(); return false; }
+    return true;
 }
 
 
 // This method removes self loops (edges with the same node as start and end)
 // and multi-edges (e.g. pairs of edges which have identical starts and ends)
-void Network::lose_loops() {
+// Returns true on success, false if network could not be rewired
+bool Network::lose_loops() {
+    if ( is_stopped() ) return false;
                                  //all (outbound) edges in the network
     vector<Edge*> edges = get_edges();
     vector<Edge*>::iterator edge1, edge2;
@@ -309,14 +346,16 @@ void Network::lose_loops() {
     for (int i = max; i >= 0; i-- ) swap(bad_edges[i], bad_edges[ mtrand.randInt(i) ]);
 
     while ( bad_edges.size() > 0 ) {
+        PROG( 50 + (int) (50 * (max - bad_edges.size()) / max) );
         m = bad_edges.size() - 1;
         n = mtrand.randInt(  edges.size() - 1 );
         if ( failed_attempts > 99 ) {
             cerr    << "It may be impossible to equilibriate a network with these parameters--"
                 << "couldn't get rid of any self-loops or multi-edges in the last 100 attempts"
                 << endl;
-            return;
+            return false;
         }
+        if ( is_stopped() ) return false;
 
         Edge* edge1 = bad_edges[m];
         Edge* edge2 = edges[n];
@@ -369,6 +408,7 @@ void Network::lose_loops() {
     //    self_loops.clear();
     //    multiedges.clear();
     //    get_bad_edges( self_loops, multiedges);
+    return true;
 }
 
 
@@ -399,24 +439,47 @@ void Network::get_bad_edges(vector<Edge*> &self_loops, vector<Edge*> &multiedges
 }
 
 
-vector<Node*> Network::get_major_component() {
-    vector<Node*> major_comp(0);
-    vector<int> remaining_nodes(size(),1);
+vector<Node*> Network::get_biggest_component() {
+    vector<Node*> big_comp(0);
+    vector< vector<Node*> > all_comp = get_components();
 
-    while ((unsigned) sum(remaining_nodes) > major_comp.size()) {
-        Node* starting_point = NULL;
-        for ( unsigned int i = 0; i < remaining_nodes.size(); i++ ) {
-            if (remaining_nodes[i] == 1) {
-                starting_point = get_node(i);
-                break;
-            }
+    for (unsigned int i = 0; i<all_comp.size(); i++) {
+        if (all_comp[i].size() > big_comp.size()) big_comp = all_comp[i];
+    }
+    
+    return big_comp;
+}
+
+
+vector< vector<Node*> > Network::get_components() {
+    vector< vector<Node*> > components;
+    vector<Node*> temp_comp(0);
+    map<Node*,bool> remaining_nodes;
+    PROG(0);
+    for (int i = 0; i<size(); i++) remaining_nodes.insert( make_pair(get_nodes()[i], true) );
+
+    known_nodes = 0;
+    while ( known_nodes < size() ) {
+        if (is_stopped()) {
+            vector< vector<Node*> > empty;
+            return empty;
         }
 
-        vector<Node*> temp_comp = get_component(starting_point);
-        for ( unsigned int i = 0; i < temp_comp.size(); i++ ) remaining_nodes[i] = 0;
-        if (temp_comp.size() > major_comp.size()) major_comp = temp_comp;
+        map<Node*, bool>::iterator it;
+
+        for (it = remaining_nodes.begin(); it != remaining_nodes.end(); ++it){
+            if (it->second == true){
+                Node* next = it->first;
+
+                temp_comp = get_component( next );
+                components.push_back(temp_comp);
+                known_nodes += temp_comp.size();
+
+                for (unsigned int i = 0; i<temp_comp.size(); i++) remaining_nodes[ temp_comp[i] ] = false;
+            }
+        }
     }
-    return major_comp;
+    return components;
 }
 
 
@@ -429,6 +492,8 @@ vector<Node*> Network::get_component(Node* node) {
     state[node->id] = 1;
 
     while (hot_nodes.size() > 0) {
+        if (process_stopped) return cold_nodes;
+        
         vector<Node*> new_hot_nodes;
         for (unsigned int i = 0; i < hot_nodes.size(); i++) {
             vector<Node*> neighbors = hot_nodes[i]->get_neighbors();
@@ -440,6 +505,7 @@ vector<Node*> Network::get_component(Node* node) {
             }
             state[hot_nodes[i]->id] = 2;
             cold_nodes.push_back( hot_nodes[i] );
+            PROG((int) 100*((float) (known_nodes + cold_nodes.size())/size() ));
         }
         hot_nodes = new_hot_nodes;
     }
@@ -447,19 +513,28 @@ vector<Node*> Network::get_component(Node* node) {
 }
 
 
-void Network::_assign_deg_series() {
+bool Network::_assign_deg_series() {
     int n = this->node_list.size();
     vector<int> deg_series(n);
 
-    gen_deg_series(deg_series);
+    if ( ! gen_deg_series(deg_series) ||  is_stopped() ) return false;
 
     for (int i = 0; i < n; i++ ) {
         this->node_list[i]->add_stubs(deg_series[i]);
+        PROG( (int) (25.0 * i / n));
     }
+    return true;
 }
 
 
-void Network::gen_deg_series(vector<int> &deg_series) {
+bool Network::gen_deg_series(vector<int> &deg_series) {
+    double dist_sum = sum(gen_deg_dist);
+    if (dist_sum < 1 - 1e-14 || dist_sum > 1 + 1e-14) {
+        //cerr << "Sum: " << setprecision(50) << (double) sum(gen_deg_dist) << endl;
+        cerr << "Degree distribution does not sum to 1\n";
+        return false;
+    }
+
     for (unsigned int i = 0; i < deg_series.size(); i++ ) {
         deg_series[i] = rand_nonuniform_int(gen_deg_dist, &mtrand);
     }
@@ -468,6 +543,7 @@ void Network::gen_deg_series(vector<int> &deg_series) {
         int idx = mtrand.randInt( deg_series.size() - 1 );
         deg_series[idx] = rand_nonuniform_int(gen_deg_dist, &mtrand);
     }
+    return true;
 }
 
 
@@ -539,6 +615,7 @@ double Network::transitivity (vector<Node*> node_set) {
     Node *a, *b, *c;
 
     for (unsigned int i = 0; i < node_list.size(); i++) {
+        if (is_stopped()) return -1 * std::numeric_limits<float>::max();
         a = node_list[i];
         vector<Node*> neighborhood_a = a->get_neighbors();
         for (unsigned int j = 0; j < neighborhood_a.size(); j++) {
@@ -551,28 +628,55 @@ double Network::transitivity (vector<Node*> node_set) {
                 tripples++;
             }
         }
+        PROG(100*i/size());
     }
     return (double) triangles / (double) tripples ;
 }
 
 
-double Network::mean_dist() {    // average distance between nodes in network
-    vector< vector<double> > distance_matrix = all_distances();
+double Network::mean_dist(vector<Node*> node_set) {    // average distance between nodes in network
+    if (node_set.size() == 0) node_set = node_list;
+    vector< vector<double> > distance_matrix = calculate_distances(node_set);
     double grand_total = 0;
     for( unsigned int i=0; i < distance_matrix.size(); i++ ) {
         grand_total += sum(distance_matrix[i]);
     }
-    double mean = grand_total / ( size()*size() );
+    double mean = grand_total / ( size()*( size()-1 ) ); // don't consider distance from nodes to themselves
     return mean;
 }
 
-
-vector< vector<double> > Network::all_distances() {
-    vector< vector<double> > all_dist( size() );
-    for(unsigned int i = 0; i < node_list.size(); i++ ) {
-        all_dist[i] = node_list[i]->min_paths();
+// if node_set is not provided, default is all nodes.  node_set would generally be
+// all nodes within a single component
+vector< vector<int> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
+    if (node_set.size() == 0) node_set = node_list;
+    vector< vector<int> > dist( node_set.size() );
+    for(unsigned int i = 0; i < node_set.size(); i++ ) {
+        if (is_stopped() ) {
+            vector< vector<int> > empty;
+            return empty;
+        }
+        PROG(100*(i-1)/node_set.size());
+            dist[i] = node_set[i]->min_unweighted_paths(node_set);
     }
-    return all_dist;
+    return dist;
+}
+
+
+
+// if node_set is not provided, default is all nodes.  node_set would generally be
+// all nodes within a single component
+vector< vector<double> > Network::calculate_distances(vector<Node*> node_set)  {
+    if (node_set.size() == 0) node_set = node_list;
+    vector< vector<double> > dist( node_set.size() );
+    for(unsigned int i = 0; i < node_set.size(); i++ ) {
+        if (is_stopped() ) {
+            vector< vector<double> > empty;
+            return empty;
+        }
+        PROG(100*(i-1)/node_set.size());
+            dist[i] = node_set[i]->min_paths(node_set);
+    }
+    return dist;
 }
 
 
@@ -733,41 +837,52 @@ void Network::read_edgelist(string filename) {
             //split string based on "," and store results into vector
             vector<string>fields;
             split(line,',', fields);
+            const char whitespace[] = " \n\t\r";
 
             //format check
-            if (fields.size() != 2 ) {
-                cerr << "problem with line " << line << endl;
+            if (fields.size() > 2 ) {
+                cerr << "Skipping line: too many fields: " << line << endl;
                 continue;
-            }
-
-            const char whitespace[] = " \n\t\r";
-            string name1 = strip(fields[0],whitespace);
-            string name2 = strip(fields[1],whitespace);
-
-            cerr << line << endl;
-            if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
-            if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
-            cerr << "---" << endl;
-
-                                 //new node;
-            if(idmap.count(name1)==0) {
-                                 //allocate memory for new node
+            } else if (fields.size() == 1) {
                 Node* node = this->add_new_node();
+                string name1 = strip(fields[0],whitespace);
+                cerr << "Found single node " << name1 << endl;
                 node->name = name1;
                 idmap[name1] = node;
-            }
+                continue;
+            } else if (fields.size() < 1) {
+                continue;
+            } else { // there are exactly 2 nodes
+            
+                string name1 = strip(fields[0],whitespace);
+                string name2 = strip(fields[1],whitespace);
 
-                                 //new node;
-            if(idmap.count(name2)==0) {
-                                 //allocate memory for new node
-                Node* node = this->add_new_node();
-                node->name = name2;
-                idmap[name2]=node;
-            }
+                //cerr << line << endl;
+                //if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
+                //if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
+                //cerr << "---" << endl;
 
-            Node *n1 = idmap[name1];
-            Node *n2 = idmap[name2];
-            n1->connect_to(n2);
+                                     //new node;
+                if(idmap.count(name1)==0) {
+                                     //allocate memory for new node
+                    Node* node = this->add_new_node();
+                    node->name = name1;
+                    idmap[name1] = node;
+                }
+
+                                     //new node;
+                if(idmap.count(name2)==0) {
+                                     //allocate memory for new node
+                    Node* node = this->add_new_node();
+                    node->name = name2;
+                    idmap[name2]=node;
+                }
+
+                idmap[name1]->connect_to(idmap[name2]);
+                //Node *n1 = idmap[name1];
+                //Node *n2 = idmap[name2];
+                //n1->connect_to(n2);
+            }
         }
     }
 }
@@ -777,12 +892,18 @@ void Network::write_edgelist(string filename) {
     if (filename == "") filename = "edgelist.out";
 
     ofstream pipe(filename.c_str(), ios::out);
-    vector<Edge*> edges = get_edges();
-    for (unsigned int i = 0; i < edges.size(); i++) {
-        int start_id = edges[i]->start->id;
-        int end_id   = edges[i]->end->id;
-        if (start_id > end_id) continue;
-        pipe << start_id << "," << end_id << endl;
+    //vector<Edge*> edges = get_edges();
+    //for (unsigned int i = 0; i < edges.size(); i++) {
+    vector<Edge*> edges;
+    for (unsigned int i = 0; i < node_list.size(); i++) {
+        edges = node_list[i]->get_edges_out();
+        for (unsigned int e = 0; e < edges.size(); e++) {
+            int start_id = edges[e]->start->id;
+            int end_id   = edges[e]->end->id;
+            if (!is_directed() and start_id > end_id) continue;
+            pipe << start_id << "," << end_id << endl;
+        }
+        if (node_list[i]->deg() == 0) pipe << node_list[i]->id << endl;
     }
     pipe.close();
 
@@ -851,6 +972,12 @@ void Network::graphviz (string filename) {
     pipe << "}\n";
 
     pipe.close();
+}
+
+bool Network::is_stopped() {
+    bool status = process_stopped;
+    process_stopped = false;
+    return status;
 }
 
 
@@ -992,10 +1119,11 @@ void Node::dumper() {
     cerr << "\n";
 }
 
-
+// Mean path length from this node to all others in same component
 double Node::mean_min_path() {
     int component_size = 0;
-    vector<double> distances = min_paths();
+    vector<Node*> empty;
+    vector<double> distances = min_paths(empty);
     double sum = 0;
     for (int i = 0; i < (signed) distances.size(); i++) {
         if (distances[i] > -1 && id != i) {
@@ -1011,34 +1139,88 @@ double Node::mean_min_path() {
 
 
 double Node::min_path(Node* dest) {
-    vector<double> distances = this->min_paths();
+    vector<Node*> empty(0);
+    vector<double> distances = this->min_paths(empty);
     return distances[dest->id];
 }
 
 
-//Calculates length of the minimum path (if possible) between two nodes using Dijkstra's Algorithm
-vector<double> Node::min_paths() {
-    map <Node*, int> known_cost; //Per Dijkstra's Algorithm, these are the two lists
-    map <Node*, int>::iterator itr;
+vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
+    if (nodes.size() == 0) nodes = get_network()->node_list;
+    map <Node*, int> known_cost; 
+    queue<Node*> Q; // nodes to examine next
+    vector<int> distances(nodes.size(), -1);
+
+    map <Node*, int> hits; // checking for existence is faster with a map
+    for (unsigned int i = 0; i < nodes.size(); i++) {
+       hits[ nodes[i] ] = 1;
+    }
+
+    known_cost[this] = 0;  //We only know initially that there is no cost to get to the starting node
+    Q.push(this);
+
+    int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
+    while ( ! Q.empty() ) {
+        if (get_network()->process_stopped) {vector<int> empty; return empty;}
+        Node* known_node = Q.front();
+        Q.pop();
+
+        //Get the outbound edges for this known node
+        vector <Node*> neighbors = known_node->get_neighbors();
+        for (unsigned int i = 0; i < neighbors.size(); i++) {
+            Node* v = neighbors[i];
+
+            // if we've already done better, continue
+            if (known_cost.count(v) == 1) {
+                continue;
+            } else {
+                known_cost[v] = known_cost[known_node] + 1;
+                Q.push(v);
+                if (hits.count(v) == 1) {
+                    j++;
+                }
+                if (j == nodes.size()) { // we've found all the nodes we want
+                    for ( unsigned int i=0; i<nodes.size(); i++) distances[i] = known_cost[nodes[i]];
+                    return distances;
+                }
+            }
+        }
+    }
+
+    for ( unsigned int i=0; i<nodes.size(); i++) {
+        if (known_cost.count(nodes[i]) == 1) {
+            distances[i] = known_cost[nodes[i]];
+        }
+    }
+    return distances;
+}
+
+
+// Calculates length of the minimum path (if possible) between *this* and everything in *nodes*
+// If *nodes* is empty, default is all nodes
+vector<double> Node::min_paths(vector<Node*> nodes) {
+    if (nodes.size() == 0) nodes = get_network()->node_list;
+    map <Node*, double> known_cost; //Per Dijkstra's Algorithm, these are the two lists
+    map <Node*, double>::iterator itr;
                                  //we need to keep track of
     map <Node*, double> uncertain_cost;
 
                                  //the following initializes the 'uncertain' set with undefined values,
                                  //since we have no information about these nodes yet.
-    vector <Node*> nodes = network->node_list;
     for (unsigned int i = 0; i < nodes.size(); i++) {
         if (this == nodes[i]) continue;
-                                 // infinity =: 10^99
-        uncertain_cost[ nodes[i] ] = 1e+99;
+                                 // infinity =: max double value
+        uncertain_cost[ nodes[i] ] = std::numeric_limits<double>::max();
     }
     known_cost[this] = 0;        //We only know initially that there is no cost to get to the starting node
 
     int j = 0;
                                  //As long as there are nodes with uncertain min costs
     while ( j++ < (signed) nodes.size() ) {
+        if (get_network()->process_stopped) {vector<double> empty; return empty;}
+                                 
+        Node* min = NULL;       
                                  //Loop through the nodes we know about.
-                                 //Initialize min to an arbitrary node in the "uncertain" map
-        Node* min = NULL;        //(*uncertain_cost.begin()).first;
         for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
                                  //key of the map is the node
             Node* known_node = (*itr).first;
@@ -1047,22 +1229,20 @@ vector<double> Node::min_paths() {
             vector <Edge*> edges = known_node->edges_out;
             for (unsigned int i = 0; i < edges.size(); i++) {
                                  //Get this neighbor
-                Node* end = edges[i]->end;
+                Node* neighbor = edges[i]->end;
                                  //Move on if this endpoint already has a known cost
-                if ( known_cost.count(end) > 0 ) continue;
+                if ( known_cost.count(neighbor) > 0 ) continue;
                                  //Otherwise, calculate a cost using this path
                 int cost = known_cost[known_node] + edges[i]->cost;
 
                 //Store the new cost as an uncertain cost
                 //if it's better than the others we've seen
-                if (uncertain_cost.count(end) > 0 && uncertain_cost[end] < cost) {
+                if (uncertain_cost.count(neighbor) > 0 && uncertain_cost[neighbor] < cost) {
                     continue;
-                }
-                else {
-
-                    if ( min == NULL ) min = end;
-                    uncertain_cost[end] = cost;
-                    if ( uncertain_cost[end] < uncertain_cost[min] ) min = end;
+                } else {
+                    if ( min == NULL ) min = neighbor;
+                    uncertain_cost[neighbor] = cost;
+                    if ( uncertain_cost[neighbor] < uncertain_cost[min] ) min = neighbor;
                 }
             }
         }
@@ -1081,9 +1261,11 @@ vector<double> Node::min_paths() {
     }                            //test  this->id = start;
 
     int n = nodes.size();
-    vector<double> distances(n+1,-1);
-    for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
-        distances[(*itr).first->id] = (*itr).second;
+    vector<double> distances(n,-1);
+    for ( int i=0; i<n; i++) {
+        if ( known_cost.count(nodes[i]) ) {
+            distances[i] = known_cost[nodes[i]];
+        }
     }
     return distances;
 }

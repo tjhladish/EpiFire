@@ -12,25 +12,51 @@ double EPSILON = 10e-15;         // probabilities smaller than this are treated 
  * @param max
  */
 // generate a truncated poisson distribution
+long double poisson_pmf(double lambda, int k) {
+    long double a = expl(-lambda);
+    long double b = powl((long double) lambda,k);
+    long double c = factorial(k);
+    return a * b / c;
+}
+
 vector<double> gen_trunc_poisson(double lambda, int min, int max) {
-    vector<double> dist(max + 1);//initializes distribution to all 0
-    double sum = 0;
-
-    for (int k = min; k <= max; k++) {
-        //cerr << "\tk: " << k;
-        double a = exp(-lambda);
-        double b = pow(lambda,k);
-        double c = factorial(k);
-        double pk = a * b / c;
-        dist[k] = pk;
-        sum += pk;
-        //cerr << "\tsum: " << sum << endl;
-        if (pk/sum < EPSILON) {
-            dist.resize(k + 1);
-            break;
+    vector<double> dist(max + 1, 0.0);//initializes distribution to all 0
+    double sum = 0.0;
+    if (lambda < 500) {
+        for (int k = lambda; k >= min; k--) {
+            dist[k] = poisson_pmf(lambda, k);
+            sum += dist[k];
+            if ( dist[k]/sum < EPSILON) break;
         }
-    }
+        
+        for (int k = lambda + 1; k <= max; k++) {
+            dist[k] = poisson_pmf(lambda, k);
+            sum += dist[k];
+            if ( dist[k]/sum < EPSILON) {
+                dist.resize(k + 1);
+                break;
+            }
+        }
 
+    } else { // use a normal approximation, avoiding the factorial and pow calculations
+    // by starting 9 SD's above lambda, we should capture all densities greater than EPSILON
+        int prob_max = lambda + 9 * sqrt(lambda);
+        max = MIN(max, prob_max);
+        dist.resize(max + 1);
+        
+        for (int k = max; k >= min; k--) {
+            dist[k] = normal_cdf(k + 0.5, lambda, lambda); // 0.5 is a continuity correction
+            if ( k < max ) {
+                dist[k+1] -= dist[k];
+                sum += dist[k+1];
+            }
+            if ( k < lambda and dist[k+1] < EPSILON) {
+                dist[k] = 0;
+                break;
+            }
+        }
+            
+    }
     return normalize_dist(dist, sum);
 }
 
@@ -41,7 +67,7 @@ vector<double> gen_trunc_powerlaw(double alpha, double kappa, int min, int max) 
     double sum = 0;
 
     for (int k = min; k <= max; k++) {
-        double pk = pow(k, -alpha) * exp(-k/kappa);
+        double pk = powl(k, (long double) -alpha) * expl(-k/(long double) kappa);
         dist[k] = pk;
         sum += pk;
         if (pk/sum < EPSILON) break;
@@ -53,6 +79,10 @@ vector<double> gen_trunc_powerlaw(double alpha, double kappa, int min, int max) 
 
 vector<double> gen_trunc_exponential(double lambda, int min, int max) {
     vector<double> dist(max + 1);
+    if (lambda <= 0) {
+        cerr << "Exponential distribution must have a positive parameter value\n";
+        return dist;
+    }
     double sum = 0;
 
     for (int k = min; k <= max; k++) {
@@ -94,7 +124,7 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
         }
     }
     if (last != 1) {
-        cerr << "rand_uniform_integer() expects a normed distribution.  "
+        cerr << "rand_nonuniform_int() expects a normed distribution.  "
             << "Your probabilities sum to " << setprecision(15) << last
             << ".  Fix this using Utilities::normalize_dist()\n";
         exit(1);
@@ -146,7 +176,28 @@ void rand_nchoosek(int N, vector<int>& sample, MTRand* mtrand) {
     }
 }
 
+double normal_pdf(double x, double mu, double var) {
+    long double PI = 3.1415926535897932384;
+    return exp(-pow(x-mu,2) / 2.0*var) / sqrt(2*PI*var);
+}
 
+double normal_cdf(double x, double mu, double var) {
+    x = (x-mu)/sqrt(var);
+    // Abramowitz & Stegun (1964) approximation
+    long double b0 = 0.2316419;
+    double b1 = 0.319381530;
+    double b2 = -0.356563782;
+    double b3 = 1.781477937;
+    double b4 = -1.821255978;
+    double b5 = 1.330274429;
+    if (x >= 0.0) {
+        long double t = 1.0/(1.0+b0*x);
+        return 1.0 - normal_pdf(x, 0, 1)*(b1*t + b2*pow(t,2) + b3*pow(t,3) + b4*pow(t,4) + b5*pow(t,5));
+    } else {
+        long double t = 1.0/(1.0-b0*x);
+        return normal_pdf(x, 0, 1)*(b1*t + b2*pow(t,2) + b3*pow(t,3) + b4*pow(t,4) + b5*pow(t,5));
+    }
+}
 /*
 double sum(vector<double> list) {
     double sum = 0;
@@ -178,12 +229,12 @@ double mean(vector<T> list) {
     return (double) sum(list) / list.size();
 }*/
 
-double factorial(int num) {
+long double factorial(int num) {
     assert( num > -1);
     if (num == 0) return 1;      // definition of 0!
-    double result = log(1);
-    for (int i = 1; i <= num; i++) result = result + log(i);
-    return exp(result);
+    long double result = 0.0;//log(1);
+    for (int i = 1; i <= num; i++) result = result + logl((long double) i);
+    return expl(result);
 }
 
 
@@ -212,10 +263,10 @@ void split(const string& s, char c, vector<string>& v) {
         v.push_back(s.substr(i, j-i));
         i = ++j;
         j = s.find(c, j);
-
-        if (j == string::npos) v.push_back(s.substr(i, s.length( )));
     }
+    if (j == string::npos) v.push_back(s.substr(i, s.length( )));
 }
+
 
 
 /*      	// initialize random seed:

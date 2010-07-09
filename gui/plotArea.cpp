@@ -14,16 +14,39 @@ PlotArea::PlotArea(QWidget*, QString l) {
     xAxis = NULL;
     yAxis = NULL;
 
+    savePlotAction = new QAction("Export plot as png", this);
+    connect( savePlotAction, SIGNAL(triggered()), this, SLOT(savePlot()) );
+    saveDataAction = new QAction("", this);
+    connect( saveDataAction, SIGNAL(triggered()), this, SLOT(saveData()) );
+}
+
+void PlotArea::contextMenuEvent(QContextMenuEvent* event) {
+    QMenu menu(this);
+ 
+    if ( plotType == CURVEPLOT ) {
+        saveDataAction->setText("Export time series data");
+    } else if (plotType == STATEPLOT ) { 
+        saveDataAction->setText("Export node state data (100 node max)");
+    } else if (plotType == HISTPLOT) {
+        saveDataAction->setText("Export epidemic size data");
+    } else if ( plotType == DEGPLOT) { 
+        saveDataAction->setText("Export degree sequence data");
+    }
+   
+
+    menu.addAction(savePlotAction);
+    menu.addAction(saveDataAction);
+    menu.exec(event->globalPos());
 }
 
 
 void PlotArea::replot() {
 
-    if ( plotType == EPICURVE ) {
+    if ( plotType == CURVEPLOT ) {
         drawEpiCurvePlot();
     } else if (plotType == STATEPLOT ) { 
         drawNodeStatePlot();
-    } else if (plotType == HISTPLOT ) { 
+    } else if (plotType == HISTPLOT || plotType == DEGPLOT) { 
         drawHistogram();
     }
 }
@@ -107,6 +130,7 @@ void PlotArea::clearPlot() {
     myscene->setLabel(label, 0, -30);
 }
 
+
 void PlotArea::drawHistogram() {
     setRenderHint(QPainter::Antialiasing); // smooth data points
     clearPlot();
@@ -126,11 +150,17 @@ void PlotArea::drawHistogram() {
     // n if n < 10
     // 10 if 10 < n < 100
     // (int) sqrt(n) if n > 100
-    int nbins = n < 10 ? n : 10;
-    nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
+    int nbins = n < 10 ? n 
+              : sqrt(n) < 10 ? 10
+              : sqrt(n) < 20 ? sqrt(n)
+              : 20;
+    //nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
     
     float max_val = (float) find_max_val(data);
     float min_val = (float) find_min_val(data);
+    float range = max_val - min_val;
+   
+    nbins = nbins > range + 1 ? range + 1 : nbins;
 
     vector<int> density(nbins,0);
     if (max_val == min_val) {
@@ -297,26 +327,58 @@ void PlotArea::resizeEvent ( QResizeEvent * event ) {
 
 void PlotArea::saveData() {
     QString startdir = ".";
-    QString file = QFileDialog::getOpenFileName(
-        this, "Select file to save to", startdir, "CSV Files(*.csv)");
+    QString filename = QFileDialog::getSaveFileName(this, "Select file to save to", startdir, "CSV Files(*.csv)");
+
+    QFile file(filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    QTextStream out(&file);
+
+    if ( plotType == CURVEPLOT ) {
+        // One time series per line
+        for( unsigned int r=0; r < data.size(); r++) {
+            for( unsigned int c=0; c < data[r].size() - 1; c++ ) {
+                out << data[r][c] << ",";
+            }
+            out << data[r][data[r].size()-1] << endl;
+        }
+    } else if (plotType == STATEPLOT ) { 
+        // Swap rows and columns -- data structure must be rectangular!
+        for( unsigned int r=0; r < data[0].size(); r++ ) {
+            for( unsigned int c=0; c < data.size() - 1; c++) {
+                out << data[c][r] << ",";
+            }
+            out << data[data.size()-1][r] << endl;
+        }
+    } else if (plotType == HISTPLOT || plotType == DEGPLOT) {
+        // One number per line
+         for( unsigned int r=0; r < data.size(); r++) {
+            for( unsigned int c=0; c < data[r].size(); c++ ) {
+                out << data[r][c] << endl;
+            }
+        }
+    }
+
+    file.close();
 
 }
 
 
-void PlotArea::savePicture() {
+void PlotArea::savePlot() {
     QString startdir = ".";
-    QString file = QFileDialog::getOpenFileName(
+    QString filename = QFileDialog::getSaveFileName(
         this, "Select file to save to", startdir, "PNG Image Files(*.png)");
 
-    QPixmap image(scene()->width(),scene()->height());
+//    QPixmap image(scene()->width(),scene()->height());
+    QPixmap image(width(),height());
     image.fill(Qt::white);
 
     QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing, true);
     render(&painter);
 
     /*clipboard*/
     //QApplication::clipboard()->setPixmap(image);
 
-    image.save(file,"PNG");
+    image.save(filename,"PNG");
 
 }

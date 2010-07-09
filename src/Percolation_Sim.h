@@ -11,7 +11,7 @@ class Percolation_Sim: public Simulator
 
     public:
         typedef enum {           //Whatever is equal to zero is the default state
-            S=0, I=1, R=2
+            S=0, I=1, R=-1
         } stateType;
         float T;                 // transmissibiltiy, e.g. P{infection spreading along a given edge that connects an infected and a susceptible}
 

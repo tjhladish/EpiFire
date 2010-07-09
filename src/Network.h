@@ -4,6 +4,7 @@
 #include <iterator>
 #include <string>
 #include <vector>
+#include <queue>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -13,6 +14,9 @@
 #include "Utility.h"
 #include <assert.h>
 #include "MersenneTwister.h"
+#include <limits>
+
+#include "debug.h"
 
 using namespace std;
 
@@ -120,8 +124,11 @@ class Network
         // with the problematic edges inside the function
         void get_bad_edges(vector<Edge*> &self_loops, vector<Edge*> &multiedges);
 
-        vector<Node*> get_component(Node* node);
-        vector<Node*> get_major_component();
+        vector<Node*> get_component(Node* node);  // get the component this node is in
+        vector< vector<Node*> > get_components(); // get all components
+        vector<Node*> get_biggest_component();
+        
+        inline bool topology_altered() { return _topology_altered; }
         // vector< vector<Node*> > get_components(){};
 
         /***************************************************************************
@@ -141,15 +148,17 @@ class Network
         // Erdos-Renyi can only produce Poisson distributed networks, whereas
         // all the rand_connect* functions use an adaptation of the Molloy-Reed
         // algorithm, and therefore can take any discrete, non-negative distribution.
-        void erdos_renyi(double lambda);
-        void sparse_random_graph(double lambda);
-        void ring_lattice(int k);
+        bool erdos_renyi(double lambda);
+        bool sparse_random_graph(double lambda);
+        //fast_random_graph() tries to pick the fastest algorithm based on parameters given
+        bool fast_random_graph(double lambda);
+        bool ring_lattice(int k);
                                  // RxC lattice, including diagonals if diag
-        void square_lattice(int R, int C, bool diag);
-        void small_world(double p);
-        void rand_connect_poisson(double lambda);
-        void rand_connect_powerlaw(double alpha, double kappa);
-        void rand_connect_exponential(double lambda);
+        bool square_lattice(int R, int C, bool diag);
+        bool small_world(double p);
+        bool rand_connect_poisson(double lambda);
+        bool rand_connect_powerlaw(double alpha, double kappa);
+        bool rand_connect_exponential(double lambda);
         //void rand_connect_user(map<int,double>); not implemented
 
         // User provides arbitrary (normalized!) distribution.  normalize_dist(my_dist)
@@ -157,22 +166,22 @@ class Network
         // of the index (index = degree), i.e. if the contents of the vector are
         // (0, 0.13, 0.2, 0.04, 0.63), then the probability of drawing a deviate (=degree)
         // of 0 is 0, of 1 is 13%, of 2 is 20%, and so on.
-        void rand_connect_user(vector<double> dist);
+        bool rand_connect_user(vector<double> dist);
 
         // User provides an explicit degree series, one degree per node. Sum of
         // all degrees should be even, or else it's impossible to connect all nodes
-        void rand_connect_explicit(vector<int> deg_series);
+        bool rand_connect_explicit(vector<int> deg_series);
 
         // You probably don't want this, unless you are manually creating stubs for
         // each node.  It is likely easier for you to call one of the other
         // rand_connect* functions that takes either a distribution or
         // distribution parameters.
-        void rand_connect_stubs(vector<Edge*> stubs);
+        bool rand_connect_stubs(vector<Edge*> stubs);
 
         // Gets rid of self-loops and multi-edges.  This is called automatically
         // by erdos_renyi() and all of the rand_connect* functions.  You only
         // need it if you are using your own algorithm to connect nodes.
-        void lose_loops();
+        bool lose_loops();
 
         // Unpopulate the network.
         void clear_nodes();      // { for (int i = 0; i < size(); i++) delete node_list[i]; }
@@ -188,6 +197,8 @@ class Network
         void disconnect_edges();
 
         void set_node_states(vector<stateType> &states);
+        
+        inline void set_topology_altered(bool flag) { _topology_altered = flag; }
 
         /***************************************************************************
          * Network Input/Output (including visualization)
@@ -199,6 +210,15 @@ class Network
                                  // output a graphviz file
         void graphviz(string filename);
         void dumper();           // print the network object contents in the terminal
+
+        /***************************************************************************
+         * Network Properties
+         **************************************************************************/
+        bool gen_deg_series(vector<int> &deg_series);
+        vector<int> get_states();// get the states of all nodes
+                                 // get the state sequences, indexed by degree
+        vector< vector<int> > get_states_by_degree();
+
         bool validate();
 
                                  // list of degrees, one for each node
@@ -211,23 +231,26 @@ class Network
                                  // measure of clustering of nodes in node_set;
         double transitivity(vector<Node*> node_set);
                                  // if node_set is empty, use all nodes
-        double mean_dist();      // mean distANCE between all nodes A and B
+        double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
-        vector< vector<double> > all_distances();
+                               
+                                 // distances == edge costs
+        vector< vector<double> > calculate_distances( vector<Node*> destinations );
+                                 // edge lengths assumed to be 1
+        vector< vector<int> > calculate_unweighted_distances( vector<Node*> destinations );
 
-        inline bool topology_altered() { return _topology_altered; }
-        inline void set_topology_altered(bool flag) { _topology_altered = flag; }
+
 
         /***************************************************************************
-         * Network Properties
+         * Process status & control
          **************************************************************************/
-        void gen_deg_series(vector<int> &deg_series);
-        vector<int> get_states();// get the states of all nodes
-                                 // get the state sequences, indexed by degree
-        vector< vector<int> > get_states_by_degree();
+        // Allows outside control of terminating some long-running network processes
+        void stop_processing() { process_stopped = true; }
+        void reset_processing_flag() { process_stopped = false; }
 
     private:
-        int id;                  //unique id for the node
+        bool is_stopped();       // checks process status, resets to false if true
+        int id;                  // unique id for the node
         string name;
         vector<Node*> node_list;
         bool unit_edges;
@@ -239,20 +262,26 @@ class Network
         bool _topology_altered;  //has the network topology changed?
         int node_id_counter;
         int edge_id_counter;
-        void _assign_deg_series();
-
+        bool _assign_deg_series();
+        
         // The network has no stubs, but gen_deg_dist (a normalized degree distribution
         // to draw deviates from) has already been stored.
-        void _rand_connect();
+        bool _rand_connect();
 
+        // This is checked during some long-running processes to determine whether to
+        // continue
+        volatile bool process_stopped;
+        int known_nodes; // bookkeeping var; allows get_component() to report % complete
 };
 
 class Node
 {
     friend class Network;
     friend class Edge;
-
+    
     public:
+
+        inline bool is_stopped() {return network->is_stopped();}
 
         /***************************************************************************
          * Constructor and Destructor
@@ -274,7 +303,10 @@ class Node
         inline void set_state(stateType s) { this->state = s; }
 
         double mean_min_path();
-        vector<double> min_paths();
+
+        // if network edge lengths can be assumed to be 1, use min_unweighted_paths()
+        vector<int> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
+        vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
 

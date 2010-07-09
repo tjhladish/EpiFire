@@ -32,45 +32,54 @@ class ChainBinomial_Sim: public Simulator
         }
 
         void step_simulation () {
+            // States: 0 (default) is susceptible
+            //         1 is infectious day 1
+            //         2 is infectious day 2
+            //         ... up to the infectious period
+            //         -1 is recovered
             assert(infected.size() > 0);
             time++;
-            //cerr << "\t" << infected.size() << endl;
             new_infected.clear();
-            list<Node*>::iterator it;
-            for (it=infected.begin(); it!=infected.end(); it++) {
-                Node *inode = *it;
-                vector<Node*> neighbors = inode->get_neighbors();
+            
+            list<Node*>::iterator inode;
+            for (inode=infected.begin(); inode!=infected.end(); inode++) {
+                
+                vector<Node*> neighbors = (*inode)->get_neighbors();
                 for (int j = 0; j < neighbors.size(); j++) {
                     Node* test = neighbors[j];
+                    // Is this neighbor susceptible and 
+                    // has it been exposed?
                     if ( test->get_state() == 0 && mtrand->rand() < T ) {
                         test->set_state( 1 );
                         new_infected.push_back( test );
                     }
                 }
-                inode->set_state( inode->get_state()+1 );
+                // Increment node states through the infectious period
+                (*inode)->set_state( (*inode)->get_state()+1 );
             }
+
+            // Some nodes may be reaching the end of their infectious period ...
             while (infected.size() > 0 && infected.front()->get_state() > infectious_period) {
                 Node* first = infected.front();
-                first->set_state(-1);
+                first->set_state(-1); // -> recovered
                 recovered.push_back( first );
                 infected.pop_front();
             }
+           
+            // Append the newly infected to the queue
             for (int i = 0; i<new_infected.size(); i++) {
                 infected.push_back( new_infected[i] );
             }
+
         }
 
         void run_simulation() {
             assert(infectious_period > 0 && T >= 0 && T <= 1);
             vector<Node*> nodes = net->get_nodes();
-                                 // verify that this is right
-            for (int i = 0; i<nodes.size(); i++) {
-                                 //
-                nodes[i]->set_state(0);
-            }                    //
-            while (infected.size() > 0) {
-                step_simulation();
-            }
+            
+            // As long as someone's still infected, step simulation
+            while (infected.size() > 0)  step_simulation();
+
         }
 
         int count_infected() {
@@ -84,8 +93,14 @@ class ChainBinomial_Sim: public Simulator
         void reset() {
             reset_time();
 
-            //set_these_nodes_to_state(infected, 0);
-            //infected.clear();
+            while (! infected.empty()) {
+                Node* node = infected.front();
+                infected.front()->set_state(0);
+                infected.pop_front();
+            }
+
+            set_these_nodes_to_state(new_infected, 0);
+            new_infected.clear();
 
             set_these_nodes_to_state(recovered, 0);
             recovered.clear();
