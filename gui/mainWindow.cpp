@@ -11,6 +11,8 @@ MainWindow::MainWindow() {
 // Constructor for the main interface
 
     centralWidget = new QWidget(this);
+    tabWidget     = new QTabWidget(this);
+    tabWidget->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     leftBox       = new QWidget(this);
     // Allow the leftBox to expand vertically, but not horizontally
     leftBox->setSizePolicy(QSizePolicy(QSizePolicy::Fixed,QSizePolicy::Expanding));
@@ -35,12 +37,15 @@ MainWindow::MainWindow() {
     createControlButtonsBox();
     createNetworkSettingsBox();
     createSimulatorSettingsBox();
+    createPredictionsBox();
     defaultSettings();
     
-    leftLayout->addWidget(networkSettingsGroupBox, Qt::AlignCenter);    
-    leftLayout->addWidget(simulatorSettingsGroupBox, Qt::AlignCenter);    
-    leftLayout->addWidget(logEditor);
+    tabWidget->addTab(networkSettingsGroupBox, "Step 1: Choose a network");    
+    tabWidget->addTab(simulatorSettingsGroupBox, "Step 2: Design a simulation");    
+    leftLayout->addWidget(tabWidget);
+    leftLayout->addWidget(predictionsGroupBox);
     leftLayout->addWidget(controlButtonsGroupBox);
+    leftLayout->addWidget(logEditor);
     
     leftBox->setLayout(leftLayout);
     leftBox->setContentsMargins(0,0,0,0);
@@ -213,7 +218,7 @@ void MainWindow::createNetworkSettingsBox() {
     connect(netsourceBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeNetSource(int)));
 
     // Put everything together
-    networkSettingsGroupBox = new QGroupBox(tr("Step 1: Choose a network"));
+    networkSettingsGroupBox = new QWidget();
     networkSettingsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     QGridLayout *layout = new QGridLayout;
 
@@ -251,10 +256,6 @@ void MainWindow::createSimulatorSettingsBox() {
     numrunsLine = new QLineEdit();
     numrunsLine->setAlignment(Qt::AlignRight);
     numrunsLine->setValidator( new QIntValidator(1,10000,numrunsLine) );
-    rzeroLine = new QLineEdit();
-    makeReadonly(rzeroLine);
-    rzeroLine->setAlignment(Qt::AlignRight);
-    rzeroLine->setToolTip("Expected number of secondary infections caused\nby each infection early in the epidemic");
     
     transLine = new QLineEdit();
     transLine->setAlignment(Qt::AlignRight);
@@ -272,19 +273,16 @@ void MainWindow::createSimulatorSettingsBox() {
     infectiousPeriodLine->setToolTip("Duration of infectious state (units = time steps)\nRange: positive integers");
 
     QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
-    QLabel *rzeroLabel = new QLabel(tr("Expected R-zero:"));
     QLabel *transLabel = new QLabel(tr("Transmissibility:"));
     infectiousPeriodLabel = new QLabel(tr("Infectious period:"));
     changeSimType(0); 
     connect(simBox,SIGNAL(currentIndexChanged (int)), this, SLOT(changeSimType(int)));
     connect(transLine,            SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
     connect(infectiousPeriodLine, SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
-
-    //Build checkbox
-    retainDataCheckBox = new QCheckBox(tr("Retain data between runs"));
+    connect(pzeroLine,            SIGNAL(textChanged(QString)), this, SLOT(updateRZero()));
 
     // Put everything together
-    simulatorSettingsGroupBox = new QGroupBox(tr("Step 2: Design a simulation"));
+    simulatorSettingsGroupBox = new QWidget();
     simulatorSettingsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     QGridLayout *layout = new QGridLayout;
 
@@ -295,13 +293,10 @@ void MainWindow::createSimulatorSettingsBox() {
     layout->addWidget(infectiousPeriodLine, 1, 2);
     layout->addWidget(transLabel, 2, 1);
     layout->addWidget(transLine, 2, 2);
-    layout->addWidget(rzeroLabel, 3, 1);
-    layout->addWidget(rzeroLine, 3, 2);
-    layout->addWidget(pzeroLabel, 4, 1);
-    layout->addWidget(pzeroLine, 4, 2);
-    layout->addWidget(numrunsLabel, 5, 1);
-    layout->addWidget(numrunsLine, 5, 2);
-    layout->addWidget(retainDataCheckBox,6,1,2,2);
+    layout->addWidget(pzeroLabel, 3, 1);
+    layout->addWidget(pzeroLine, 3, 2);
+    layout->addWidget(numrunsLabel, 4, 1);
+    layout->addWidget(numrunsLine, 4, 2);
 
     simulatorSettingsGroupBox->setLayout(layout);
 }
@@ -351,8 +346,50 @@ void MainWindow::createControlButtonsBox() {
     layout->addWidget(runSimulationButton, 1, 2);
     runSimulationButton->setEnabled(false);
 
+    //Build checkbox
+    retainDataCheckBox = new QCheckBox(tr("Retain data between runs"));
+    layout->addWidget(retainDataCheckBox,2,1,2,2);
+
     controlButtonsGroupBox->setLayout(layout);
 }
+
+
+void MainWindow::createPredictionsBox() {
+    rzeroLine = new QLineEdit();
+    makeReadonly(rzeroLine);
+    rzeroLine->setAlignment(Qt::AlignRight);
+    rzeroLine->setToolTip("Expected number of secondary infections caused\nby each infection early in the epidemic");
+    
+    maPredictionLine = new QLineEdit();
+    makeReadonly(maPredictionLine);
+    maPredictionLine->setAlignment(Qt::AlignRight);
+//    maPredictionLine->setToolTip("Expected number of secondary infections caused\nby each infection early in the epidemic");
+    
+    netPredictionLine = new QLineEdit();
+    makeReadonly(netPredictionLine);
+    netPredictionLine->setAlignment(Qt::AlignRight);
+    //netPredictionLine->setToolTip("Expected number of secondary infections caused\nby each infection early in the epidemic");
+    
+    QLabel* rzeroLabel = new QLabel(tr("Expected R-zero:"));
+    QLabel* maLabel = new QLabel(tr("Epi size (mass action model):"));
+    QLabel* netLabel = new QLabel(tr("Epi size (network model):"));
+
+    // Put everything together
+    predictionsGroupBox = new QGroupBox("Theoretical predictions");
+    predictionsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
+    QGridLayout *layout = new QGridLayout;
+
+    //SECOND COLUMN -- Simulation stuff
+    layout->addWidget(rzeroLabel, 0, 1);
+    layout->addWidget(rzeroLine, 0, 2);
+    layout->addWidget(maLabel, 1, 1);
+    layout->addWidget(maPredictionLine, 1, 2);
+    layout->addWidget(netLabel, 2, 1);
+    layout->addWidget(netPredictionLine, 2, 2);
+
+    predictionsGroupBox->setLayout(layout);
+}
+
 
 
 /*#############################################################################
@@ -638,17 +675,25 @@ bool MainWindow::validateParameters() {
 void MainWindow::updateRZero() {
     if (!network || network->size() == 0 || !validateParameters()) {
         rzeroLine->setText( "Undefined" );
+        maPredictionLine->setText( "Undefined" );
+        netPredictionLine->setText( "Undefined" );
         return;
     }
 
-    double T = (transLine->text()).toDouble();
-    int d = (infectiousPeriodLine->text()).toInt();
-    if ( simBox->currentText() == "Chain Binomial") {
-        T = convertTCBtoT(T, d); // convert to perc's transmissibility
-    }
+    double T = getPercTransmissibility();
 
     double R0 = convertTtoR0(T); 
     rzeroLine->setText( QString::number(R0));
+
+    // mass action prediction
+    int patient_zero_ct = pzeroLine->text().toInt(); 
+    int n = network->size();
+    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * maExpectedSize(R0, 0, 0.5);
+    maPredictionLine->setText( QString::number( predictedSize ) );
+
+    // network prediction
+    double netPredictedSize = n * netExpectedSize(T, ((double) patient_zero_ct)/n);
+    netPredictionLine->setText( QString::number( netPredictedSize ) );
 }
 
 
@@ -1144,7 +1189,7 @@ double MainWindow::calculate_T_crit() {
 }
 
 /*
-double MainWindow::guessEpiSize(double R0, double P0) {
+double MainWindow::maExpectedSize(double R0, double P0) {
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
     double S0 = 1.0 - P0;
@@ -1156,18 +1201,19 @@ double MainWindow::guessEpiSize(double R0, double P0) {
 }*/
 
 
-double MainWindow::guessEpiSize(double R0, double P0, double guess) {
+double MainWindow::maExpectedSize(double R0, double P0, double guess) {
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
     //cerr << "r: " << guess << endl;
     double S0 = 1.0 - P0;
     double p = S0*(1-exp(-R0 * guess));
     if (fabs(p-guess) < 0.0001) {return p;}
-    else return guessEpiSize(R0, P0, p);
+    else return maExpectedSize(R0, P0, p);
 }
 
 /*
-double MainWindow::guessEpiSizeB(double R0, double P0) {
+double MainWindow::maExpectedSizeB(double R0, double P0) {
+    //Bisection method
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
     cerr << "b" << endl;
@@ -1185,6 +1231,99 @@ double MainWindow::guessEpiSizeB(double R0, double P0) {
     return guess;
 }
 */
+
+
+// Calculate the theoretical epidemic size (and probability) based on
+// a network's degree distribution and transmissibility.  Based on 
+// Lauren's AMS 2007 paper.
+// WARNING: This approach to predicting epidemic size makes certain
+// assumptions that may be violated if you derive your own simulation class
+// or if the network you use is not randomly connected.  Refer to Meyers (2007)
+// for more details.
+double _funcS(vector<double>&p, double u, double T) {
+    // Eqn 25 in Meyers (2007)
+    double S = 1;
+    for (unsigned int k=0; k<p.size(); k++) {
+        S -= p[k]*powl(1 + (u-1)*T, k);
+    }
+    return S;
+}
+
+
+double _funcU(vector<double>&p, double u, double T) {
+    // Eqn 26 in Meyers (2007)
+    double numerator = 0.0;
+    double denominator = 0.0;
+    for (unsigned int k=0; k<p.size(); k++) {
+        numerator += k*p[k] * powl(1 + (u-1)*T, k-1);
+        denominator += k*p[k];
+    }
+    return numerator/denominator;
+}
+
+
+double MainWindow::netExpectedSize(double T, double P0_frac) { 
+    // This method uses a binary search with a twist to find the root
+    // The twist is that we know some things about the behavior of the function:
+    // it never goes from positive to negative as u increases; it either stays
+    // positive, stays negative, or goes from negative to positive.
+
+    double top = 1;     // Top of search interval
+    double bottom = 0;  // Bottom of search interval
+    double u=0.5;       // Starting point
+    vector<int> dist = network->get_deg_dist();
+    vector<double>p = normalize_dist( dist, sum(dist) ); // Degree distribution
+
+    int i = 0;
+    int max = 100; // max number of iterations
+    double old_S = _funcS(p,u,T);
+    double S = -1; 
+
+    //double a,b,c,d;
+    double epsilon = pow(10,-10);
+    double small_u = epsilon;
+    double big_u   = 1-epsilon;
+
+    /*a = 0; b = 0.00001; c = 0.99999; d = 1;
+
+      cout << "Transmissibility: " << T << " Fixed degree: " << deg << endl;
+      cout << "u: " << a << "\t" << b << "\t" << c << "\t" << d << endl; 
+      cout << "F: " << a - funcU(p,a,T) << "\t" << b - funcU(p,b,T) << "\t" << c - funcU(p,c,T) << "\t" << d - funcU(p,d,T) << endl; 
+      cout << "S: " << funcS(p,0,T) << "\t" << funcS(p,0.00001,T) << "\t" << funcS(p,0.99999,T) << "\t" <<funcS(p,1,T) << endl;
+     */
+
+    if (small_u - _funcU(p,small_u,T) > 0) {
+        u = 0; S = 1;
+    } else if (big_u - _funcU(p,big_u,T) < 0) {
+        u = 1; S = 0;
+    } else {
+        while ( fabs(S-old_S) > pow(10,-5) && i < max ) {
+            double y = u - _funcU(p,u,T);
+            //cout << "u= " << u << " y= " << y << " S= " << funcS(p,u,T) << endl;
+            if (y < 0) {
+                bottom = u;
+                u = u + (top - u)/2;
+            } else if (y > 0) {
+                top = u;
+                u = u - (u-bottom)/2;
+            }
+            old_S = S; S = _funcS(p,u,T);
+        }
+    }
+    return S * (1-P0_frac) + P0_frac;
+    //cout << "Final u, S: " << u << " " << S << endl;
+}
+
+
+double MainWindow::getPercTransmissibility() {
+    double T = (transLine->text()).toDouble();
+    int d = (infectiousPeriodLine->text()).toInt();
+    if ( simBox->currentText() == "Chain Binomial") {
+        T = convertTCBtoT(T, d); // convert to perc's transmissibility
+    }
+    return T;
+}
+
 
 double MainWindow::convertR0toT(double R0) { return R0 * calculate_T_crit(); }
 

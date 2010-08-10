@@ -16,7 +16,6 @@ class Simulator
 
         Simulator() { time = 0; net=NULL; mtrand=NULL; };
         Simulator(Network* net) { this->net = net; this->time = 0; this->mtrand = net->get_rng(); };
-        //       ~Simulator(){};
 
         void set_network( Network* net ) { this->net = net; this->mtrand = net->get_rng(); };
         Network* network() { return(net); };
@@ -61,6 +60,7 @@ class Simulator
             }
             return numerator/denominator;
         }
+
 
         //these functions must be derived in child class
         virtual void step_simulation() {};

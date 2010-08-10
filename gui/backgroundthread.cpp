@@ -71,11 +71,7 @@ void BackgroundThread::runSimulation() {
 
     int j_max = (mw->numrunsLine->text()).toInt();
     int patient_zero_ct = (mw->pzeroLine->text()).toInt(); 
-    double R0 = (mw->rzeroLine->text()).toDouble();
-    int n = mw->network->size();
-    
-    double I0 = (double) patient_zero_ct / n;
-    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * mw->guessEpiSize(R0, 0, 0.5);
+    double predictedSize = (mw->maPredictionLine->text()).toDouble();
     int currentSize = patient_zero_ct;
 
     vector<int> epi_sizes (j_max);

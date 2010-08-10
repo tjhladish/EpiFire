@@ -161,10 +161,11 @@ class MainWindow : public QMainWindow
         QMenuBar* menuBar;
         void createMenu();
         QWidget* leftBox;
+        QTabWidget* tabWidget;
         QSplitter* rightBox;
 
         // Network settings
-        QGroupBox* networkSettingsGroupBox;
+        QWidget* networkSettingsGroupBox;
         void createNetworkSettingsBox();
         QLabel* netsourceLabel;
         QComboBox* netsourceBox;
@@ -186,17 +187,15 @@ class MainWindow : public QMainWindow
 
 
         // Simulator settings
-        QGroupBox* simulatorSettingsGroupBox;
+        QWidget* simulatorSettingsGroupBox;
         void createSimulatorSettingsBox();
         QLabel* simLabel;
         QComboBox* simBox;
         QLabel* infectiousPeriodLabel;
         QLineEdit* pzeroLine;
         QLineEdit* transLine;
-        QLineEdit* rzeroLine;
         QLineEdit* infectiousPeriodLine;
         QLineEdit* numrunsLine;
-        QCheckBox* retainDataCheckBox;
         
         // Control panel
         QGroupBox* controlButtonsGroupBox;
@@ -209,6 +208,15 @@ class MainWindow : public QMainWindow
         //QPushButton* helpButton;
         QPushButton* analyzeNetButton;
         QPushButton* runSimulationButton;
+        QCheckBox* retainDataCheckBox;
+
+        // Predictions panel
+        QGroupBox* predictionsGroupBox;
+        //QGroupBox* predictionsGroupBox;
+        void createPredictionsBox();
+        QLineEdit* rzeroLine;
+        QLineEdit* maPredictionLine;
+        QLineEdit* netPredictionLine;
 
         // Main plots
         void createPlotPanel();
@@ -246,11 +254,13 @@ class MainWindow : public QMainWindow
 
         // Helper functions
         double calculate_T_crit();
+        double getPercTransmissibility();
         double convertR0toT(double R0);
         double convertTtoR0(double T);
         double convertTtoTCB (double T, int d);
         double convertTCBtoT (double TCB, int d);
-        double guessEpiSize(double R0, double P0_frac, double guess);
+        double maExpectedSize(double R0, double P0_frac, double guess);
+        double netExpectedSize(double T, double P0_frac);
         
         void makeEditable(QLineEdit* lineEdit);
         void makeReadonly(QLineEdit* lineEdit);
