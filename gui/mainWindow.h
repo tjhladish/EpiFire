@@ -125,6 +125,7 @@ class MainWindow : public QMainWindow
         void analyzeNetwork();
         void generate_comp_thread();
         void calculateComponentStats();
+        void removeMinorComponents();
         void generate_trans_thread();
         void calculateTransitivity();
         void generate_dist_thread();
