@@ -78,6 +78,7 @@ class MainWindow : public QMainWindow
         GraphWidget* networkPlot;
         BackgroundThread* backgroundThread;
         QDialog* netAnalysisDialog;
+        QDialog* resultsAnalysisDialog;
         QTextEdit* logEditor;
         QProgressDialog* progressDialog;
 
@@ -138,6 +139,8 @@ class MainWindow : public QMainWindow
         void resetCursor();
         void enableCentralWidget();
         void disableCentralWidget();
+        void analyzeResults();
+        void updateResultsAnalysis();
  
     protected:
 
@@ -213,7 +216,6 @@ class MainWindow : public QMainWindow
 
         // Predictions panel
         QGroupBox* predictionsGroupBox;
-        //QGroupBox* predictionsGroupBox;
         void createPredictionsBox();
         QLineEdit* rzeroLine;
         QLineEdit* maPredictionLine;
@@ -229,7 +231,7 @@ class MainWindow : public QMainWindow
 
         // Network analysis dialog
         void createNetworkAnalysis();
-        void _addAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
+        void _addNetAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
 
         QLineEdit* nodeCountEdit;
         QLineEdit* edgeCountEdit;
@@ -247,6 +249,28 @@ class MainWindow : public QMainWindow
         QPushButton* meanDistanceButton;
 
         PlotArea* degDistPlot;
+
+        // Results analysis dialog
+        void createResultsAnalysis();
+        void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* mean, QLineEdit* sd, QLineEdit* min, QLineEdit* max);
+
+        QLineEdit* thresholdEdit;
+        
+        QLineEdit* outMeanEdit;
+        QLineEdit* outSDEdit;
+        QLineEdit* outMinEdit;
+        QLineEdit* outMaxEdit;
+        
+        QLineEdit* epiMeanEdit;
+        QLineEdit* epiSDEdit;
+        QLineEdit* epiMinEdit;
+        QLineEdit* epiMaxEdit;
+        
+        QLineEdit* allMeanEdit;
+        QLineEdit* allSDEdit;
+        QLineEdit* allMinEdit;
+        QLineEdit* allMaxEdit;
+
 
         // Network plot
     

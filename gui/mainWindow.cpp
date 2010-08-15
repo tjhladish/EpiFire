@@ -26,6 +26,8 @@ MainWindow::MainWindow() {
     netAnalysisDialog->setWindowTitle("Analysis of current network");
     rep_ct = 0;
 
+    resultsAnalysisDialog = new QDialog(this);
+    resultsAnalysisDialog->setWindowTitle("Analysis of simulation results");
     
     logEditor = new QTextEdit();
     logEditor->setReadOnly(true);
@@ -64,6 +66,7 @@ MainWindow::MainWindow() {
     statusBar()->showMessage(generateNetMsg);
 
     createNetworkAnalysis();
+    createResultsAnalysis();
 
     progressDialog = new QProgressDialog("", "Cancel", 0, 100);
     progressDialog->setWindowTitle("EpiFire status");
@@ -157,9 +160,15 @@ void MainWindow::createMenu() {
     connect( showNetworkAnalysis, SIGNAL(triggered()), this, SLOT(analyzeNetwork()));
     connect( reduceToGiantComponent, SIGNAL(triggered()), this, SLOT(removeMinorComponents()));
 
+    //Create 'Results' menu
+    QMenu* resultsMenu = new QMenu(tr("&Results"), this);
+    QAction* showResultsAnalysis = resultsMenu->addAction("Simulation results analysis");
+    connect( showResultsAnalysis, SIGNAL(triggered()), this, SLOT(analyzeResults()));
+
     menuBar->addMenu(fileMenu);
     menuBar->addMenu(plotMenu);
     menuBar->addMenu(networkMenu);
+    menuBar->addMenu(resultsMenu);
 }
 
 void MainWindow::updateProgress(int x) {
@@ -883,7 +892,8 @@ void MainWindow::plotNetwork() {
     networkPlot->show();
 }
 
-void MainWindow::_addAnalysisRow(QGridLayout* layout, QString text, QLineEdit* box, QPushButton* button) {
+
+void MainWindow::_addNetAnalysisRow(QGridLayout* layout, QString text, QLineEdit* box, QPushButton* button) {
     int r = layout->rowCount();
     QLabel* label = new QLabel(text, netAnalysisDialog);
     layout->addWidget(label, r, 0);
@@ -891,11 +901,94 @@ void MainWindow::_addAnalysisRow(QGridLayout* layout, QString text, QLineEdit* b
     if (button) layout->addWidget(button, r, 2);
 }
 
+
+void MainWindow::_addResultsAnalysisRow(QGridLayout* layout, QString text, QLineEdit* mean, QLineEdit* sd, QLineEdit* min, QLineEdit* max){
+    int r = layout->rowCount();
+    QLabel* label = new QLabel(text, resultsAnalysisDialog);
+    layout->addWidget(label, r, 0);
+    layout->addWidget(mean, r, 1);
+    layout->addWidget(sd, r, 2);
+    layout->addWidget(min, r, 3);
+    layout->addWidget(max, r, 4);
+}
+
+
+void MainWindow::createResultsAnalysis() {
+    QVBoxLayout* resultsAnalysisLayout = new QVBoxLayout();
+    QGridLayout* resultsTopLayout = new QGridLayout();
+
+    thresholdEdit = new QLineEdit(resultsAnalysisDialog);
+    thresholdEdit ->setText(QString::number( 0 ));
+    connect(thresholdEdit, SIGNAL(textChanged(QString)), this, SLOT(updateResultsAnalysis()));
+
+    outMeanEdit   = new QLineEdit(resultsAnalysisDialog);
+    outSDEdit     = new QLineEdit(resultsAnalysisDialog);
+    outMinEdit    = new QLineEdit(resultsAnalysisDialog);
+    outMaxEdit    = new QLineEdit(resultsAnalysisDialog);
+
+    epiMeanEdit   = new QLineEdit(resultsAnalysisDialog);
+    epiSDEdit     = new QLineEdit(resultsAnalysisDialog);
+    epiMinEdit    = new QLineEdit(resultsAnalysisDialog);
+    epiMaxEdit    = new QLineEdit(resultsAnalysisDialog);
+     
+    allMeanEdit   = new QLineEdit(resultsAnalysisDialog);
+    allSDEdit     = new QLineEdit(resultsAnalysisDialog);
+    allMinEdit    = new QLineEdit(resultsAnalysisDialog);
+    allMaxEdit    = new QLineEdit(resultsAnalysisDialog);
+
+    makeReadonly( outMeanEdit );
+    makeReadonly( outSDEdit   );
+    makeReadonly( outMinEdit  );
+    makeReadonly( outMaxEdit  );
+    makeReadonly( epiMeanEdit );
+    makeReadonly( epiSDEdit   );
+    makeReadonly( epiMinEdit  );
+    makeReadonly( epiMaxEdit  );
+    makeReadonly( allMeanEdit );
+    makeReadonly( allSDEdit   );
+    makeReadonly( allMinEdit  );
+    makeReadonly( allMaxEdit  );
+ 
+    QLabel* thresholdLabel = new QLabel("Outbreak/epidemic threshold:", resultsAnalysisDialog);
+    resultsTopLayout->addWidget(thresholdLabel, 1, 0); 
+    resultsTopLayout->addWidget(thresholdEdit, 1, 1); 
+    
+    QLabel* meanLabel = new QLabel("Mean", resultsAnalysisDialog);
+    QLabel* SDLabel = new QLabel("SD", resultsAnalysisDialog);
+    QLabel* minLabel = new QLabel("Min", resultsAnalysisDialog);
+    QLabel* maxLabel = new QLabel("Max", resultsAnalysisDialog);
+    resultsTopLayout->addWidget(meanLabel, 2, 1);
+    resultsTopLayout->addWidget(SDLabel,   2, 2);
+    resultsTopLayout->addWidget(minLabel,  2, 3);
+    resultsTopLayout->addWidget(maxLabel,  2, 4);
+
+    _addResultsAnalysisRow(resultsTopLayout, "Outbreaks only:",  outMeanEdit, outSDEdit, outMinEdit, outMaxEdit);
+    _addResultsAnalysisRow(resultsTopLayout, "Epidemics only:",  epiMeanEdit, epiSDEdit, epiMinEdit, epiMaxEdit);
+    _addResultsAnalysisRow(resultsTopLayout, "All simulations:", allMeanEdit, allSDEdit, allMinEdit, allMaxEdit);
+
+    QGroupBox* resultsAnalysisTop = new QGroupBox();
+    resultsAnalysisTop->setLayout(resultsTopLayout);
+
+    // add a close window button
+    QPushButton* closeButton = new QPushButton("Close analysis", resultsAnalysisDialog);
+    connect(closeButton,  SIGNAL(clicked()), resultsAnalysisDialog, SLOT(close()));
+    QHBoxLayout* buttonBoxLayout   = new QHBoxLayout();
+    QWidget* buttonBox = new QWidget();
+    buttonBoxLayout->addStretch(1);
+    buttonBoxLayout->addWidget(closeButton);
+    buttonBox->setLayout(buttonBoxLayout);
+
+    resultsAnalysisLayout->addWidget(resultsAnalysisTop);
+    //resultsAnalysisLayout->addWidget(histPlot);
+    resultsAnalysisLayout->addWidget(buttonBox);
+    
+    resultsAnalysisDialog->setLayout(resultsAnalysisLayout);
+}
+
+
 void MainWindow::createNetworkAnalysis() {
     QVBoxLayout* netAnalysisLayout = new QVBoxLayout();
-    //QHBoxLayout* netTopLayout = new QHBoxLayout();
     QGridLayout* netTopLayout = new QGridLayout();
-    //QVBoxLayout* netTopRightLayout = new QVBoxLayout();
 
     nodeCountEdit        = new QLineEdit(netAnalysisDialog);
     edgeCountEdit        = new QLineEdit(netAnalysisDialog);
@@ -927,14 +1020,14 @@ void MainWindow::createNetworkAnalysis() {
     connect(diameterButton,     SIGNAL(clicked()), this, SLOT(generate_dist_thread()));
     connect(meanDistanceButton, SIGNAL(clicked()), this, SLOT(generate_dist_thread()));
 
-    _addAnalysisRow(netTopLayout, "Node count:",         nodeCountEdit);
-    _addAnalysisRow(netTopLayout, "Edge count:",         edgeCountEdit);
-    _addAnalysisRow(netTopLayout, "Mean degree:",        meanDegreeEdit);
-    _addAnalysisRow(netTopLayout, "Largest component:",  maxComponentSizeEdit, componentButton1);
-    _addAnalysisRow(netTopLayout, "Component count:",    componentCountEdit, componentButton2 );
-    _addAnalysisRow(netTopLayout, "Transitivity:",       transitivityEdit, transitivityButton);
-    _addAnalysisRow(netTopLayout, "Diameter:",           diameterEdit, diameterButton);
-    _addAnalysisRow(netTopLayout, "Mean shortest path:", meanDistanceEdit, meanDistanceButton);
+    _addNetAnalysisRow(netTopLayout, "Node count:",         nodeCountEdit);
+    _addNetAnalysisRow(netTopLayout, "Edge count:",         edgeCountEdit);
+    _addNetAnalysisRow(netTopLayout, "Mean degree:",        meanDegreeEdit);
+    _addNetAnalysisRow(netTopLayout, "Largest component:",  maxComponentSizeEdit, componentButton1);
+    _addNetAnalysisRow(netTopLayout, "Component count:",    componentCountEdit, componentButton2 );
+    _addNetAnalysisRow(netTopLayout, "Transitivity:",       transitivityEdit, transitivityButton);
+    _addNetAnalysisRow(netTopLayout, "Diameter:",           diameterEdit, diameterButton);
+    _addNetAnalysisRow(netTopLayout, "Mean shortest path:", meanDistanceEdit, meanDistanceButton);
 
     QGroupBox* netAnalysisTop = new QGroupBox();
     netAnalysisTop->setLayout(netTopLayout);
@@ -1025,7 +1118,6 @@ cerr << "deleting " << j << ", size " << netComponents[j].size() << endl;
 }
 
 void MainWindow::analyzeNetwork() {
-    //progressDialog->setParent(netAnalysisDialog);
     if (!network or network->size() == 0) {
         QMessageBox msgBox;
         msgBox.setText("Please generate or import a network first.");
@@ -1048,6 +1140,73 @@ void MainWindow::analyzeNetwork() {
     degDistPlot->replot();
 
     netAnalysisDialog->exec();
+}
+
+
+void MainWindow::analyzeResults() {
+    if (!histPlot or (histPlot->getData()).size() == 0) {
+        QMessageBox msgBox; msgBox.setText("Please run some simulations first."); msgBox.exec();
+        return;
+    }
+    updateResultsAnalysis();
+    resultsAnalysisDialog->exec();
+}
+
+
+void _calcStats( vector<int> &data, vector<QString> &stats ) {
+    if (data.empty()) {
+        stats[0] = "Undefined";
+        stats[1] = "Undefined";
+        stats[2] = "Undefined";
+        stats[3] = "Undefined";
+    } else {
+        stats[0] = QString::number( mean(data)        );
+        stats[1] = QString::number( stdev(data)       );
+        stats[2] = QString::number( min_element(data) );
+        stats[3] = QString::number( max_element(data) );
+    }
+    if (data.size() == 1) {
+        stats[1] = "Undefined";
+    }
+}
+
+
+void MainWindow::updateResultsAnalysis() {
+    double threshold = (thresholdEdit->text()).toDouble();
+    vector< vector<int> > data = histPlot->getData();
+    vector<int> all_data;
+    vector<int> outbreaks;
+    vector<int> epidemics;
+    for( unsigned int r=0; r < data.size(); r++) {
+        for( unsigned int c=0; c < data[r].size(); c++ ) {
+            all_data.push_back(data[r][c]);
+            if (data[r][c] >= threshold) {
+                epidemics.push_back(data[r][c]);
+            } else {
+                outbreaks.push_back(data[r][c]);
+            }
+        }
+    }
+    
+    vector<QString> stats(4);
+    
+    _calcStats( outbreaks, stats);
+    outMeanEdit ->setText( stats[0] );
+    outSDEdit   ->setText( stats[1] );
+    outMinEdit  ->setText( stats[2] );
+    outMaxEdit  ->setText( stats[3] );
+    
+    _calcStats( epidemics, stats);
+    epiMeanEdit ->setText( stats[0] );
+    epiSDEdit   ->setText( stats[1] );
+    epiMinEdit  ->setText( stats[2] );
+    epiMaxEdit  ->setText( stats[3] );
+    
+    _calcStats( all_data, stats);
+    allMeanEdit ->setText( stats[0] );
+    allSDEdit   ->setText( stats[1] );
+    allMinEdit  ->setText( stats[2] );
+    allMaxEdit  ->setText( stats[3] );
 }
 
 

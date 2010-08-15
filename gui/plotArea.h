@@ -24,6 +24,7 @@ class PlotArea : public QGraphicsView
 
         PlotArea(QWidget* mw, QString l);
         void debugger();
+        vector< vector<int> > getData() { return data; }
 
     public slots:
         void replot();
