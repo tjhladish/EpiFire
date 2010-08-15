@@ -15,6 +15,7 @@ template <typename T> inline T sum(vector<T> list) { T sum=0; for (unsigned int 
 template <typename T> inline double mean(vector<T> list) { return (double) sum(list) / list.size(); }
 
 long double factorial (int num);
+int min_element(vector<int> list);
 int max_element(vector<int> list);
 
 long double poisson_pmf(double lambda, int k);

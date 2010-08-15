@@ -238,6 +238,15 @@ long double factorial(int num) {
 }
 
 
+int min_element(vector<int> list) {
+    int element = list[0];
+    for (unsigned int i = 0; i < list.size(); i++) {
+        element = min(element, list[i]);
+    }
+    return element;
+}
+
+
 int max_element(vector<int> list) {
     int element = list[0];
     for (unsigned int i = 0; i < list.size(); i++) {
