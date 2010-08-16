@@ -73,8 +73,8 @@ inline void delete_element(vector<T> & my_vector, T element) {
 }
 
 
-inline vector<int> tabulate_vector( vector<int> my_vector ) {
-    vector<int> tabulated(max_element(my_vector));
+inline vector<int> tabulate_vector( vector<int> & my_vector ) {
+    vector<int> tabulated(max_element(my_vector) + 1, 0);
     for (unsigned int i = 0; i<my_vector.size(); i++) tabulated[my_vector[i]]++;
     return tabulated;
 }
