@@ -108,7 +108,7 @@ void MainWindow::createPlotPanel() {
 
 void MainWindow::createMenu() {
     //Create 'File' menu
-    menuBar = new QMenuBar;
+    menuBar = new QMenuBar(this);
 
     fileMenu = new QMenu(tr("&File"), this);
 
