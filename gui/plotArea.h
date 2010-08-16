@@ -28,8 +28,8 @@ class PlotArea : public QGraphicsView
 
     public slots:
         void replot();
-        void addData(vector<int> X ) { data.push_back(X); }
-        void clearData() { data.clear(); recentDataCursor = 0; newDataCursor = 0; ellipseData.clear(); }
+        void addData(vector<int> X );
+        void clearData();
         void clearPlot();
         void saveData();
         void savePlot();

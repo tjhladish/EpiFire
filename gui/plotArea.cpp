@@ -156,8 +156,8 @@ void PlotArea::drawHistogram() {
               : 20;
     //nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
     
-    float max_val = (float) find_max_val(data);
-    float min_val = (float) find_min_val(data);
+    float max_val = (float) max_element(data[0]);
+    float min_val = (float) min_element(data[0]);
     float range = max_val - min_val;
    
     nbins = nbins > range + 1 ? range + 1 : nbins;
@@ -166,11 +166,12 @@ void PlotArea::drawHistogram() {
     if (max_val == min_val) {
         density[0] = n;
     } else {
-        for (unsigned int i = 0; i<data.size(); i++) {
-            for (unsigned int j = 0; j<data[i].size(); j++) {
-                int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
+        for (unsigned int i = 0; i<data[0].size(); i++) {
+            //for (unsigned int j = 0; j<data[i].size(); j++) {
+            //    int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
+                int bin = (data[0][i]-min_val) / (max_val-min_val)*(nbins-1);
                 density[ bin ]++;
-            }
+            //}
         }
     }
 
@@ -324,6 +325,26 @@ void PlotArea::resizeEvent ( QResizeEvent * event ) {
     replot();
 }
 
+
+void PlotArea::addData( vector<int> X ) { 
+    if (plotType == STATEPLOT or plotType == CURVEPLOT) {
+        data.push_back(X);
+    } else {
+        if (data.empty()) {
+            vector<int> nothing;
+            data.push_back(nothing);
+        }
+        data[0].insert(data[0].end(), X.begin(), X.end());
+    }
+}
+
+void PlotArea::clearData() {
+    //for (unsigned int i = 0; i < data.size(); i++) data[i].clear();
+    data.clear();
+    recentDataCursor = 0;
+    newDataCursor = 0;
+    ellipseData.clear();
+}
 
 void PlotArea::saveData() {
     QString startdir = ".";

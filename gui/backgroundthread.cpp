@@ -109,7 +109,7 @@ void BackgroundThread::runSimulation() {
 
         QString status = "Rep: " + rep_str + ", Total infected: " + QString::number(epi_size,10);
         emit appendOutputLine(status);
-        cerr << "Rep: " << mw->rep_ct << "    Total: " << epi_size << "\n\n";
+        //cerr << "Rep: " << mw->rep_ct << "    Total: " << epi_size << "\n\n";
 
         if (_stopped) {
             emit statusChanged("Simulation interrupted");

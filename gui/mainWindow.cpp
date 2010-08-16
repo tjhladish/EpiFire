@@ -902,14 +902,15 @@ void MainWindow::_addNetAnalysisRow(QGridLayout* layout, QString text, QLineEdit
 }
 
 
-void MainWindow::_addResultsAnalysisRow(QGridLayout* layout, QString text, QLineEdit* mean, QLineEdit* sd, QLineEdit* min, QLineEdit* max){
+void MainWindow::_addResultsAnalysisRow(QGridLayout* layout, QString text, QLineEdit* n, QLineEdit* min, QLineEdit* max, QLineEdit* mean, QLineEdit* sd){
     int r = layout->rowCount();
     QLabel* label = new QLabel(text, resultsAnalysisDialog);
     layout->addWidget(label, r, 0);
-    layout->addWidget(mean, r, 1);
-    layout->addWidget(sd, r, 2);
-    layout->addWidget(min, r, 3);
-    layout->addWidget(max, r, 4);
+    layout->addWidget(n,     r, 1);
+    layout->addWidget(min,   r, 2);
+    layout->addWidget(max,   r, 3);
+    layout->addWidget(mean,  r, 4);
+    layout->addWidget(sd,    r, 5);
 }
 
 
@@ -921,50 +922,60 @@ void MainWindow::createResultsAnalysis() {
     thresholdEdit ->setText(QString::number( 0 ));
     connect(thresholdEdit, SIGNAL(textChanged(QString)), this, SLOT(updateResultsAnalysis()));
 
-    outMeanEdit   = new QLineEdit(resultsAnalysisDialog);
-    outSDEdit     = new QLineEdit(resultsAnalysisDialog);
-    outMinEdit    = new QLineEdit(resultsAnalysisDialog);
-    outMaxEdit    = new QLineEdit(resultsAnalysisDialog);
-
-    epiMeanEdit   = new QLineEdit(resultsAnalysisDialog);
-    epiSDEdit     = new QLineEdit(resultsAnalysisDialog);
-    epiMinEdit    = new QLineEdit(resultsAnalysisDialog);
-    epiMaxEdit    = new QLineEdit(resultsAnalysisDialog);
-     
-    allMeanEdit   = new QLineEdit(resultsAnalysisDialog);
-    allSDEdit     = new QLineEdit(resultsAnalysisDialog);
+    allNEdit      = new QLineEdit(resultsAnalysisDialog);
     allMinEdit    = new QLineEdit(resultsAnalysisDialog);
     allMaxEdit    = new QLineEdit(resultsAnalysisDialog);
+    allMeanEdit   = new QLineEdit(resultsAnalysisDialog);
+    allSDEdit     = new QLineEdit(resultsAnalysisDialog);
 
-    makeReadonly( outMeanEdit );
-    makeReadonly( outSDEdit   );
-    makeReadonly( outMinEdit  );
-    makeReadonly( outMaxEdit  );
-    makeReadonly( epiMeanEdit );
-    makeReadonly( epiSDEdit   );
-    makeReadonly( epiMinEdit  );
-    makeReadonly( epiMaxEdit  );
-    makeReadonly( allMeanEdit );
-    makeReadonly( allSDEdit   );
+    outNEdit      = new QLineEdit(resultsAnalysisDialog);
+    outMinEdit    = new QLineEdit(resultsAnalysisDialog);
+    outMaxEdit    = new QLineEdit(resultsAnalysisDialog);
+    outMeanEdit   = new QLineEdit(resultsAnalysisDialog);
+    outSDEdit     = new QLineEdit(resultsAnalysisDialog);
+
+    epiNEdit      = new QLineEdit(resultsAnalysisDialog);
+    epiMinEdit    = new QLineEdit(resultsAnalysisDialog);
+    epiMaxEdit    = new QLineEdit(resultsAnalysisDialog);
+    epiMeanEdit   = new QLineEdit(resultsAnalysisDialog);
+    epiSDEdit     = new QLineEdit(resultsAnalysisDialog);
+     
+    makeReadonly( allNEdit  );
     makeReadonly( allMinEdit  );
     makeReadonly( allMaxEdit  );
+    makeReadonly( allMeanEdit );
+    makeReadonly( allSDEdit   );
+    
+    makeReadonly( outNEdit  );
+    makeReadonly( outMinEdit  );
+    makeReadonly( outMaxEdit  );
+    makeReadonly( outMeanEdit );
+    makeReadonly( outSDEdit   );
+
+    makeReadonly( epiNEdit  );
+    makeReadonly( epiMinEdit  );
+    makeReadonly( epiMaxEdit  );
+    makeReadonly( epiMeanEdit );
+    makeReadonly( epiSDEdit   );
  
     QLabel* thresholdLabel = new QLabel("Outbreak/epidemic threshold:", resultsAnalysisDialog);
     resultsTopLayout->addWidget(thresholdLabel, 1, 0); 
     resultsTopLayout->addWidget(thresholdEdit, 1, 1); 
     
-    QLabel* meanLabel = new QLabel("Mean", resultsAnalysisDialog);
-    QLabel* SDLabel = new QLabel("SD", resultsAnalysisDialog);
+    QLabel* nLabel   = new QLabel("N",   resultsAnalysisDialog);
     QLabel* minLabel = new QLabel("Min", resultsAnalysisDialog);
     QLabel* maxLabel = new QLabel("Max", resultsAnalysisDialog);
-    resultsTopLayout->addWidget(meanLabel, 2, 1);
-    resultsTopLayout->addWidget(SDLabel,   2, 2);
-    resultsTopLayout->addWidget(minLabel,  2, 3);
-    resultsTopLayout->addWidget(maxLabel,  2, 4);
+    QLabel* meanLabel = new QLabel("Mean", resultsAnalysisDialog);
+    QLabel* SDLabel  = new QLabel("SD", resultsAnalysisDialog);
+    resultsTopLayout->addWidget(nLabel,    2, 1);
+    resultsTopLayout->addWidget(minLabel,  2, 2);
+    resultsTopLayout->addWidget(maxLabel,  2, 3);
+    resultsTopLayout->addWidget(meanLabel, 2, 4);
+    resultsTopLayout->addWidget(SDLabel,   2, 5);
 
-    _addResultsAnalysisRow(resultsTopLayout, "Outbreaks only:",  outMeanEdit, outSDEdit, outMinEdit, outMaxEdit);
-    _addResultsAnalysisRow(resultsTopLayout, "Epidemics only:",  epiMeanEdit, epiSDEdit, epiMinEdit, epiMaxEdit);
-    _addResultsAnalysisRow(resultsTopLayout, "All simulations:", allMeanEdit, allSDEdit, allMinEdit, allMaxEdit);
+    _addResultsAnalysisRow(resultsTopLayout, "All simulations:", allNEdit, allMinEdit, allMaxEdit, allMeanEdit, allSDEdit);
+    _addResultsAnalysisRow(resultsTopLayout, "Outbreaks only:" , outNEdit, outMinEdit, outMaxEdit, outMeanEdit, outSDEdit);
+    _addResultsAnalysisRow(resultsTopLayout, "Epidemics only:" , epiNEdit, epiMinEdit, epiMaxEdit, epiMeanEdit, epiSDEdit);
 
     QGroupBox* resultsAnalysisTop = new QGroupBox();
     resultsAnalysisTop->setLayout(resultsTopLayout);
@@ -1148,6 +1159,8 @@ void MainWindow::analyzeResults() {
         QMessageBox msgBox; msgBox.setText("Please run some simulations first."); msgBox.exec();
         return;
     }
+    int threshold = find_epi_threshold( histPlot->getData()[0] );
+    thresholdEdit->setText( QString::number( threshold ) );
     updateResultsAnalysis();
     resultsAnalysisDialog->exec();
 }
@@ -1159,11 +1172,13 @@ void _calcStats( vector<int> &data, vector<QString> &stats ) {
         stats[1] = "Undefined";
         stats[2] = "Undefined";
         stats[3] = "Undefined";
+        stats[4] = "0";
     } else {
         stats[0] = QString::number( mean(data)        );
         stats[1] = QString::number( stdev(data)       );
         stats[2] = QString::number( min_element(data) );
         stats[3] = QString::number( max_element(data) );
+        stats[4] = QString::number( data.size() );
     }
     if (data.size() == 1) {
         stats[1] = "Undefined";
@@ -1173,40 +1188,40 @@ void _calcStats( vector<int> &data, vector<QString> &stats ) {
 
 void MainWindow::updateResultsAnalysis() {
     double threshold = (thresholdEdit->text()).toDouble();
-    vector< vector<int> > data = histPlot->getData();
-    vector<int> all_data;
+    vector<int> all_data = (histPlot->getData())[0];
     vector<int> outbreaks;
     vector<int> epidemics;
-    for( unsigned int r=0; r < data.size(); r++) {
-        for( unsigned int c=0; c < data[r].size(); c++ ) {
-            all_data.push_back(data[r][c]);
-            if (data[r][c] >= threshold) {
-                epidemics.push_back(data[r][c]);
-            } else {
-                outbreaks.push_back(data[r][c]);
-            }
+    for( unsigned int i = 0; i < all_data.size(); i++) {
+        if (all_data[i] >= threshold) {
+            epidemics.push_back(all_data[i]);
+        } else {
+            outbreaks.push_back(all_data[i]);
         }
     }
-    
-    vector<QString> stats(4);
+
+    vector<QString> stats(5);
     
     _calcStats( outbreaks, stats);
     outMeanEdit ->setText( stats[0] );
     outSDEdit   ->setText( stats[1] );
     outMinEdit  ->setText( stats[2] );
     outMaxEdit  ->setText( stats[3] );
+    QString txt = stats[4].append("(").append(QString::number(100.0 * outbreaks.size()/all_data.size())).append("%)");
+    outNEdit    ->setText( txt );
     
     _calcStats( epidemics, stats);
     epiMeanEdit ->setText( stats[0] );
     epiSDEdit   ->setText( stats[1] );
     epiMinEdit  ->setText( stats[2] );
     epiMaxEdit  ->setText( stats[3] );
+    epiNEdit    ->setText( stats[4] );
     
     _calcStats( all_data, stats);
     allMeanEdit ->setText( stats[0] );
     allSDEdit   ->setText( stats[1] );
     allMinEdit  ->setText( stats[2] );
     allMaxEdit  ->setText( stats[3] );
+    allNEdit    ->setText( stats[4] );
 }
 
 
@@ -1548,3 +1563,39 @@ double MainWindow::convertTCBtoT (double TCB, int d) { return 1.0 - pow(1.0 - TC
 
 
 int MainWindow::percent_complete(int current, double predicted) { return current > predicted ? 99 : (int) (100 * current/predicted); }
+
+int MainWindow::find_epi_threshold(vector<int> data) {
+    cerr << "data size: " << data.size() << endl;
+    // quick and dirty way to guess the threshold between outbreaks and epidemics
+    int min = min_element(data);
+    int start = 0; // beginning of trough between outbreaks and epis
+    int stop  = 0; // end of trough
+    int best_range = 0;
+    int second_range = 0;
+
+    int curr_start = -1;
+    int curr_stop  = -1;
+
+    vector<int> freqs = tabulate_vector(data);
+
+    for (int s = min; s < freqs.size(); s++) {
+        if (freqs[s] == 0 and curr_start == -1) {
+            curr_start = s;
+        } else if (freqs[s] > 0 and curr_start > -1) {
+            curr_stop = s;
+            if (curr_stop - curr_start > best_range) {
+                start = curr_start;
+                stop = curr_stop;
+                second_range = best_range;
+                best_range = curr_stop - curr_start;
+                curr_start = -1;
+                curr_stop = -1;
+            }
+        }
+    }
+    if (best_range > 2 * second_range) {
+        return start + (stop-start)/2;
+    } else {
+        return -1;
+    }
+}

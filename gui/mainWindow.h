@@ -252,20 +252,23 @@ class MainWindow : public QMainWindow
 
         // Results analysis dialog
         void createResultsAnalysis();
-        void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* mean, QLineEdit* sd, QLineEdit* min, QLineEdit* max);
+        void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* n, QLineEdit* min, QLineEdit* max, QLineEdit* mean, QLineEdit* sd);
 
         QLineEdit* thresholdEdit;
         
+        QLineEdit* outNEdit;
         QLineEdit* outMeanEdit;
         QLineEdit* outSDEdit;
         QLineEdit* outMinEdit;
         QLineEdit* outMaxEdit;
         
+        QLineEdit* epiNEdit;
         QLineEdit* epiMeanEdit;
         QLineEdit* epiSDEdit;
         QLineEdit* epiMinEdit;
         QLineEdit* epiMaxEdit;
         
+        QLineEdit* allNEdit;
         QLineEdit* allMeanEdit;
         QLineEdit* allSDEdit;
         QLineEdit* allMinEdit;
@@ -286,6 +289,7 @@ class MainWindow : public QMainWindow
         double convertTCBtoT (double TCB, int d);
         double maExpectedSize(double R0, double P0_frac, double guess);
         double netExpectedSize(double T, double P0_frac);
+        int find_epi_threshold(vector<int> data);
         
         void makeEditable(QLineEdit* lineEdit);
         void makeReadonly(QLineEdit* lineEdit);
