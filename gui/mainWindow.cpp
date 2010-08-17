@@ -701,11 +701,11 @@ void MainWindow::updateRZero() {
     int patient_zero_ct = pzeroLine->text().toInt(); 
     int n = network->size();
     double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * maExpectedSize(R0, 0, 0.5);
-    maPredictionLine->setText( QString::number( predictedSize ) );
+    maPredictionLine->setText( frequencyFormat( predictedSize, (double) n ) );
 
     // network prediction
     double netPredictedSize = n * netExpectedSize(T, ((double) patient_zero_ct)/n);
-    netPredictionLine->setText( QString::number( netPredictedSize ) );
+    netPredictionLine->setText( frequencyFormat( netPredictedSize, (double) n ) );
 }
 
 
@@ -1172,13 +1172,13 @@ void _calcStats( vector<int> &data, vector<QString> &stats ) {
         stats[1] = "Undefined";
         stats[2] = "Undefined";
         stats[3] = "Undefined";
-        stats[4] = "0";
+        //stats[4] = "0";
     } else {
         stats[0] = QString::number( mean(data)        );
         stats[1] = QString::number( stdev(data)       );
         stats[2] = QString::number( min_element(data) );
         stats[3] = QString::number( max_element(data) );
-        stats[4] = QString::number( data.size() );
+        //stats[4] = QString::number( data.size() );
     }
     if (data.size() == 1) {
         stats[1] = "Undefined";
@@ -1206,22 +1206,22 @@ void MainWindow::updateResultsAnalysis() {
     outSDEdit   ->setText( stats[1] );
     outMinEdit  ->setText( stats[2] );
     outMaxEdit  ->setText( stats[3] );
-    QString txt = stats[4].append("(").append(QString::number(100.0 * outbreaks.size()/all_data.size())).append("%)");
-    outNEdit    ->setText( txt );
+    //QString txt = stats[4].append("(").append(QString::number(100.0 * outbreaks.size()/all_data.size())).append("%)");
+    outNEdit    ->setText( frequencyFormat((double) outbreaks.size(), (double) all_data.size()) );
     
     _calcStats( epidemics, stats);
     epiMeanEdit ->setText( stats[0] );
     epiSDEdit   ->setText( stats[1] );
     epiMinEdit  ->setText( stats[2] );
     epiMaxEdit  ->setText( stats[3] );
-    epiNEdit    ->setText( stats[4] );
+    epiNEdit    ->setText( frequencyFormat((double) epidemics.size(), (double) all_data.size()) );
     
     _calcStats( all_data, stats);
     allMeanEdit ->setText( stats[0] );
     allSDEdit   ->setText( stats[1] );
     allMinEdit  ->setText( stats[2] );
     allMaxEdit  ->setText( stats[3] );
-    allNEdit    ->setText( stats[4] );
+    allNEdit    ->setText( frequencyFormat((double) all_data.size(), (double) all_data.size()) );
 }
 
 
@@ -1270,6 +1270,12 @@ void MainWindow::calculateDistances() {
 }
 
 void MainWindow::resetCursor() { setCursor(Qt::ArrowCursor); }
+
+QString MainWindow::frequencyFormat(double numerator, double denominator) {
+    QString text = QString::number(numerator);
+    text.append("  (").append(QString::number(100.0 * numerator/denominator, 'g', 4)).append("%)");
+    return text;
+}
 
 void MainWindow::enableCentralWidget() { centralWidget->setEnabled(true); }
 

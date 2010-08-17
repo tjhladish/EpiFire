@@ -293,6 +293,7 @@ class MainWindow : public QMainWindow
         
         void makeEditable(QLineEdit* lineEdit);
         void makeReadonly(QLineEdit* lineEdit);
+        QString frequencyFormat(double numerator, double denominator);
         int percent_complete(int current, double predicted);
 
 
