@@ -45,17 +45,17 @@ void BackgroundThread::run(void) {
         emit completed(success);
     } else if (type == COMPONENTS ) {
         emit setProgressValue(0);
-        mw->calculateComponentStats();
+        mw->netAnalysisDialog->calculateComponentStats();
         emit setProgressValue(100);
     } else if (type == TRANSITIVITY ) {
         emit setProgressValue(0);
-        mw->calculateTransitivity();
+        mw->netAnalysisDialog->calculateTransitivity();
         emit setProgressValue(100);
     } else if (type == DISTANCES ) {
-        mw->calculateComponentStats();
+        mw->netAnalysisDialog->calculateComponentStats();
         emit setProgressValue(0);
         emit showProgressDialog();
-        mw->calculateDistances();
+        mw->netAnalysisDialog->calculateDistances();
         emit setProgressValue(100);
     } else if (type == SIMULATE ) {
         emit setProgressValue(0);

@@ -9,6 +9,7 @@ HEADERS     = mainWindow.h \
              edge.h \
              graphwidget.h \
              debug.h \
+             analysisDialog.h \
              backgroundthread.h
 
  SOURCES     = mainWindow.cpp \
@@ -21,6 +22,7 @@ HEADERS     = mainWindow.h \
                edge.cpp \
                graphwidget.cpp \
                debug.cpp \
+               analysisDialog.cpp \
                backgroundthread.cpp
 
 

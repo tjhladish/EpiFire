@@ -12,6 +12,7 @@
 #include "plotArea.h"
 #include "graphwidget.h"
 #include "backgroundthread.h"
+#include "analysisDialog.h"
 #include "../src/Network.h"
 #include "../src/Simulator.h";
 #include "../src/Percolation_Sim.h"
@@ -62,6 +63,11 @@ class QCheckBox;
 class PlotArea;
 class GraphWidget;
 class BackgroundThread;
+class AnalysisDialog;
+
+void makeReadonly(QLineEdit*);
+void makeEditable(QLineEdit*);
+QString frequencyFormat(double numerator, double denominator);
 
 //Define public and private functions and slots for 'MainWindow' class
 class MainWindow : public QMainWindow
@@ -69,6 +75,7 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
     friend class BackgroundThread;
+    friend class AnalysisDialog;
 
         public:
         MainWindow();
@@ -77,8 +84,8 @@ class MainWindow : public QMainWindow
         Simulator* simulator;
         GraphWidget* networkPlot;
         BackgroundThread* backgroundThread;
-        QDialog* netAnalysisDialog;
-        QDialog* resultsAnalysisDialog;
+        AnalysisDialog* netAnalysisDialog;
+        AnalysisDialog* resultsAnalysisDialog;
         QTextEdit* logEditor;
         QProgressDialog* progressDialog;
 
@@ -108,6 +115,7 @@ class MainWindow : public QMainWindow
         void readEdgeList();
         void saveEdgeList();
         void clear_network();
+        void removeMinorComponents();
 
         // Simulation slots
         void simulatorWrapper();
@@ -122,16 +130,6 @@ class MainWindow : public QMainWindow
         void showHideHistPlot();
         void plotNetwork();
 
-        // Network analysis slots
-        void analyzeNetwork();
-        void generate_comp_thread();
-        void calculateComponentStats();
-        void removeMinorComponents();
-        void generate_trans_thread();
-        void calculateTransitivity();
-        void generate_dist_thread();
-        void calculateDistances();
-
         // Misc
         void appendOutput(QString);
         void appendOutputLine(QString);
@@ -139,8 +137,6 @@ class MainWindow : public QMainWindow
         void resetCursor();
         void enableCentralWidget();
         void disableCentralWidget();
-        void analyzeResults();
-        void updateResultsAnalysis();
  
     protected:
 
@@ -226,59 +222,7 @@ class MainWindow : public QMainWindow
         PlotArea* epiCurvePlot;
         PlotArea* statePlot;
         PlotArea* histPlot;
-        
         void addStateData();
-
-        // Network analysis dialog
-        void createNetworkAnalysis();
-        void _addNetAnalysisRow(QGridLayout* layout, QString label, QLineEdit* box, QPushButton* button = NULL);
-
-        QLineEdit* nodeCountEdit;
-        QLineEdit* edgeCountEdit;
-        QLineEdit* meanDegreeEdit;
-        QLineEdit* componentCountEdit;
-        QLineEdit* maxComponentSizeEdit;
-        QLineEdit* transitivityEdit;
-        QLineEdit* diameterEdit;
-        QLineEdit* meanDistanceEdit;
-
-        QPushButton* componentButton1;
-        QPushButton* componentButton2;
-        QPushButton* transitivityButton;
-        QPushButton* diameterButton;
-        QPushButton* meanDistanceButton;
-
-        PlotArea* degDistPlot;
-
-        // Results analysis dialog
-        void createResultsAnalysis();
-        void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* n, QLineEdit* min, QLineEdit* max, QLineEdit* mean, QLineEdit* sd);
-
-        QLineEdit* thresholdEdit;
-        
-        QLineEdit* outNEdit;
-        QLineEdit* outMeanEdit;
-        QLineEdit* outSDEdit;
-        QLineEdit* outMinEdit;
-        QLineEdit* outMaxEdit;
-        
-        QLineEdit* epiNEdit;
-        QLineEdit* epiMeanEdit;
-        QLineEdit* epiSDEdit;
-        QLineEdit* epiMinEdit;
-        QLineEdit* epiMaxEdit;
-        
-        QLineEdit* allNEdit;
-        QLineEdit* allMeanEdit;
-        QLineEdit* allSDEdit;
-        QLineEdit* allMinEdit;
-        QLineEdit* allMaxEdit;
-
-
-        // Network plot
-    
-        //QMainWindowButtonBox* buttonBox;
-     
 
         // Helper functions
         double calculate_T_crit();
@@ -289,15 +233,7 @@ class MainWindow : public QMainWindow
         double convertTCBtoT (double TCB, int d);
         double maExpectedSize(double R0, double P0_frac, double guess);
         double netExpectedSize(double T, double P0_frac);
-        int find_epi_threshold(vector<int> data);
         
-        void makeEditable(QLineEdit* lineEdit);
-        void makeReadonly(QLineEdit* lineEdit);
-        QString frequencyFormat(double numerator, double denominator);
         int percent_complete(int current, double predicted);
-
-
-        
-
 };
 #endif
