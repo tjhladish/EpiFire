@@ -177,6 +177,7 @@ void AnalysisDialog::createResultsAnalysis() {
     resultsHistPlot = new PlotArea(this, "Epidemic size distribution");
     resultsHistPlot->setPlotType(PlotArea::RESULTS_HISTPLOT);
     
+    connect(thresholdEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setCutoff(QString)));
     connect(nbinsLineEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setNBins(QString)));
     connect(minRangeLineEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setRangeMin(QString)));
     connect(maxRangeLineEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setRangeMax(QString)));
@@ -229,6 +230,8 @@ void AnalysisDialog::analyzeResults() {
         QMessageBox msgBox; msgBox.setText("Please run some simulations first."); msgBox.exec();
         return;
     }
+    double threshold = (double) find_epi_threshold( mw->histPlot->getData()[0] );
+    thresholdEdit->setText( QString::number( threshold ) );
     updateResultsAnalysis();
     this->exec();
 }
@@ -259,8 +262,7 @@ void AnalysisDialog::updateResultsAnalysis() {
     resultsHistPlot->addData(all_data);
     resultsHistPlot->replot();
     
-    double threshold = (double) find_epi_threshold( all_data );
-    thresholdEdit->setText( QString::number( threshold ) );
+    double threshold = thresholdEdit->text().toDouble();
     vector<int> outbreaks;
     vector<int> epidemics;
     for( unsigned int i = 0; i < all_data.size(); i++) {

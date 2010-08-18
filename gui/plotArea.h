@@ -43,6 +43,8 @@ class PlotArea : public QGraphicsView
         void setRangeMax(QString max) { rangeMax=max.toDouble(); replot(); }
         void setNBins(int bins) { nbins=bins; replot(); }
         void setNBins(QString bins) { nbins=bins.toInt(); replot(); }
+        void setCutoff(double cut) { cutoff = cut; replot(); }
+        void setCutoff(QString cut) { cutoff = cut.toDouble(); replot(); }
 
     protected:
         void drawEpiCurvePlot();
@@ -60,6 +62,7 @@ class PlotArea : public QGraphicsView
         double rangeMin;
         double rangeMax;
         int    nbins;
+        double cutoff;
         PlotScene* myscene;
         QString label;
         QAction* savePlotAction;

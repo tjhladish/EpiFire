@@ -13,9 +13,10 @@ PlotArea::PlotArea(QWidget*, QString l) {
     label = l;
     xAxis = NULL;
     yAxis = NULL;
-    rangeMin = -1;  // these are only used if the user
+    rangeMin = -1;  // these are only used if the gui user
     rangeMax = -1;  // sets them somewhere
     nbins    = -1;  //
+    cutoff   = -1;  //
 
     savePlotAction = new QAction("Export plot as png", this);
     connect( savePlotAction, SIGNAL(triggered()), this, SLOT(savePlot()) );
@@ -245,6 +246,11 @@ void PlotArea::drawHistogram() {
         float x = myscene->toPlotX(r);
         float y = myscene->toPlotY(density[r]);
         float h = myscene->toPlotY(0) - y;
+        if (cutoff < min_val + r*(max_val-min_val)/nbins) {
+            brush.setColor(Qt::red);
+        } else {
+            brush.setColor(Qt::yellow);
+        }
         myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
     }
 }
