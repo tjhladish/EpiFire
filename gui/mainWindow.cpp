@@ -55,13 +55,9 @@ MainWindow::MainWindow() {
     networkPlot = new GraphWidget();
     
     netAnalysisDialog = new AnalysisDialog(this, AnalysisDialog::NETWORK, "Analysis of current network");
-    //netAnalysisDialog = new QDialog(this);
-    //netAnalysisDialog->setWindowTitle("Analysis of current network");
     rep_ct = 0;
 
     resultsAnalysisDialog = new AnalysisDialog(this, AnalysisDialog::RESULTS, "Analysis of simulation results");
-    //resultsAnalysisDialog = new QDialog(this);
-    //resultsAnalysisDialog->setWindowTitle("Analysis of simulation results");
     
     logEditor = new QTextEdit();
     logEditor->setReadOnly(true);

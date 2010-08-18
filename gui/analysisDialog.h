@@ -42,7 +42,7 @@ class AnalysisDialog: public QDialog {
         DialogType dialogType;
         MainWindow* mw;
         Network* network;
-        //BackgroundThread* backgroundThread;
+        // BackgroundThread* backgroundThread;
 
         // Network analysis dialog
         void createNetworkAnalysis();
@@ -67,7 +67,7 @@ class AnalysisDialog: public QDialog {
 
         // Results analysis dialog
         void createResultsAnalysis();
-        void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* n, QLineEdit* min, QLineEdit* max, QLineEdit* mean, QLineEdit* sd);
+        void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* all, QLineEdit* out, QLineEdit* epi);
 
         int find_epi_threshold(vector<int> data);
         QLineEdit* thresholdEdit;
@@ -90,8 +90,11 @@ class AnalysisDialog: public QDialog {
         QLineEdit* allMinEdit;
         QLineEdit* allMaxEdit;
 
+        PlotArea* resultsHistPlot;
 
-
+        QLineEdit* nBinsEdit;
+        QLineEdit* minRangeEdit;
+        QLineEdit* maxRangeEdit;
 };
 
 #endif

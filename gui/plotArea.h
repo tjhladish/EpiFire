@@ -18,13 +18,15 @@ class PlotArea : public QGraphicsView
     Q_OBJECT
     public:
 
-        enum PlotType { STATEPLOT, CURVEPLOT, HISTPLOT, DEGPLOT };
+        enum PlotType { STATEPLOT, CURVEPLOT, HISTPLOT, DEGPLOT, RESULTS_HISTPLOT };
         void setPlotType(PlotType x) { plotType = x; }
         PlotType getPlotType() { return plotType; }
 
         PlotArea(QWidget* mw, QString l);
         void debugger();
         vector< vector<int> > getData() { return data; }
+        int default_nbins(double rangeMin, double rangeMax);
+        vector<double> default_minmax();
 
     public slots:
         void replot();
@@ -35,6 +37,12 @@ class PlotArea : public QGraphicsView
         void savePlot();
         void setLabel(QString l) {label = l;}
         QString getLabel() {return label;}
+        void setRangeMin(double min) { rangeMin=min; replot(); }
+        void setRangeMin(QString min) { rangeMin=min.toDouble(); replot(); }
+        void setRangeMax(double max) { rangeMax=max; replot(); }
+        void setRangeMax(QString max) { rangeMax=max.toDouble(); replot(); }
+        void setNBins(int bins) { nbins=bins; replot(); }
+        void setNBins(QString bins) { nbins=bins.toInt(); replot(); }
 
     protected:
         void drawEpiCurvePlot();
@@ -49,6 +57,9 @@ class PlotArea : public QGraphicsView
         Axis* xAxis;
         Axis* yAxis;
         vector< vector<int> > data;
+        double rangeMin;
+        double rangeMax;
+        int    nbins;
         PlotScene* myscene;
         QString label;
         QAction* savePlotAction;

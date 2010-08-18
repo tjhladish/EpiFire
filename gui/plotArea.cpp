@@ -13,6 +13,9 @@ PlotArea::PlotArea(QWidget*, QString l) {
     label = l;
     xAxis = NULL;
     yAxis = NULL;
+    rangeMin = -1;  // these are only used if the user
+    rangeMax = -1;  // sets them somewhere
+    nbins    = -1;  //
 
     savePlotAction = new QAction("Export plot as png", this);
     connect( savePlotAction, SIGNAL(triggered()), this, SLOT(savePlot()) );
@@ -27,7 +30,7 @@ void PlotArea::contextMenuEvent(QContextMenuEvent* event) {
         saveDataAction->setText("Export time series data");
     } else if (plotType == STATEPLOT ) { 
         saveDataAction->setText("Export node state data (100 node max)");
-    } else if (plotType == HISTPLOT) {
+    } else if (plotType == HISTPLOT or plotType == RESULTS_HISTPLOT) {
         saveDataAction->setText("Export epidemic size data");
     } else if ( plotType == DEGPLOT) { 
         saveDataAction->setText("Export degree sequence data");
@@ -46,7 +49,7 @@ void PlotArea::replot() {
         drawEpiCurvePlot();
     } else if (plotType == STATEPLOT ) { 
         drawNodeStatePlot();
-    } else if (plotType == HISTPLOT || plotType == DEGPLOT) { 
+    } else if (plotType == HISTPLOT || plotType == DEGPLOT || plotType == RESULTS_HISTPLOT) { 
         drawHistogram();
     }
 }
@@ -131,21 +134,13 @@ void PlotArea::clearPlot() {
 }
 
 
-void PlotArea::drawHistogram() {
-    setRenderHint(QPainter::Antialiasing); // smooth data points
-    clearPlot();
-    scene()->update(); // clears any artifacts in plot margins
-    if (data.size() == 0 ) return;
-    
-    PlotScene* myscene = (PlotScene*) scene();
-
-    int plotW = width() - 110;   //width of the view
-    int plotH = height() - 80;  //height of the view
-    myscene->setSceneRect(0,0,plotW,plotH);
-
-    int n = 0;
-    for (unsigned int i =0; i < data.size(); i++) n += data[i].size();
-
+int PlotArea::default_nbins(double min_val, double max_val) {
+    if (min_val < 0 or max_val < 0 or min_val > max_val) {
+        cerr << "PlotArea::default_nbins() must be called with valid min and max arguments.\n"
+             << "Arguments given: " << min_val << ", " << max_val << endl;
+        return 0;
+    }
+    int n = data[0].size();
     // for n data points, number of bins should be:
     // n if n < 10
     // 10 if 10 < n < 100
@@ -156,22 +151,72 @@ void PlotArea::drawHistogram() {
               : 20;
     //nbins = sqrt(n) > 10 ? (int) sqrt(n) : nbins;
     
-    float max_val = (float) max_element(data[0]);
-    float min_val = (float) min_element(data[0]);
     float range = max_val - min_val;
    
     nbins = nbins > range + 1 ? range + 1 : nbins;
+    return nbins;
+}
+
+
+vector<double> PlotArea::default_minmax() {
+   vector<double> minmax(2);
+   minmax[0] = (double) min_element(data[0]);
+   minmax[1] = (double) max_element(data[0]);
+   return minmax;
+}
+
+
+void PlotArea::drawHistogram() {
+    setRenderHint(QPainter::Antialiasing); // smooth data points
+    clearPlot();
+    scene()->update(); // clears any artifacts in plot margins
+    if (data.size() == 0 || data[0].size() == 0) return;
+    vector<int>& epi_data = data[0];
+
+    PlotScene* myscene = (PlotScene*) scene();
+
+    int plotW = width() - 110;   //width of the view
+    int plotH = height() - 80;  //height of the view
+    myscene->setSceneRect(0,0,plotW,plotH);
+
+    int n = epi_data.size();
+
+    int min_val = 0;
+    int max_val = 0;
+
+    if (plotType == RESULTS_HISTPLOT) {
+        vector<double> minmax = default_minmax();
+        min_val = rangeMin == -1 ? minmax[0] : rangeMin;
+        max_val = rangeMax == -1 ? minmax[1] : rangeMax;
+        if ( max_val < min_val ) {
+            min_val = minmax[0];
+            max_val = minmax[1];
+        }
+
+        if (nbins < 1) nbins = default_nbins(min_val, max_val);
+    } else {
+        vector<double> minmax = default_minmax();
+        min_val = minmax[0];
+        max_val = minmax[1];
+        nbins = default_nbins(min_val, max_val);
+    }
 
     vector<int> density(nbins,0);
     if (max_val == min_val) {
-        density[0] = n;
+        for (unsigned int i = 0; i<epi_data.size(); i++) {
+            if (epi_data[i] == max_val) density[0]++;
+        }
     } else {
-        for (unsigned int i = 0; i<data[0].size(); i++) {
-            //for (unsigned int j = 0; j<data[i].size(); j++) {
-            //    int bin = (data[i][j]-min_val) / (max_val-min_val)*(nbins-1);
-                int bin = (data[0][i]-min_val) / (max_val-min_val)*(nbins-1);
-                density[ bin ]++;
-            //}
+        for (unsigned int i = 0; i<epi_data.size(); i++) {
+            int bin;
+            if (epi_data[i] < min_val or epi_data[i] > max_val) {
+                continue;
+            } else if ( epi_data[i] == max_val ) { // last bin includes upper bound
+                bin = nbins-1;
+            } else {
+                bin = nbins * ((double) epi_data[i]-min_val) / (max_val-min_val);
+            }
+            density[ bin ]++;
         }
     }
 
@@ -370,7 +415,7 @@ void PlotArea::saveData() {
             }
             out << data[data.size()-1][r] << endl;
         }
-    } else if (plotType == HISTPLOT || plotType == DEGPLOT) {
+    } else if (plotType == HISTPLOT || plotType == DEGPLOT || plotType == RESULTS_HISTPLOT) {
         // One number per line
          for( unsigned int r=0; r < data.size(); r++) {
             for( unsigned int c=0; c < data[r].size(); c++ ) {
