@@ -41,8 +41,8 @@ class PlotArea : public QGraphicsView
         void setRangeMin(QString min) { rangeMin=min.toDouble(); replot(); }
         void setRangeMax(double max) { rangeMax=max; replot(); }
         void setRangeMax(QString max) { rangeMax=max.toDouble(); replot(); }
-        void setNBins(int bins) { nbins=bins; replot(); }
-        void setNBins(QString bins) { nbins=bins.toInt(); replot(); }
+        void setNBins(int bins) { Nbins=bins; replot(); }
+        void setNBins(QString bins) { Nbins=bins.toInt(); replot(); }
         void setCutoff(double cut) { cutoff = cut; replot(); }
         void setCutoff(QString cut) { cutoff = cut.toDouble(); replot(); }
 
@@ -61,7 +61,7 @@ class PlotArea : public QGraphicsView
         vector< vector<int> > data;
         double rangeMin;
         double rangeMax;
-        int    nbins;
+        int    Nbins;
         double cutoff;
         PlotScene* myscene;
         QString label;

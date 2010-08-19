@@ -1,4 +1,4 @@
-CONFIG += qt thread warn_off debug
+CONFIG += qt thread warn_off
 
 HEADERS     = mainWindow.h \
              plotArea.h \

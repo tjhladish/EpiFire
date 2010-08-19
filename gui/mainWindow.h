@@ -142,8 +142,8 @@ class MainWindow : public QMainWindow
 
     private:
 
-       // void updateNetProcessProgress();
-
+        bool networkBusy;
+        bool simulatorBusy;
         
         // Menu bar
         QMenu* fileMenu;

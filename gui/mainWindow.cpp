@@ -72,8 +72,8 @@ MainWindow::MainWindow() {
     createPredictionsBox();
     defaultSettings();
     
-    tabWidget->addTab(networkSettingsGroupBox, "Step 1: Choose a network");    
-    tabWidget->addTab(simulatorSettingsGroupBox, "Step 2: Design a simulation");    
+    tabWidget->addTab(networkSettingsGroupBox, "Step &1: Choose a network");    
+    tabWidget->addTab(simulatorSettingsGroupBox, "Step &2: Design a simulation");    
     leftLayout->addWidget(tabWidget);
     leftLayout->addWidget(predictionsGroupBox);
     leftLayout->addWidget(controlButtonsGroupBox);
@@ -110,6 +110,9 @@ MainWindow::MainWindow() {
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
     connect(progressDialog,SIGNAL(accepted()),this,SLOT(disableCentralWidget()));
     connect(progressDialog,SIGNAL(rejected()),this,SLOT(enableCentralWidget()));
+
+    networkBusy   = false;
+    simulatorBusy = false;
 }
 
 
@@ -142,19 +145,15 @@ void MainWindow::createMenu() {
     fileMenu = new QMenu(tr("&File"), this);
 
     exitAction = fileMenu->addAction(tr("E&xit"));
-    openAction = fileMenu->addAction(tr("&Open"));
-
-    QAction* simulateAction = fileMenu->addAction("Simulate");
-    simulateAction->setShortcut(Qt::Key_Enter);
+    openAction = fileMenu->addAction(tr("&Open edgelist file"));
 
     QAction* saveNetwork = fileMenu->addAction("Save network as edgelist");
     QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
     QAction* savePlotAction = fileMenu->addAction("Save epidemic curve plot");
 
-    connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
-    connect(openAction, SIGNAL(triggered()), this, SLOT(readEdgeList()));
-    connect(simulateAction, SIGNAL(triggered()), this, SLOT(simulatorWrapper()));
-    connect(saveNetwork, SIGNAL(triggered()), this, SLOT(saveEdgeList()));
+    connect(exitAction,     SIGNAL(triggered()), this, SLOT(close()));
+    connect(openAction,     SIGNAL(triggered()), this, SLOT(readEdgeList()));
+    connect(saveNetwork,    SIGNAL(triggered()), this, SLOT(saveEdgeList()));
     connect(saveDataAction, SIGNAL(triggered()), epiCurvePlot, SLOT(saveData()));
     connect(savePlotAction, SIGNAL(triggered()), epiCurvePlot, SLOT(savePlot()));
  
@@ -183,14 +182,28 @@ void MainWindow::createMenu() {
 
     //Create 'Network' menu
     QMenu* networkMenu = new QMenu(tr("&Network"), this);
+    QAction* generateNetAction = networkMenu->addAction("Generate network");
+    //QAction* loadNetAction     = networkMenu->addAction("Import edge list");
     QAction* showNetworkAnalysis = networkMenu->addAction("Network analysis");
     QAction* reduceToGiantComponent = networkMenu->addAction("Remove all minor components");
 
-    connect( showNetworkAnalysis, SIGNAL(triggered()), netAnalysisDialog, SLOT(analyzeNetwork()));
-    connect( reduceToGiantComponent, SIGNAL(triggered()), this, SLOT(removeMinorComponents()));
+    generateNetAction->setShortcut(tr("Ctrl+G"));
+    openAction->setShortcut(tr("Ctrl+O"));
+
+    connect( generateNetAction,      SIGNAL(triggered()), this,              SLOT(generate_network_thread()));
+    //connect( loadNetAction,          SIGNAL(triggered()), this,              SLOT(readEdgeList()));
+    connect( showNetworkAnalysis,    SIGNAL(triggered()), netAnalysisDialog, SLOT(analyzeNetwork()));
+    connect( reduceToGiantComponent, SIGNAL(triggered()), this,              SLOT(removeMinorComponents()));
 
     //Create 'Results' menu
     QMenu* resultsMenu = new QMenu(tr("&Results"), this);
+    QAction* simulateAction = fileMenu->addAction("Run simulator");
+    connect(simulateAction, SIGNAL(triggered()), this, SLOT(simulatorWrapper()));
+    QList<QKeySequence> simKeys;
+    simKeys.append(Qt::Key_Return);
+    simKeys.append(Qt::Key_Enter);
+    simulateAction->setShortcuts(simKeys);
+
     QAction* showResultsAnalysis = resultsMenu->addAction("Simulation results analysis");
     connect( showResultsAnalysis, SIGNAL(triggered()), resultsAnalysisDialog, SLOT(analyzeResults()));
 
@@ -669,6 +682,8 @@ void MainWindow::clear_data() {
     histPlot->clearData();
     histPlot->replot();
 
+    resultsAnalysisDialog->updateResultsAnalysis();
+
     rep_ct = 0;
     appendOutputLine("Epidemic data deleted");
     clearDataButton->setEnabled(false);
@@ -731,6 +746,12 @@ void MainWindow::updateRZero() {
 
 void MainWindow::simulatorWrapper() {
 //Connects the GUI information to the percolation simulator
+    if (simulatorBusy) {
+        return;
+    } else {
+        simulatorBusy = true;
+    }
+
     if (!network || network->size() == 0 ) { appendOutputLine("Network must be generated first."); return; }
 
     // Get values from textboxes
@@ -782,9 +803,10 @@ void MainWindow::simulatorWrapper() {
     progressDialog->setLabelText("");
 
     //MAKE PLOTS
-    epiCurvePlot->replot();
-    statePlot->replot();
-    histPlot->replot();
+    if ( rightBox->sizes()[0] > 0) statePlot->replot();
+    if ( rightBox->sizes()[1] > 0) epiCurvePlot->replot();
+    if ( rightBox->sizes()[2] > 0) histPlot->replot();
+    if ( resultsAnalysisDialog->isVisible() ) resultsAnalysisDialog->updateResultsAnalysis();
 
 }
 

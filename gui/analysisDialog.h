@@ -33,6 +33,8 @@ class AnalysisDialog: public QDialog {
         // Results analysis slots
         void analyzeResults();
         void updateResultsAnalysis();
+        void setThresholdEdited() {thresholdEdited = true;};
+        void reset_epi_threshold(){thresholdEdited = false; thresholdEdit->setText( QString::number(find_epi_threshold()) );};
     
     signals:
 
@@ -42,7 +44,6 @@ class AnalysisDialog: public QDialog {
         DialogType dialogType;
         MainWindow* mw;
         Network* network;
-        // BackgroundThread* backgroundThread;
 
         // Network analysis dialog
         void createNetworkAnalysis();
@@ -69,7 +70,8 @@ class AnalysisDialog: public QDialog {
         void createResultsAnalysis();
         void _addResultsAnalysisRow(QGridLayout* layout, QString label, QLineEdit* all, QLineEdit* out, QLineEdit* epi);
 
-        int find_epi_threshold(vector<int> data);
+        int find_epi_threshold();
+        bool thresholdEdited;
         QLineEdit* thresholdEdit;
         
         QLineEdit* outNEdit;

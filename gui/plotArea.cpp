@@ -15,7 +15,7 @@ PlotArea::PlotArea(QWidget*, QString l) {
     yAxis = NULL;
     rangeMin = -1;  // these are only used if the gui user
     rangeMax = -1;  // sets them somewhere
-    nbins    = -1;  //
+    Nbins    = -1;  //
     cutoff   = -1;  //
 
     savePlotAction = new QAction("Export plot as png", this);
@@ -184,6 +184,7 @@ void PlotArea::drawHistogram() {
 
     int min_val = 0;
     int max_val = 0;
+    int nbins    = 0;
 
     if (plotType == RESULTS_HISTPLOT) {
         vector<double> minmax = default_minmax();
@@ -193,8 +194,9 @@ void PlotArea::drawHistogram() {
             min_val = minmax[0];
             max_val = minmax[1];
         }
-
-        if (nbins < 1) nbins = default_nbins(min_val, max_val);
+        
+        nbins = Nbins < 1 ? default_nbins(min_val, max_val) : Nbins;
+//        if (nbins < 1) nbins = default_nbins(min_val, max_val);
     } else {
         vector<double> minmax = default_minmax();
         min_val = minmax[0];
@@ -249,7 +251,7 @@ void PlotArea::drawHistogram() {
         if (cutoff < min_val + r*(max_val-min_val)/nbins) {
             brush.setColor(Qt::red);
         } else {
-            brush.setColor(Qt::yellow);
+            brush.setColor(QColor(255,221,0));
         }
         myscene->addRect((qreal) x,(qreal) y,(qreal) w,(qreal) h, pen, brush);
     }

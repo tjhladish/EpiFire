@@ -122,6 +122,7 @@ void BackgroundThread::runSimulation() {
         mw->simulator->reset();
     }
     if (! _stopped) mw->histPlot->addData(epi_sizes);
+    mw->simulatorBusy = false;
     return;
 }
 

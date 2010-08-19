@@ -4,8 +4,8 @@ AnalysisDialog::AnalysisDialog(MainWindow* w, DialogType d, QString title) {
     mw = w;
     dialogType = d;
     network = mw->network;
-
     this->setWindowTitle(title);
+    thresholdEdited = false;
     
     if (d == NETWORK) {
         createNetworkAnalysis();
@@ -114,7 +114,11 @@ void AnalysisDialog::createResultsAnalysis() {
 
     thresholdEdit = new QLineEdit(this);
     thresholdEdit ->setText(QString::number( 0 ));
+    thresholdEdit->setValidator( new QDoubleValidator(thresholdEdit) );
     connect(thresholdEdit, SIGNAL(textChanged(QString)), this, SLOT(updateResultsAnalysis()));
+
+    QPushButton* defaultThresholdButton = new QPushButton("Default");
+    connect(defaultThresholdButton, SIGNAL(clicked()), this, SLOT(reset_epi_threshold()));
 
     allNEdit      = new QLineEdit(this);
     allMinEdit    = new QLineEdit(this);
@@ -137,6 +141,7 @@ void AnalysisDialog::createResultsAnalysis() {
     QLabel* thresholdLabel = new QLabel("Outbreak/epidemic threshold:", this);
     resultsTopLayout->addWidget(thresholdLabel, 1, 0, 1, 2); 
     resultsTopLayout->addWidget(thresholdEdit, 1, 2); 
+    resultsTopLayout->addWidget(defaultThresholdButton, 1, 3); 
 
     QLabel* allLabel = new QLabel("All simulations", this);
     QLabel* outLabel = new QLabel("Outbreaks only", this);
@@ -178,6 +183,7 @@ void AnalysisDialog::createResultsAnalysis() {
     resultsHistPlot->setPlotType(PlotArea::RESULTS_HISTPLOT);
     
     connect(thresholdEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setCutoff(QString)));
+    connect(thresholdEdit, SIGNAL(textEdited(QString)), this, SLOT(setThresholdEdited()));
     connect(nbinsLineEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setNBins(QString)));
     connect(minRangeLineEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setRangeMin(QString)));
     connect(maxRangeLineEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setRangeMax(QString)));
@@ -230,10 +236,8 @@ void AnalysisDialog::analyzeResults() {
         QMessageBox msgBox; msgBox.setText("Please run some simulations first."); msgBox.exec();
         return;
     }
-    double threshold = (double) find_epi_threshold( mw->histPlot->getData()[0] );
-    thresholdEdit->setText( QString::number( threshold ) );
     updateResultsAnalysis();
-    this->exec();
+    this->show();
 }
 
 
@@ -256,45 +260,70 @@ void _calcStats( vector<int> &data, vector<QString> &stats ) {
 
 
 void AnalysisDialog::updateResultsAnalysis() {
-    vector<int> all_data = mw->histPlot->getData()[0];
-    
-    resultsHistPlot->clearData();
-    resultsHistPlot->addData(all_data);
-    resultsHistPlot->replot();
-    
-    double threshold = thresholdEdit->text().toDouble();
-    vector<int> outbreaks;
-    vector<int> epidemics;
-    for( unsigned int i = 0; i < all_data.size(); i++) {
-        if (all_data[i] >= threshold) {
-            epidemics.push_back(all_data[i]);
-        } else {
-            outbreaks.push_back(all_data[i]);
-        }
-    }
+    vector< vector<int> > histData = mw->histPlot->getData();
+    if (histData.size() > 0 and histData[0].size() > 0) {
+        vector<int> all_data = mw->histPlot->getData()[0];
 
-    vector<QString> stats(5);
-    
-    _calcStats( outbreaks, stats);
-    outMeanEdit ->setText( stats[0] );
-    outSDEdit   ->setText( stats[1] );
-    outMinEdit  ->setText( stats[2] );
-    outMaxEdit  ->setText( stats[3] );
-    outNEdit    ->setText( frequencyFormat((double) outbreaks.size(), (double) all_data.size()) );
-    
-    _calcStats( epidemics, stats);
-    epiMeanEdit ->setText( stats[0] );
-    epiSDEdit   ->setText( stats[1] );
-    epiMinEdit  ->setText( stats[2] );
-    epiMaxEdit  ->setText( stats[3] );
-    epiNEdit    ->setText( frequencyFormat((double) epidemics.size(), (double) all_data.size()) );
-    
-    _calcStats( all_data, stats);
-    allMeanEdit ->setText( stats[0] );
-    allSDEdit   ->setText( stats[1] );
-    allMinEdit  ->setText( stats[2] );
-    allMaxEdit  ->setText( stats[3] );
-    allNEdit    ->setText( frequencyFormat((double) all_data.size(), (double) all_data.size()) );
+        resultsHistPlot->clearData();
+        resultsHistPlot->addData(all_data);
+        resultsHistPlot->replot();
+
+        double threshold = thresholdEdited ? thresholdEdit->text().toDouble()
+                                           : (double) find_epi_threshold();
+        
+        thresholdEdit->setText( QString::number( threshold ) );
+        
+        vector<int> outbreaks;
+        vector<int> epidemics;
+        for( unsigned int i = 0; i < all_data.size(); i++) {
+            if (all_data[i] >= threshold) {
+                epidemics.push_back(all_data[i]);
+            } else {
+                outbreaks.push_back(all_data[i]);
+            }
+        }
+
+        vector<QString> stats(5);
+
+        _calcStats( outbreaks, stats);
+        outMeanEdit ->setText( stats[0] );
+        outSDEdit   ->setText( stats[1] );
+        outMinEdit  ->setText( stats[2] );
+        outMaxEdit  ->setText( stats[3] );
+        outNEdit    ->setText( frequencyFormat((double) outbreaks.size(), (double) all_data.size()) );
+
+        _calcStats( epidemics, stats);
+        epiMeanEdit ->setText( stats[0] );
+        epiSDEdit   ->setText( stats[1] );
+        epiMinEdit  ->setText( stats[2] );
+        epiMaxEdit  ->setText( stats[3] );
+        epiNEdit    ->setText( frequencyFormat((double) epidemics.size(), (double) all_data.size()) );
+
+        _calcStats( all_data, stats);
+        allMeanEdit ->setText( stats[0] );
+        allSDEdit   ->setText( stats[1] );
+        allMinEdit  ->setText( stats[2] );
+        allMaxEdit  ->setText( stats[3] );
+        allNEdit    ->setText( frequencyFormat((double) all_data.size(), (double) all_data.size()) );
+    } else {
+        outMeanEdit ->setText( "Undefined" );
+        outSDEdit   ->setText( "Undefined" );
+        outMinEdit  ->setText( "Undefined" );
+        outMaxEdit  ->setText( "Undefined" );
+        outNEdit    ->setText( "0" );
+        epiMeanEdit ->setText( "Undefined" );
+        epiSDEdit   ->setText( "Undefined" );
+        epiMinEdit  ->setText( "Undefined" );
+        epiMaxEdit  ->setText( "Undefined" );
+        epiNEdit    ->setText( "0" );
+        allMeanEdit ->setText( "Undefined" );
+        allSDEdit   ->setText( "Undefined" );
+        allMinEdit  ->setText( "Undefined" );
+        allMaxEdit  ->setText( "Undefined" );
+        allNEdit    ->setText( "0" );
+        resultsHistPlot->clearData();
+        resultsHistPlot->replot();
+    }
 }
 
 
@@ -358,8 +387,11 @@ void AnalysisDialog::calculateDistances() {
     meanDistanceEdit->setText(QString::number( mean ));
 }
 
-int AnalysisDialog::find_epi_threshold(vector<int> data) {
+int AnalysisDialog::find_epi_threshold() {
     // quick and dirty way to guess the threshold between outbreaks and epidemics
+    vector< vector<int> > plotData = resultsHistPlot->getData();
+    if (plotData.size() == 0 or plotData[0].size() == 0) return -1;
+    vector<int>& data = plotData[0];
     int min = min_element(data);
     int start = 0; // beginning of trough between outbreaks and epis
     int stop  = 0; // end of trough
