@@ -68,16 +68,19 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
     if ( type == 0) {            // for x-axis
         painter->drawLine(x0, y0, x1, y0);
-        for (int i=0; i <= ticks; i++ ) painter->drawLine(x0+ix*i,y0-5,x0+ix*i,y0+5);
         int decimals = intLabels ? 0 : float_prec; // how many decimal digits to display
         
         //Is there enough room to print all labels, or should we skip some?
         textWidth = fm.width(QString::number(min+bin_width*(ticks-1), 'f', decimals));
-        int skip = ix > textWidth*1.6 ? 1 : 2; // print every other one if spacing is small
+        int skip = (1.6*textWidth / ix) + 1; // skip tick labels as necessary to avoid a pile-up
         for (int i=0; i <= ticks; i += skip ) {
             QString label = QString::number(min+bin_width*i,'f',decimals);
             textWidth = fm.width(label);
             painter->drawText(x0 + ix*i - textWidth/2 + 1, y0+15,label);
+        }
+        for (int i=0; i <= ticks; i++ ) {
+            int l = i % skip == 0 ? 5 : 2;
+            painter->drawLine(x0+ix*i,y0-l,x0+ix*i,y0+l);
         }
     }                            // for y-axis
     else if ( type == 1 ) {
