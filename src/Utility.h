@@ -22,8 +22,6 @@ long double poisson_pmf(double lambda, int k);
 vector<double> gen_trunc_poisson (double lambda, int min, int max);
 vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
-vector<double> normalize_dist (vector<double> dist, double sum);
-vector<double> normalize_dist (vector<int> dist, int sum);
 int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
 double rand_exp (double lambda, MTRand* mtrand);
 
@@ -33,6 +31,18 @@ double normal_cdf(double x, double mu, double var);
  
 void split(const string& s, char c, vector<string>& v);
 string strip (string const& str, char const* sepSet);
+
+template <typename T>
+vector<double> normalize_dist (vector<T> dist, T sum) {
+    vector<double> normed(dist.size());
+    for (unsigned int i = 0; i < dist.size(); i++) normed[i] = ((double) dist[i]) / sum;
+    return normed;
+}
+
+template <typename T>
+vector<double> normalize_dist (vector<T> dist) {
+    return normalize_dist(dist, sum(dist));
+}
 
 template <typename T>
 inline std::string to_string (const T& t) {
