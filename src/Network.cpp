@@ -288,20 +288,16 @@ bool Network::_rand_connect() {
 // and some stubs
 bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     if ( is_stopped() ) return false;
+    if ( stubs.size() == 0 ) return true;
                                  //get all edges in network
     vector<Edge*>::iterator itr;
     Edge* m;
     Edge* n;
 
     //shuffle the vector
-    //int max = stubs.size() - 1;
-    //for (int i = max; i >= 0; i-- ) swap(stubs[i], stubs[ mtrand.randInt(i) ]);
-
     shuffle(stubs, &mtrand);
 
     //connect stubs
-
-    //int stupid_var = stubs.size() - 1;
     for (unsigned int i = 0; i < stubs.size() - 1; i += 2 ) {
         m  = stubs[i];
         n  = stubs[i  + 1];
@@ -1179,7 +1175,7 @@ vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
                 if (hits.count(v) == 1) {
                     j++;
                 }
-                if (j == nodes.size()) { // we've found all the nodes we want
+                if (j == (int) nodes.size()) { // we've found all the nodes we want
                     for ( unsigned int i=0; i<nodes.size(); i++) distances[i] = known_cost[nodes[i]];
                     return distances;
                 }
@@ -1362,6 +1358,7 @@ void Edge::swap_ends (Edge* other_edge) {
 */
 
 void Edge::break_end () {
+    if (end == NULL) return;
     end->_del_inbound_edge(this);
     end = NULL;
     network->set_topology_altered(true);
