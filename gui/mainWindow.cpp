@@ -318,7 +318,7 @@ void MainWindow::createSimulatorSettingsBox() {
     
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
-    pzeroLine->setValidator( new QIntValidator(1,INT_MAX,numrunsLine) );
+    pzeroLine->setValidator( new QIntValidator(1,INT_MAX,pzeroLine) );
     pzeroLine->setToolTip("Number of randomly chosen individuals to start epidemic\nRange: positive integers");
 
     infectiousPeriodLine = new QLineEdit();
@@ -1085,7 +1085,7 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
 
 
 double MainWindow::calculate_T_crit() {
-    vector<double> dist = network->get_gen_deg_dist();
+    vector<double> dist = normalize_dist( network->get_deg_dist() );
     double numerator = 0;// mean degree, (= <k>)
     double denominator = 0;
     for (unsigned int k=1; k < dist.size(); k++) {
