@@ -29,6 +29,7 @@ void BackgroundThread::stop() {
     while (this->isRunning()) msleep(50);
     mw->network->reset_processing_flag();
     emit hideProgressDialog();
+    //cerr << "Dialog hidden!\n";
     emit updateDialogText("");
 }
 
@@ -69,7 +70,10 @@ void BackgroundThread::runSimulation() {
         return;
     }
 
-    int j_max = (mw->numrunsLine->text()).toInt();
+    mw->J_max = (mw->numrunsLine->text()).toInt();
+    int& j_max = mw->J_max;
+    int& j = mw->J;
+
     int patient_zero_ct = (mw->pzeroLine->text()).toInt(); 
     double predictedSize = (mw->maPredictionLine->text()).toDouble();
     int currentSize = patient_zero_ct;
@@ -81,7 +85,7 @@ void BackgroundThread::runSimulation() {
         mw->histPlot->clearData();
     }
     
-    for ( int j = 0; j < j_max; j++) {
+    for ( j = 0; j < j_max; j++) {
         if (_stopped) break;
         QString rep_str = QString::number(++(mw->rep_ct), 10);
         emit statusChanged(busySimMsg);
@@ -98,13 +102,15 @@ void BackgroundThread::runSimulation() {
         }
 
         while (mw->simulator->count_infected() > 0 && ! _stopped) {
-            emit setProgressValue(mw->percent_complete(currentSize, predictedSize));
+            mw->updateProgress(mw->percent_complete(currentSize, predictedSize));
+            //emit setProgressValue(mw->percent_complete(currentSize, predictedSize));
             mw->simulator->step_simulation();
             epi_curve.push_back(mw->simulator->count_infected());
             currentSize = mw->simulator->epidemic_size();
             if (j == j_max - 1) mw->addStateData();
         }
-        emit setProgressValue(100);
+        if (! _stopped) mw->updateProgress(100);
+        //emit setProgressValue(100);
         int epi_size = mw->simulator->epidemic_size();
 
         QString status = "Rep: " + rep_str + ", Total infected: " + QString::number(epi_size,10);
@@ -113,16 +119,20 @@ void BackgroundThread::runSimulation() {
 
         if (_stopped) {
             emit statusChanged("Simulation interrupted");
+            epi_sizes.resize(j);
         } else {
             emit statusChanged("Simulation complete");
             mw->epiCurvePlot->addData(epi_curve);
+            epi_sizes[j] = epi_size;
         }
-        epi_sizes[j] = epi_size;
 
         mw->simulator->reset();
     }
-    if (! _stopped) mw->histPlot->addData(epi_sizes);
+    mw->histPlot->addData(epi_sizes);
+    //if (! _stopped) mw->histPlot->addData(epi_sizes);
     mw->simulatorBusy = false;
+    mw->J = 0;
+    mw->J_max = 1;
     return;
 }
 

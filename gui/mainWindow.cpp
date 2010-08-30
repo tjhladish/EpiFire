@@ -56,6 +56,7 @@ MainWindow::MainWindow() {
     
     netAnalysisDialog = new AnalysisDialog(this, AnalysisDialog::NETWORK, "Analysis of current network");
     rep_ct = 0;
+    J = 0; J_max = 1;
 
     resultsAnalysisDialog = new AnalysisDialog(this, AnalysisDialog::RESULTS, "Analysis of simulation results");
     
@@ -214,7 +215,7 @@ void MainWindow::createMenu() {
 }
 
 void MainWindow::updateProgress(int x) {
-     emit progressUpdated(x);
+     emit progressUpdated((100*J + x)/J_max);
 }
 
 void MainWindow::createNetworkSettingsBox() {

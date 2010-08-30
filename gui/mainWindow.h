@@ -196,6 +196,7 @@ class MainWindow : public QMainWindow
         QLineEdit* transLine;
         QLineEdit* infectiousPeriodLine;
         QLineEdit* numrunsLine;
+        int J, J_max; // What run we're on
         
         // Control panel
         QGroupBox* controlButtonsGroupBox;
