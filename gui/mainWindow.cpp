@@ -430,7 +430,7 @@ void MainWindow::createPredictionsBox() {
     QLabel* netLabel = new QLabel(tr("Epi size (network model):"));
 
     // Put everything together
-    predictionsGroupBox = new QGroupBox("Theoretical predictions");
+    predictionsGroupBox = new QGroupBox("Theoretical predictions (Expected values given an epidemic occurs)");
     predictionsGroupBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
     QGridLayout *layout = new QGridLayout;
 
