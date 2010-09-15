@@ -206,6 +206,7 @@ void AnalysisDialog::createResultsAnalysis() {
 }
 
 void AnalysisDialog::analyzeNetwork() {
+    network = mw->network;
     if (!network or network->size() == 0) {
         QMessageBox msgBox;
         msgBox.setText("Please generate or import a network first.");
