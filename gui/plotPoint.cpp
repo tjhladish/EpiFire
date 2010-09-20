@@ -7,14 +7,19 @@ QRectF Point::boundingRect() const {
 
 
 void Point::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
+    qDebug() << "Point::paint" << x << " " << y <<  " " << r;
 
     painter->setBrush(brush);
     painter->setPen(Qt::NoPen);
     painter->drawEllipse(-r,-r,2*r,2*r);
-
+    painter->setBrush(Qt::red);
+    painter->drawEllipse(0,0,1,1);
 }
 
 void Point::updatePosition() { 
-      PlotScene* myscene = (PlotScene*) scene();
-      setPos( myscene->toPlotX(x), myscene->toPlotY(y)); 
+      PlotRegion* myregion = (PlotRegion*) parentItem();
+
+      if (myregion) {
+        setPos( myregion->toPlotX(x), myregion->toPlotY(y)); 
+      }
 };

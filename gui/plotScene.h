@@ -12,6 +12,9 @@ class PlotScene : public QGraphicsScene
 {
     Q_OBJECT
 
+    friend class PlotRegion;
+    friend class PlotView;
+
     public:
 
         PlotScene(QObject* parent);
@@ -24,8 +27,9 @@ class PlotScene : public QGraphicsScene
         float getMinY() { return minY; }
         float getMaxX() { return maxX; }
         float getMaxY() { return maxY; }
-        float toPlotX( float x ) { return (x-minX)/(maxX-minX)*width(); } 
-        float toPlotY( float y ) { return height()*(1.0-(y-minY)/(maxY-minY)); } 
+ //       float toPlotX( float x ) { return dataArea->toPlotX(x); }
+  //      float toPlotY( float y ) { return dataArea->toPlotY(y); }
+
         void setLabel(QString l, qreal x, qreal y) { label=addText(l); label->setPos(x,y); }
         QGraphicsTextItem* getLabel() {return label;}
         void setMarginsDim(int top, int bottom, int left, int right) { topM=top; bottomM=bottom; leftM=left; rightM=right; reDefinePlotRegions(); }

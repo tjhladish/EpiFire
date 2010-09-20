@@ -7,6 +7,7 @@
 #include <QGraphicsScene>
 #include <QPainter>
 #include <QFlags>
+#include "plotScene.h"
 #include <math.h>
 
 
@@ -15,6 +16,9 @@ class PlotRegion : public QObject, public QGraphicsRectItem
     Q_OBJECT
     Q_INTERFACES( QGraphicsItem )
 
+    friend class PlotScene;
+    friend class PlotView;
+    
     public:
         enum { Type = UserType + 1 };
         int type() const { return Type; }
@@ -23,14 +27,9 @@ class PlotRegion : public QObject, public QGraphicsRectItem
         void setWidthHeight(int iw, int ih) { w=iw; h=ih; }
         int width()  { return w; }
         int height() { return h; }
-        void setXrange(float a, float b) { minX=a; maxX=b; }
-        void setYrange(float a, float b) { minY=a; maxY=b; }
-        float getMinX() { return minX; }
-        float getMinY() { return minY; }
-        float getMaxX() { return maxX; }
-        float getMaxY() { return maxY; }
-        float toPlotX( float x ) { return (x-minX)/(maxX-minX)*width(); } 
-        float toPlotY( float y ) { return height()*(1.0-(y-minY)/(maxY-minY)); } 
+        float toPlotX( float x );
+        float toPlotY( float y );
+        void addPoint( float x, float y, float r);
 
     protected:
         QRectF boundingRect() const;
@@ -39,12 +38,6 @@ class PlotRegion : public QObject, public QGraphicsRectItem
     private:
         int w;
         int h;
-        float xmargin;
-        float ymargin;
-        float minX;
-        float minY;
-        float maxX;
-        float maxY;
         QBrush brush;
 
 };
