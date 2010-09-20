@@ -370,7 +370,7 @@ void GraphWidget::randomLayout() {
             }
             
             // calculate attration
-            float aX=0; float aY=0;
+            //float aX=0; float aY=0;
             float att = 0.0;
             foreach (GEdge* e, n1->edges() ) { 
                 GNode* n2 = e->destGNode(); if(n2 == n1) n2 = e->sourceGNode();
@@ -534,7 +534,7 @@ void GraphWidget::recursiveDepth(GNode* n0,int depth) {
 
 
 void GraphWidget::computeAvgGEdgeLength() {
-	int count=0; double len=0;
+	int count=0;// double len=0;
     _averageGEdgeSize=50; 
 
 	vector<float>lvector;

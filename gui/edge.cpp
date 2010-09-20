@@ -78,7 +78,7 @@ float GEdge::computeArrowSize(float flux) {
     return arrowSize;
 }
 
-void GEdge::drawArrow(QPainter *painter, int direction) {
+void GEdge::drawArrow(QPainter *painter) {
 
 	if (!source || !source->isVisible()) return;
 	if (!dest   || !dest->isVisible()) return;
@@ -141,13 +141,13 @@ void GEdge::reverseDirection() {
 	dest = tmpGNode;
 }
 
-void GEdge::mouseDoubleClickEvent ( QGraphicsSceneMouseEvent * event ) {
+void GEdge::mouseDoubleClickEvent ( QGraphicsSceneMouseEvent * ) {
 	reverseDirection();
 	update();
 }
 
-void GEdge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
-	drawArrow(painter,0);	//forward arrow
+void GEdge::paint(QPainter *, const QStyleOptionGraphicsItem *, QWidget *) {
+	//drawArrow(painter,0);	//forward arrow
 }
 
 

@@ -9,12 +9,12 @@
 #include <QSizePolicy>
 
 #include "debug.h"
-#include "plotArea.h"
+#include "plotView.h"
 #include "graphwidget.h"
 #include "backgroundthread.h"
 #include "analysisDialog.h"
 #include "../src/Network.h"
-#include "../src/Simulator.h";
+#include "../src/Simulator.h"
 #include "../src/Percolation_Sim.h"
 #include "../src/ChainBinomial_Sim.h"
 
@@ -60,7 +60,7 @@ class QPushButton;
 class QTextEdit;
 class QComboBox;
 class QCheckBox;
-class PlotArea;
+class PlotView;
 class GraphWidget;
 class BackgroundThread;
 class AnalysisDialog;
@@ -220,9 +220,9 @@ class MainWindow : public QMainWindow
 
         // Main plots
         void createPlotPanel();
-        PlotArea* epiCurvePlot;
-        PlotArea* statePlot;
-        PlotArea* histPlot;
+        PlotView* epiCurvePlot;
+        PlotView* statePlot;
+        PlotView* histPlot;
         void addStateData();
 
         // Helper functions

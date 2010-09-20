@@ -4,7 +4,7 @@
 #include<iostream>
 
 
-inline void __update_progress(float x) { 
+inline void __update_progress(float) { 
     //cerr << x << endl;
 }
     

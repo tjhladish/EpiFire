@@ -88,9 +88,9 @@ void GNode::calculateForces()
         qreal dx = line.dx();
         qreal dy = line.dy();
         double l = sqrt(dx * dx + dy * dy);
-        float overlapX = (this->boundingRect().width() + node->boundingRect().width())/2.0 - l;
-        float overlapY = (this->boundingRect().height() + node->boundingRect().height())/2.0 - l;
-        float overlap = std::max( overlapX, overlapY);
+        //float overlapX = (this->boundingRect().width() + node->boundingRect().width())/2.0 - l;
+        //float overlapY = (this->boundingRect().height() + node->boundingRect().height())/2.0 - l;
+        //float overlap = std::max( overlapX, overlapY);
 		float weight=1.0;
 		repelx += dx/(l*l)*weight;
 		repely += dy/(l*l)*weight;
@@ -163,7 +163,7 @@ void GNode::adjustNeighbors() {
 	this->advance();
 }
 
-double GNode::computeGNodeSize(float concentration) { 
+double GNode::computeGNodeSize(float) { 
     return 10;
 }
 
@@ -187,11 +187,11 @@ void GNode::paint(QPainter *painter, const QStyleOptionGraphicsItem*, QWidget *)
 
 
 
-void GNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event) {
+void GNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *) {
     emit(nodeDoubleClicked(this));
 }
 
-void GNode::mousePressEvent(QGraphicsSceneMouseEvent *event) {
+void GNode::mousePressEvent(QGraphicsSceneMouseEvent *) {
 	scene()->clearSelection();
     emit(nodePressed(this));
 }

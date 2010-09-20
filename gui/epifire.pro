@@ -1,10 +1,11 @@
-CONFIG += qt thread warn_off
+CONFIG += qt thread debug
 
 HEADERS     = mainWindow.h \
-             plotArea.h \
+             plotView.h \
              plotAxis.h \
              plotPoint.h \
              plotScene.h \ 
+             plotRegion.h \
              node.h \
              edge.h \
              graphwidget.h \
@@ -15,9 +16,11 @@ HEADERS     = mainWindow.h \
  SOURCES     = mainWindow.cpp \
                ../src/*.cpp \
                main.cpp \
-               plotArea.cpp \
+               plotView.cpp \
+               plotScene.cpp \
                plotAxis.cpp \
                plotPoint.cpp  \
+               plotRegion.cpp \
                node.cpp \
                edge.cpp \
                graphwidget.cpp \

@@ -87,8 +87,8 @@ void AnalysisDialog::createNetworkAnalysis() {
     QGroupBox* netAnalysisTop = new QGroupBox();
     netAnalysisTop->setLayout(netTopLayout);
 
-    degDistPlot = new PlotArea(this, "Degree distribution");
-    degDistPlot->setPlotType(PlotArea::DEGPLOT);
+    degDistPlot = new PlotView(this, "Degree distribution");
+    degDistPlot->setPlotType(PlotView::DEGPLOT);
     
     // add a close window button
     QPushButton* closeButton = new QPushButton("Close analysis", this);
@@ -179,8 +179,8 @@ void AnalysisDialog::createResultsAnalysis() {
     QGroupBox* resultsAnalysisBottom = new QGroupBox();
     resultsAnalysisBottom->setLayout(resultsBottomLayout);
     
-    resultsHistPlot = new PlotArea(this, "Epidemic size distribution");
-    resultsHistPlot->setPlotType(PlotArea::RESULTS_HISTPLOT);
+    resultsHistPlot = new PlotView(this, "Epidemic size distribution");
+    resultsHistPlot->setPlotType(PlotView::RESULTS_HISTPLOT);
     
     connect(thresholdEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setCutoff(QString)));
     connect(thresholdEdit, SIGNAL(textEdited(QString)), this, SLOT(setThresholdEdited()));
@@ -206,6 +206,7 @@ void AnalysisDialog::createResultsAnalysis() {
 }
 
 void AnalysisDialog::analyzeNetwork() {
+    network = mw->network; 
     if (!network or network->size() == 0) {
         QMessageBox msgBox;
         msgBox.setText("Please generate or import a network first.");
@@ -403,7 +404,7 @@ int AnalysisDialog::find_epi_threshold() {
 
     vector<int> freqs = tabulate_vector(data);
 
-    for (int s = min; s < freqs.size(); s++) {
+    for (unsigned int s = min; s < freqs.size(); s++) {
         if (freqs[s] == 0 and curr_start == -1) {
             curr_start = s;
         } else if (freqs[s] > 0 and curr_start > -1) {

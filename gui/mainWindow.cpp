@@ -118,16 +118,16 @@ MainWindow::MainWindow() {
 
 
 void MainWindow::createPlotPanel() {
-    epiCurvePlot = new PlotArea(this, "Epidemic curves");
-    epiCurvePlot->setPlotType(PlotArea::CURVEPLOT);
+    epiCurvePlot = new PlotView(this, "Epidemic curves");
+    epiCurvePlot->setPlotType(PlotView::CURVEPLOT);
     epiCurvePlot->setToolTip("Absolute frequency of infectious nodes vs. time\nDouble-click plot to save image\nRight-click to save data");
 
-    statePlot = new PlotArea(this, "Node state evolution");
-    statePlot->setPlotType(PlotArea::STATEPLOT);
+    statePlot = new PlotView(this, "Node state evolution");
+    statePlot->setPlotType(PlotView::STATEPLOT);
     statePlot->setToolTip("Progression of node states over time for 100 nodes\nBlue = susceptible, Red = infectious, Yellow = Recovered\nDouble-click plot to save image\nRight-click to save data");
 
-    histPlot = new PlotArea(this, "Histogram of epidemic sizes");
-    histPlot->setPlotType(PlotArea::HISTPLOT);
+    histPlot = new PlotView(this, "Histogram of epidemic sizes");
+    histPlot->setPlotType(PlotView::HISTPLOT);
     histPlot->setToolTip("Distribution of final epidemic sizes\nDouble-click plot to save image\nRight-click to save data");
  
     QVBoxLayout *rightLayout = new QVBoxLayout;
@@ -486,7 +486,8 @@ void MainWindow::readEdgeList() {
     appendOutputLine("Importing network . . . ");
     network = new Network("mynetwork", false);
     network->read_edgelist(fileName.toStdString());
-    //network->dumper();
+    network->dumper();
+    network->validate();
     netfileLine->setText(fileName);
     numnodesLine->setText(QString::number(network->size()));
     netDoneUpdate(true);
@@ -814,7 +815,7 @@ void MainWindow::simulatorWrapper() {
 
 void MainWindow::addStateData() {
     vector<int> node_states(100);
-    for (int i = 0; i < network->size() && i < node_states.size(); i++) {
+    for (int i = 0; i < network->size() && (unsigned) i < node_states.size(); i++) {
         node_states[i] = (int) network->get_node(i)->get_state();
     }
 
@@ -912,16 +913,16 @@ void MainWindow::plotNetwork() {
     networkPlot->clear();
     vector<Edge*> edges = network->get_edges();
     map<Edge*, bool> seen;
-    for( int i=0; i < edges.size(); i++ ) {
+    for(unsigned int i=0; i < edges.size(); i++ ) {
         if (seen.count(edges[i]->get_complement())) continue;
         seen[edges[i]] = true;
-        int id1 = edges[i]->get_start()->get_id();
-        int id2 = edges[i]->get_end()->get_id();
-        string name1 = QString::number(id1).toStdString();
-        string name2 = QString::number(id2).toStdString();
-        GNode* n1 = networkPlot->addGNode(name1,0);
-        GNode* n2 = networkPlot->addGNode(name2,0);
-        GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
+        //int id1 = edges[i]->get_start()->get_id();
+        //int id2 = edges[i]->get_end()->get_id();
+        //string name1 = QString::number(id1).toStdString();
+        //string name2 = QString::number(id2).toStdString();
+        //GNode* n1 = networkPlot->addGNode(name1,0);
+        //GNode* n2 = networkPlot->addGNode(name2,0);
+        //GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
     }
     networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();
@@ -951,7 +952,7 @@ void MainWindow::removeMinorComponents() {
     cerr << "num componenets: " << netComponents.size() << endl;
     for (i = 0; i < netComponents.size(); i++) {
 cerr << "i, size: " << i << ", " << netComponents[i].size() << endl;
-        if (netComponents[i].size() > network->size()/2) {
+        if ((signed) netComponents[i].size() > network->size()/2) {
             giant = netComponents[i];
 cerr << "giant (i): " << i << endl;
             break;
@@ -1082,6 +1083,7 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
         dist[param1] = 1;
         return net->rand_connect_user(dist);
     }
+    return false;
 }
 
 

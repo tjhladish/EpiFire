@@ -60,7 +60,7 @@ protected:
     QRectF boundingRect() const;
 	QPainterPath shape () const;
     void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
-	void drawArrow(QPainter* painter, int direction );
+	void drawArrow(QPainter* painter);
     void mousePressEvent(QGraphicsSceneMouseEvent *event);
     void mouseReleaseEvent(QGraphicsSceneMouseEvent *event);
 	void mouseDoubleClickEvent ( QGraphicsSceneMouseEvent * event );

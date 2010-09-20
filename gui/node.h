@@ -60,7 +60,7 @@ public:
 	inline bool  isFixedPosition()	{ return _fixedPosition; }
 
 
-    float setGNodeSize(float x) { return _nodeSize; }
+    void setGNodeSize(float x) {_nodeSize=x; }
 	float getGNodeSize() { return _nodeSize; }
     QPointF centerPoint()     {return pos(); }
 

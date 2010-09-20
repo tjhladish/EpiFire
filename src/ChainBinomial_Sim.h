@@ -45,7 +45,7 @@ class ChainBinomial_Sim: public Simulator
             for (inode=infected.begin(); inode!=infected.end(); inode++) {
                 
                 vector<Node*> neighbors = (*inode)->get_neighbors();
-                for (int j = 0; j < neighbors.size(); j++) {
+                for (unsigned int j = 0; j < neighbors.size(); j++) {
                     Node* test = neighbors[j];
                     // Is this neighbor susceptible and 
                     // has it been exposed?
@@ -67,7 +67,7 @@ class ChainBinomial_Sim: public Simulator
             }
            
             // Append the newly infected to the queue
-            for (int i = 0; i<new_infected.size(); i++) {
+            for (unsigned int i = 0; i<new_infected.size(); i++) {
                 infected.push_back( new_infected[i] );
             }
 
@@ -94,7 +94,6 @@ class ChainBinomial_Sim: public Simulator
             reset_time();
 
             while (! infected.empty()) {
-                Node* node = infected.front();
                 infected.front()->set_state(0);
                 infected.pop_front();
             }

@@ -64,7 +64,7 @@ class AnalysisDialog: public QDialog {
         QPushButton* diameterButton;
         QPushButton* meanDistanceButton;
 
-        PlotArea* degDistPlot;
+        PlotView* degDistPlot;
 
         // Results analysis dialog
         void createResultsAnalysis();
@@ -92,7 +92,7 @@ class AnalysisDialog: public QDialog {
         QLineEdit* allMinEdit;
         QLineEdit* allMaxEdit;
 
-        PlotArea* resultsHistPlot;
+        PlotView* resultsHistPlot;
 
         QLineEdit* nBinsEdit;
         QLineEdit* minRangeEdit;
