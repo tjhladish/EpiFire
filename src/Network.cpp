@@ -1,9 +1,5 @@
 #include "Network.h"
 #include "Utility.h"
-#include <sstream>
-#include <iostream>
-#include <iterator>
-#include <string>
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -834,7 +830,6 @@ void Network::read_edgelist(string filename, char sep) {
 
     if (myfile.is_open()) {
         string line;
-        size_t found;
 
         while ( getline(myfile,line) ) {
             //split string based on "," and store results into vector
