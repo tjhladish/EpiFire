@@ -470,14 +470,8 @@ void MainWindow::saveEdgeList() {
 
 void MainWindow::readEdgeList() {
     QString startdir = ".";
-    QStringList filelist = QFileDialog::getOpenFileNames(
-        this, "Select edge list file to load:", startdir, "All Files(*.*)");
-
-    if (filelist.size() == 0) { 
-        appendOutputLine("Error: edge list file is empty");
-        return;
-    }
-    QString fileName = filelist[0];
+    QString fileName = QFileDialog::getOpenFileName(
+        this, "Select edge list file to load:", startdir, "Comma-separated-values (*.csv)(*.csv);;TAB-delimited (*.tab)(*.tab);;Space-delimited (*.space)(*.space)");
 
     if(network) { delete(network); }
     netComponents.clear();
