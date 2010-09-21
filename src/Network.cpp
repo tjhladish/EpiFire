@@ -1,5 +1,10 @@
 #include "Network.h"
 #include "Utility.h"
+#include <sstream>
+#include <iostream>
+#include <iterator>
+#include <string>
+
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -820,7 +825,7 @@ bool Network::validate() {
 
 
 // read_edgelist currently supports only undirected networks
-void Network::read_edgelist(string filename) {
+void Network::read_edgelist(string filename, char sep) {
 
     cerr << "Loading " << filename << endl;
     ifstream myfile(filename.c_str());
@@ -829,10 +834,12 @@ void Network::read_edgelist(string filename) {
 
     if (myfile.is_open()) {
         string line;
+        size_t found;
+
         while ( getline(myfile,line) ) {
             //split string based on "," and store results into vector
-            vector<string>fields;
-            split(line,',', fields);
+            vector<string> fields;
+            split(line,sep, fields);
             const char whitespace[] = " \n\t\r";
 
             //format check
@@ -849,7 +856,7 @@ void Network::read_edgelist(string filename) {
             } else if (fields.size() < 1) {
                 continue;
             } else { // there are exactly 2 nodes
-            
+
                 string name1 = strip(fields[0],whitespace);
                 string name2 = strip(fields[1],whitespace);
 
@@ -858,17 +865,17 @@ void Network::read_edgelist(string filename) {
                 //if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
                 //cerr << "---" << endl;
 
-                                     //new node;
+                //new node;
                 if(idmap.count(name1)==0) {
-                                     //allocate memory for new node
+                    //allocate memory for new node
                     Node* node = this->add_new_node();
                     node->name = name1;
                     idmap[name1] = node;
                 }
 
-                                     //new node;
+                //new node;
                 if(idmap.count(name2)==0) {
-                                     //allocate memory for new node
+                    //allocate memory for new node
                     Node* node = this->add_new_node();
                     node->name = name2;
                     idmap[name2]=node;
@@ -881,6 +888,9 @@ void Network::read_edgelist(string filename) {
             }
         }
     }
+    dumper();
+    cerr << "finished dumping network\n";
+    validate();
 }
 
 
