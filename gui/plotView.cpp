@@ -182,7 +182,9 @@ void PlotView::drawHistogram() {
     myscene->setMarginsDim(25,20,20,10);
     myscene->setAxesDim(0,25,40,0);
     myscene->reDefinePlotRegions();
-  
+    
+    fitInView(myscene->sceneRect(),Qt::IgnoreAspectRatio);
+ 
     int min_val = 0;
     int max_val = 0;
     int nbins   = 0;
@@ -263,7 +265,6 @@ void PlotView::drawHistogram() {
     
  
 void PlotView::drawEpiCurvePlot() {
-    setRenderHint(QPainter::Antialiasing); // smooth data points
     if (data.size() == 0 ) {
         clearPlot();
         scene()->update();
@@ -278,9 +279,10 @@ void PlotView::drawEpiCurvePlot() {
     myscene->setMarginsDim(25,20,20,10);
     myscene->setAxesDim(0,25,40,0);
     myscene->reDefinePlotRegions();
+
+    fitInView(myscene->sceneRect(),Qt::IgnoreAspectRatio);
   
-    //int plotW = myscene->dataArea->width();
-    //int plotH = myscene->dataArea->height();
+    setRenderHint(QPainter::Antialiasing); // smooth data points
 
     float max_val = (float) find_max_val(data);
     int   max_idx = find_max_idx(data);
@@ -314,14 +316,12 @@ void PlotView::drawEpiCurvePlot() {
     QColor default_color(0,0,0,alpha);
     QBrush brush(default_color);
 
-    /*
-    foreach(QGraphicsItem* item, items() ) {
+    foreach(QGraphicsItem* item, myscene->dataArea->childItems() ) {
         if (Point* p = qgraphicsitem_cast<Point*>(item)) {
             p->setBrush(brush);
             p->updatePosition();
         }
     }
-    */
 
     QColor recent_color = Qt::red;
     for( int i = newDataCursor; i < (signed) data.size(); i++ ) {
@@ -350,11 +350,6 @@ void PlotView::drawNodeStatePlot() {
     myscene->setAxesDim(0,25,40,0);
     myscene->reDefinePlotRegions();
     
-    int r = 5; //radius
-    myscene->setXrange(0,10);
-    myscene->setYrange(0,10);
-    myscene->dataArea->addPoint(5,5,r);
-
     fitInView(myscene->sceneRect(),Qt::IgnoreAspectRatio);
 
     QRgb colors[3] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0) };
@@ -414,11 +409,9 @@ void PlotView::addData( vector<int> X ) {
 }
 
 void PlotView::clearData() {
-    //for (unsigned int i = 0; i < data.size(); i++) data[i].clear();
     data.clear();
     recentDataCursor = 0;
     newDataCursor = 0;
-    ellipseData.clear();
 }
 
 void PlotView::saveData() {

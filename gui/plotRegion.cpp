@@ -27,9 +27,12 @@ float PlotRegion::toPlotY( float y ) {
        
 
 void PlotRegion::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
+    painter->setRenderHint(QPainter::Antialiasing, false);
     qDebug() << "paint " << w << " " << h << " " << x() << " " << y();
-    painter->setBrush(brush);
-    painter->setPen(Qt::black);
+    //QColor clear(0,0,0,0);
+    //QBrush clearBrush(clear);
+    painter->setBrush(Qt::NoBrush);
+    painter->setPen(Qt::red);
     painter->drawRect(0,0,w,h);
 
     //float r = 5;

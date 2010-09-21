@@ -38,7 +38,7 @@ class PlotRegion : public QObject, public QGraphicsRectItem
     private:
         int w;
         int h;
-        QBrush brush;
+        //QBrush brush;
 
 };
 

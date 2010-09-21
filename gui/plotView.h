@@ -75,7 +75,6 @@ class PlotView : public QGraphicsView
         QAction* savePlotAction;
         QAction* saveDataAction;
         
-        QList< QGraphicsEllipseItem* > ellipseData;
         int newDataCursor;  // starting position of data that has never been plotted
         int recentDataCursor; // starting position of data from most recent run
 

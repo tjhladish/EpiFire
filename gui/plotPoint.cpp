@@ -12,8 +12,6 @@ void Point::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *
     painter->setBrush(brush);
     painter->setPen(Qt::NoPen);
     painter->drawEllipse(-r,-r,2*r,2*r);
-    painter->setBrush(Qt::red);
-    painter->drawEllipse(0,0,1,1);
 }
 
 void Point::updatePosition() { 

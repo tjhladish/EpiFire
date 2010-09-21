@@ -53,11 +53,11 @@ void PlotScene::reDefinePlotRegions() {
     bottomAxis->setPos(leftBorderW, topBorderH + dh);
     leftAxis->setPos(leftMargin->width(), topBorderH );
     rightAxis->setPos(leftBorderW + dw, topBorderH );
-
+/*
     leftMargin->setBrush(QBrush(Qt::red));
     rightMargin->setBrush(QBrush(Qt::blue));
     topMargin->setBrush(QBrush(Qt::green));
-    bottomMargin->setBrush(QBrush(Qt::yellow));
+    bottomMargin->setBrush(QBrush(Qt::yellow));*/
 }
  
 
