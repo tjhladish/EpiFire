@@ -4,19 +4,22 @@
 #include <math.h>
 #include "../src/Utility.h"
 
-PlotView::PlotView(QWidget*, QString l) {
+PlotView::PlotView(QWidget*, QString title, QString xlabel, QString ylabel) {
     setObjectName("PlotView");
     setMinimumSize(500,200);
-    myscene = new PlotScene(this);
-    setScene(myscene);
-    scene()->setSceneRect(0,0,minimumWidth()-110,minimumHeight()-50);
-    label = l;
-    xAxis = NULL;
-    yAxis = NULL;
+
     rangeMin = -1;  // these are only used if the gui user
     rangeMax = -1;  // sets them somewhere
     Nbins    = -1;  //
     cutoff   = -1;  //
+
+    myscene = new PlotScene(this);
+    myscene->setSceneRect(0,0,width(),height()); //set scene to parent widget width x height
+    setScene(myscene);
+    clearPlot(); //initialize plotRegions, axes, and labels
+    myscene->setTitle(title);
+    myscene->setXLabel(xlabel);
+    myscene->setYLabel(ylabel);
 
     setHorizontalScrollBarPolicy ( Qt::ScrollBarAlwaysOff );
     setVerticalScrollBarPolicy ( Qt::ScrollBarAlwaysOff );
@@ -122,20 +125,6 @@ void PlotView::debugger() { // makes it easier to see what's going on with coord
         scene()->addRect(plotW-S,plotH-S,S,S,tp,tb);
 }
 
-void PlotView::clearPlot() { 
-    scene()->clear();
-    // Args: axis_type, min, max, nticks, force_nticks, use_int_labels
-    xAxis = new Axis(0, 0.0, 1.0, 10, false, false);
-    yAxis = new Axis(1, 0.0, 1.0, 10, false, false);
-    scene()->addItem(xAxis);
-    scene()->addItem(yAxis);
-    yAxis->translate(-40,0);
-    xAxis->translate(0,+10);
-    xAxis->hide();
-    yAxis->hide();
-    myscene->setLabel(label, 0, -30);
-}
-
 
 int PlotView::default_nbins(double min_val, double max_val) {
     if (min_val < 0 or max_val < 0 or min_val > max_val) {
@@ -170,21 +159,11 @@ vector<double> PlotView::default_minmax() {
 
 
 void PlotView::drawHistogram() {
-    setRenderHint(QPainter::Antialiasing); // smooth data points
     clearPlot();
-    scene()->update(); // clears any artifacts in plot margins
+
     if (data.size() == 0 || data[0].size() == 0) return;
     vector<int>& epi_data = data[0];
 
-    PlotScene* myscene = (PlotScene*) scene();
-    myscene->setSceneRect(0,0,width(),height()); //set scene to parent widget width x height
-    myscene->initialize();
-    myscene->setMarginsDim(25,20,20,10);
-    myscene->setAxesDim(0,25,40,0);
-    myscene->reDefinePlotRegions();
-    
-    fitInView(myscene->sceneRect(),Qt::IgnoreAspectRatio);
- 
     int min_val = 0;
     int max_val = 0;
     int nbins   = 0;
@@ -227,17 +206,17 @@ void PlotView::drawHistogram() {
 
     int max_ct = max_element(density);
 
-    xAxis->setLabel("Epidemic size");
+    Axis* xAxis = myscene->xAxis;
     xAxis->setNumTicks(nbins);
     xAxis->setRange(min_val,max_val);
     xAxis->forceNumTicks(true);
     xAxis->show(); 
 
-    yAxis->setLabel("Frequency");
+    Axis* yAxis = myscene->yAxis;
     int yticks = max_ct > 10 ? 10 : max_ct;
     yAxis->preferedNumTicks(yticks);
-    yAxis->calculateRange(0,max_ct);   
     yAxis->useIntLabels(true);
+    yAxis->calculateRange(0,max_ct);   
     yAxis->show(); 
 
     myscene->setXrange(0,nbins);
@@ -267,32 +246,24 @@ void PlotView::drawHistogram() {
 void PlotView::drawEpiCurvePlot() {
     if (data.size() == 0 ) {
         clearPlot();
-        scene()->update();
-
-        PlotScene* myscene = (PlotScene*) scene();
-        myscene->initialize();
         return;
     }
-
-    PlotScene* myscene = (PlotScene*) scene();
-    myscene->setSceneRect(0,0,width(),height()); //set scene to parent widget width x height
-    myscene->setMarginsDim(25,20,20,10);
-    myscene->setAxesDim(0,25,40,0);
-    myscene->reDefinePlotRegions();
-
-    fitInView(myscene->sceneRect(),Qt::IgnoreAspectRatio);
-  
+        
     setRenderHint(QPainter::Antialiasing); // smooth data points
 
     float max_val = (float) find_max_val(data);
     int   max_idx = find_max_idx(data);
+    
+    epiCurveAxisUpdated((double) max_idx);
 
-    xAxis->calculateRange(0,max_idx);
+    Axis* xAxis = myscene->xAxis;
     xAxis->useIntLabels(true);
+    xAxis->calculateRange(0,max_idx);
     xAxis->show(); 
     
-    yAxis->calculateRange(0,max_val);   
+    Axis* yAxis = myscene->yAxis;
     yAxis->useIntLabels(true);
+    yAxis->calculateRange(0,max_val);   
     yAxis->show(); 
 
     myscene->setXrange(0,xAxis->getMax());
@@ -332,7 +303,6 @@ void PlotView::drawEpiCurvePlot() {
         for( unsigned int j=0; j<data[i].size(); j++ ) {
             Point*  dot = new Point( j, data[i][j] , r);
             dot->setParentItem(myscene->dataArea);
-           // myscene->dataArea->addItem(dot);
             dot->setBrush(brush);
             dot->updatePosition();
             dot->setZValue(zval);
@@ -341,40 +311,55 @@ void PlotView::drawEpiCurvePlot() {
     
     newDataCursor = data.size();
     myscene->update();
+
 }
 
 void PlotView::drawNodeStatePlot() {
-    myscene->setSceneRect(0,0,width(),height()); //set scene to parent widget width x height
-    myscene->initialize();
-    myscene->setMarginsDim(25,20,20,10);
-    myscene->setAxesDim(0,25,40,0);
-    myscene->reDefinePlotRegions();
-    
-    fitInView(myscene->sceneRect(),Qt::IgnoreAspectRatio);
 
-    QRgb colors[3] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0) };
+    clearPlot();
+    QRgb colors[4] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0), qRgb(254,254,254) };
 
     if (data.size() == 0 ) {
-        scene()->clear();
-        scene()->update();
+        clearPlot();
         return;
     }
     
-    QRgb value;
+    int node_ct = (signed) data[0].size();
+    int duration = (signed) data.size() - 1;
+    int xmax = rangeMax > duration? rangeMax : duration;
 
-    QImage image(data.size(),data[0].size(),QImage::Format_ARGB32);
+    Axis* xAxis = myscene->xAxis;
+    xAxis->useIntLabels(true);
+    xAxis->calculateRange(0,xmax);
+    if (xmax == xAxis->getMax() and xmax == duration) xAxis->calculateRange(0, xmax+1);
+    
+    xAxis->show(); 
+    xmax = xAxis->getMax();
+
+
+    
+    Axis* yAxis = myscene->yAxis;
+    yAxis->useIntLabels(true);
+    yAxis->calculateRange(0,node_ct);   
+    yAxis->show(); 
+
+    myscene->setXrange(0,xAxis->getMax());
+    myscene->setYrange(0,yAxis->getMax());
+
+    QRgb value;
+    QImage image(xmax,  node_ct,QImage::Format_ARGB32);
     image.fill(Qt::white);
-    for( unsigned int r=0; r < data.size(); r++) {
-        for( unsigned int c=0; c < data[r].size(); c++ ) {
-             int val = data[r][c];
+    for( int x=0; x < (signed) data.size(); x++) {
+        for( int y=0; y < (signed) data[x].size(); y++ ) {
+             int val = data[x][y];
              
              if (val == 0) {}
              else if (val == -1) { val = 2; }
              else { val = 1;}
 
-             if (val > 2) cerr << "Node " << c << " has nonsense state " << val << endl;
-             value = colors[ val % 3 ];
-             image.setPixel(r, c, value);
+             if (val > 2) cerr << "Node " << x << " has nonsense state " << val << endl;
+             value = colors[ val % 4 ];
+             image.setPixel(x, y, value);
         }
     }
 
@@ -391,6 +376,7 @@ void PlotView::drawNodeStatePlot() {
 
 void PlotView::resizeEvent ( QResizeEvent * ) {
     newDataCursor = 0;
+    myscene->setSceneRect(0,0,width(),height()); //set scene to parent widget width x height
     clearPlot();
     replot();
 }
@@ -407,6 +393,11 @@ void PlotView::addData( vector<int> X ) {
         data[0].insert(data[0].end(), X.begin(), X.end());
     }
 }
+
+void PlotView::clearPlot() { 
+    myscene->clearPlot();
+}
+
 
 void PlotView::clearData() {
     data.clear();

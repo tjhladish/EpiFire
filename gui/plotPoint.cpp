@@ -7,7 +7,7 @@ QRectF Point::boundingRect() const {
 
 
 void Point::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
-    qDebug() << "Point::paint" << x << " " << y <<  " " << r;
+    //qDebug() << "Point::paint" << x << " " << y <<  " " << r;
 
     painter->setBrush(brush);
     painter->setPen(Qt::NoPen);

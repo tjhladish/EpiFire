@@ -22,16 +22,18 @@ class PlotView : public QGraphicsView
     friend class PlotScene;
 
     public:
-
+        PlotView(QWidget* mw, QString title, QString xlabel, QString ylabel);
         enum PlotType { STATEPLOT, CURVEPLOT, HISTPLOT, DEGPLOT, RESULTS_HISTPLOT };
         void setPlotType(PlotType x) { plotType = x; }
         PlotType getPlotType() { return plotType; }
 
-        PlotView(QWidget* mw, QString l);
         void debugger();
         vector< vector<int> > getData() { return data; }
         int default_nbins(double rangeMin, double rangeMax);
         vector<double> default_minmax();
+
+    signals:
+        void epiCurveAxisUpdated(double xRangeMax);
 
     public slots:
         void replot();
@@ -40,16 +42,14 @@ class PlotView : public QGraphicsView
         void clearPlot();
         void saveData();
         void savePlot();
-        void setLabel(QString l) {label = l;}
-        QString getLabel() {return label;}
         void setRangeMin(double min) { rangeMin=min; replot(); }
-        void setRangeMin(QString min) { rangeMin=min.toDouble(); replot(); }
+        void setRangeMin(QString min) { rangeMin= min.isEmpty()? -1 : min.toDouble(); replot(); }
         void setRangeMax(double max) { rangeMax=max; replot(); }
-        void setRangeMax(QString max) { rangeMax=max.toDouble(); replot(); }
+        void setRangeMax(QString max) { rangeMax= max.isEmpty()? -1 : max.toDouble(); replot(); }
         void setNBins(int bins) { Nbins=bins; replot(); }
         void setNBins(QString bins) { Nbins=bins.toInt(); replot(); }
         void setCutoff(double cut) { cutoff = cut; replot(); }
-        void setCutoff(QString cut) { cutoff = cut.toDouble(); replot(); }
+        void setCutoff(QString cut) { cutoff = cut.isEmpty() ? -1 : cut.toDouble(); replot(); }
 
     protected:
         void drawEpiCurvePlot();
@@ -64,14 +64,11 @@ class PlotView : public QGraphicsView
         vector< vector<int> > data;
 
         PlotType plotType;
-        Axis* xAxis;
-        Axis* yAxis;
         double rangeMin;
         double rangeMax;
         int    Nbins;
         double cutoff;
         PlotScene* myscene;
-        QString label;
         QAction* savePlotAction;
         QAction* saveDataAction;
         

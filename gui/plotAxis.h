@@ -19,14 +19,14 @@ class Axis : public QGraphicsItem
         void calculateRange(double a, double b); 
         double getMin() {return min;}
         double getMax() {return max;}
-        void setLabel(QString t) { label = t; }
-        //void setYLabel(QString t) { ylabel = t; }
-        void setTitle(QString  t) { title =  t; }
         void setNumTicks(int x)  { nticks = x; }
         void preferedNumTicks(int x) {nticksPref = x; }
         void forceNumTicks(bool t) { force_nticks = t; }
         bool numTicksForced() { return force_nticks; }
         void useIntLabels(bool t) {intLabels = t;}
+        int getMajTickLen() {return majTickLen;}
+        int getMinTickLen() {return minTickLen;}
+
 
     protected:
         QRectF boundingRect() const;
@@ -39,10 +39,9 @@ class Axis : public QGraphicsItem
         int nticks;
         int nticksPref;
         bool force_nticks;
+        int majTickLen;
+        int minTickLen;
         bool intLabels;
-        QString label;
-        //QString ylabel;
-        QString title;
 
 };
 #endif

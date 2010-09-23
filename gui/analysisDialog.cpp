@@ -87,7 +87,7 @@ void AnalysisDialog::createNetworkAnalysis() {
     QGroupBox* netAnalysisTop = new QGroupBox();
     netAnalysisTop->setLayout(netTopLayout);
 
-    degDistPlot = new PlotView(this, "Degree distribution");
+    degDistPlot = new PlotView(this, "Degree distribution", "Degree", "Frequency");
     degDistPlot->setPlotType(PlotView::DEGPLOT);
     
     // add a close window button
@@ -179,7 +179,7 @@ void AnalysisDialog::createResultsAnalysis() {
     QGroupBox* resultsAnalysisBottom = new QGroupBox();
     resultsAnalysisBottom->setLayout(resultsBottomLayout);
     
-    resultsHistPlot = new PlotView(this, "Epidemic size distribution");
+    resultsHistPlot = new PlotView(this, "Epidemic size distribution", "Epidemic size", "Frequency");
     resultsHistPlot->setPlotType(PlotView::RESULTS_HISTPLOT);
     
     connect(thresholdEdit, SIGNAL(textChanged(QString)), resultsHistPlot, SLOT(setCutoff(QString)));

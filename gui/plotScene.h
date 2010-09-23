@@ -3,10 +3,14 @@
 
 #include <QtGui>
 #include <QGraphicsScene>
+#include <QVector4D>
+#include <QVector2D>
 #include "plotRegion.h"
- #include <QVector4D>
+#include "plotAxis.h"
+#include "plotText.h"
 
 class PlotRegion;
+class PlotText;
 
 class PlotScene : public QGraphicsScene
 {
@@ -22,20 +26,22 @@ class PlotScene : public QGraphicsScene
         void reDefinePlotRegions();
         void setXrange(float a, float b) { minX=a; maxX=b; }
         void setYrange(float a, float b) { minY=a; maxY=b; }
+        void clearPlot();
 
         float getMinX() { return minX; }
         float getMinY() { return minY; }
         float getMaxX() { return maxX; }
         float getMaxY() { return maxY; }
- //       float toPlotX( float x ) { return dataArea->toPlotX(x); }
-  //      float toPlotY( float y ) { return dataArea->toPlotY(y); }
 
-        void setLabel(QString l, qreal x, qreal y) { label=addText(l); label->setPos(x,y); }
-        QGraphicsTextItem* getLabel() {return label;}
+        void setXLabel(QString l) { xlabelText=l;}// xlabel->setPlainText(l); }
+        void setYLabel(QString l) { ylabelText=l;}// ylabel->setPlainText(l); }
+        void setTitle (QString l) { titleText=l;  }//title=(PlotText*) addText(l);  }
+
         void setMarginsDim(int top, int bottom, int left, int right) { topM=top; bottomM=bottom; leftM=left; rightM=right; reDefinePlotRegions(); }
         void setAxesDim(int top, int bottom, int left, int right) { topA=top; bottomA=bottom; leftA=left; rightA=right; reDefinePlotRegions(); }
         QVector4D getMarginDim() { return QVector4D(topM,bottomM,leftM,rightM); }
         QVector4D getAxesDim() { return QVector4D(topM,bottomM,leftM,rightM); }
+        QVector2D getDataAreaDim();
 
    private:
         PlotRegion* dataArea;
@@ -47,6 +53,12 @@ class PlotScene : public QGraphicsScene
         PlotRegion* bottomAxis;
         PlotRegion* leftAxis;
         PlotRegion* rightAxis;
+        Axis* xAxis;
+        Axis* yAxis;
+
+        PlotText* xlabel;
+        PlotText* ylabel;
+        PlotText* title;
 
         int topM,bottomM,leftM,rightM;
         int topA,bottomA,leftA,rightA; 
@@ -55,7 +67,10 @@ class PlotScene : public QGraphicsScene
         float minY;
         float maxX;
         float maxY;
-        QGraphicsTextItem* label;
+
+        QString xlabelText;
+        QString ylabelText;
+        QString titleText;
 };
 
 #endif

@@ -118,15 +118,17 @@ MainWindow::MainWindow() {
 
 
 void MainWindow::createPlotPanel() {
-    epiCurvePlot = new PlotView(this, "Epidemic curves");
+    epiCurvePlot = new PlotView(this, "Epidemic curves", "Time", "Prevalence");
     epiCurvePlot->setPlotType(PlotView::CURVEPLOT);
     epiCurvePlot->setToolTip("Absolute frequency of infectious nodes vs. time\nDouble-click plot to save image\nRight-click to save data");
 
-    statePlot = new PlotView(this, "Node state evolution");
+    statePlot = new PlotView(this, "Node state evolution", "Time", "Node ID");
     statePlot->setPlotType(PlotView::STATEPLOT);
     statePlot->setToolTip("Progression of node states over time for 100 nodes\nBlue = susceptible, Red = infectious, Yellow = Recovered\nDouble-click plot to save image\nRight-click to save data");
 
-    histPlot = new PlotView(this, "Histogram of epidemic sizes");
+    connect(epiCurvePlot, SIGNAL(epiCurveAxisUpdated(double)), statePlot, SLOT(setRangeMax(double)));
+
+    histPlot = new PlotView(this, "Histogram of epidemic sizes", "Epidemic size", "Frequency");
     histPlot->setPlotType(PlotView::HISTPLOT);
     histPlot->setToolTip("Distribution of final epidemic sizes\nDouble-click plot to save image\nRight-click to save data");
  
@@ -757,12 +759,7 @@ void MainWindow::simulatorWrapper() {
     if (!network || network->size() == 0 ) { appendOutputLine("Network must be generated first."); return; }
 
     // Get values from textboxes
-    //int j_max = (numrunsLine->text()).toInt();
     double T = (transLine->text()).toDouble();
-    //int p_zero = (pzeroLine->text()).toInt();
-    //string RunID="1";            // This needs to be updated
-    //int dist_size_array[j_max];  //Initiate array that will contain distribution sizes
-    //int* dist_size_point=dist_size_array;
 
     //CREATE SIMULATOR
     if(simulator) { delete(simulator); simulator=NULL; }
@@ -805,8 +802,8 @@ void MainWindow::simulatorWrapper() {
     progressDialog->setLabelText("");
 
     //MAKE PLOTS
-    if ( rightBox->sizes()[0] > 0) statePlot->replot();
-    if ( rightBox->sizes()[1] > 0) epiCurvePlot->replot();
+    if ( rightBox->sizes()[1] > 0) epiCurvePlot->replot(); // epicurveplot needs to be done 1st
+    if ( rightBox->sizes()[0] > 0) statePlot->replot(); // b/c stateplot uses epicurve axis
     if ( rightBox->sizes()[2] > 0) histPlot->replot();
     if ( resultsAnalysisDialog->isVisible() ) resultsAnalysisDialog->updateResultsAnalysis();
 

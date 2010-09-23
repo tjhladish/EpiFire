@@ -1,4 +1,5 @@
 #include "plotAxis.h"
+#include "plotRegion.h"
 
 Axis::Axis( int type, double min, double max, int nticks, bool force_nticks, bool intLabels) {
     this->type = type;
@@ -9,6 +10,8 @@ Axis::Axis( int type, double min, double max, int nticks, bool force_nticks, boo
         this->nticks = nticks;
     }
     this->intLabels = intLabels;
+    this->minTickLen = 2;
+    this->majTickLen = 5;
 }
 
 
@@ -17,8 +20,13 @@ Axis::~Axis() { }
 QRectF Axis::boundingRect() const
 {
 
-    return(QRectF(0,0,scene()->width()+10,scene()->height()+10));
+   PlotRegion* myregion = (PlotRegion*) parentItem();
 
+   if (myregion) {
+        return(QRectF(0,0,myregion->width(),myregion->height()));
+   } else {
+        return QRectF(0,0,0,0);
+   }
 }
 
 void Axis::calculateRange(double minPref, double maxPref) {
@@ -26,7 +34,9 @@ void Axis::calculateRange(double minPref, double maxPref) {
     double range = maxPref-minPref; // in data coordinates
     // Calculate the order of magnitude (times a constant) that we should use
     // for a good bin width
-    if (! nticksPref || nticksPref <= 0) nticksPref = 10;
+    if (intLabels and range < 10) { setNumTicks(range); setRange(minPref, maxPref); return;}
+
+    if (! nticksPref || nticksPref <= 0) nticksPref = range < 10 ? range : 10;
     double width_magnitude = pow(10,floor( log(range/nticksPref)/log(10) ) );
     int nice_sizes[5] = {1,2,3,5,10};
     for(int i=0; i<5; i++) { bin_width = nice_sizes[i]*width_magnitude; if (bin_width >= range/nticksPref) break; }
@@ -38,19 +48,20 @@ void Axis::calculateRange(double minPref, double maxPref) {
 void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *) {
     painter->setRenderHint(QPainter::Antialiasing, false);
 
+    PlotRegion* myregion = (PlotRegion*) parentItem();
+    PlotScene*  myscene = (PlotScene*) scene();
+    if(!myregion) return;
+
     QPen pen(Qt::black, 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
     painter->setPen(pen);
 
     float fontsize = 8;
-    QFont font("Helvetica",fontsize);
+    QFont font = painter->font();
+    font.setPointSize(fontsize);
     painter->setFont(font);
 
     if (nticks == 0 ) nticks = 2;
-    int x0 = 0;
-    int y0 = scene()->height();
-    int x1 = scene()->width();
-    int y1 = 0;
-    int offset = 8;
+    int offset = 0;
     int float_prec = 1; // precision to use when printing floats
     
     double range = max - min;
@@ -59,14 +70,16 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
 
     //cerr << "min\tmax\trange\tnticks\tticks\tbin_width\n";
     //cerr << min << "\t" << max << "\t" << range << "\t" << nticks << "\t" << ticks << "\t" << bin_width << endl;
-    double ix = (double) (x1-x0)/ticks; // in scene coordinates
-    double iy = (double) (y1-y0)/ticks; //
 
     //Check size of biggest label--is it too big, given tick spacing?
     QFontMetrics fm = painter->fontMetrics();
     int textWidth = 0;
 
     if ( type == 0) {            // for x-axis
+    int x0 = 0;
+    int y0 = myregion->height();
+    int x1 = myscene->getDataAreaDim().x();
+    double ix = (double) (x1-x0)/ticks; // in scene coordinates
         painter->drawLine(x0, y0, x1, y0);
         int decimals = intLabels ? 0 : float_prec; // how many decimal digits to display
         
@@ -79,15 +92,21 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
             painter->drawText(x0 + ix*i - textWidth/2 + 1, y0+15,label);
         }
         for (int i=0; i <= ticks; i++ ) {
-            int l = i % skip == 0 ? 5 : 2;
+            int l = i % skip == 0 ? majTickLen : minTickLen;
             painter->drawLine(x0+ix*i,y0-l,x0+ix*i,y0+l);
         }
     }                            // for y-axis
     else if ( type == 1 ) {
+    int x0 = 0;
+    int x1 = myregion->width();
+    int y0 = myscene->getDataAreaDim().y();
+    int y1 = 0;
+    double iy = (double) (y1-y0)/ticks; //
         painter->drawLine(x0+offset,y0,x0+offset,y1);
 
         for (int i=0; i <= ticks; i++ ) {
-            painter->drawLine(offset+x0-5,y0+iy*i,offset+x0+5,y0+iy*i);
+            int l = majTickLen;
+            painter->drawLine(offset+x0-l,y0+iy*i,offset+x0+l,y0+iy*i);
         }
 
         for (int i=0; i <= ticks; i++ ) {
@@ -95,7 +114,7 @@ void Axis::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *)
             QString value = QString::number(num_val,'g',float_prec);
             if ( max < 10000 && intLabels ) { value = QString::number(num_val,'f',0); }
             int textHeight = fm.height() - 4;
-            painter->drawText(offset+x0+7,y0+iy*i + textHeight/2,value);
+            painter->drawText(offset+x0-7-fm.width(value),y0+iy*i + textHeight/2,value);
         }
 
         QColor line_col(200,200,200,100);

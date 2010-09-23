@@ -6,6 +6,7 @@ HEADERS     = mainWindow.h \
              plotPoint.h \
              plotScene.h \ 
              plotRegion.h \
+             plotText.h \
              node.h \
              edge.h \
              graphwidget.h \
