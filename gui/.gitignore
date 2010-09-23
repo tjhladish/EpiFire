@@ -5,3 +5,5 @@ read_edgelist_test.cpp
 moc*
 epifire
 Makefile
+*.csv
+*.out
