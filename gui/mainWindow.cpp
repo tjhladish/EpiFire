@@ -473,7 +473,12 @@ void MainWindow::saveEdgeList() {
 void MainWindow::readEdgeList() {
     QString startdir = ".";
     QString fileName = QFileDialog::getOpenFileName(
-        this, "Select edge list file to load:", startdir, "Comma-separated-values (*.csv)(*.csv);;TAB-delimited (*.tab)(*.tab);;Space-delimited (*.space)(*.space)");
+        this, "Select edge list file to load:", startdir, "Comma-separated-values (*.csv);;TAB-delimited (*.tab);;Space-delimited (*.space)");
+
+    char sep;
+    if ( fileName.endsWith(".csv") == true )  sep = ',';
+    else if ( fileName.endsWith(".tab") == true )  sep = '\t';
+    else if ( fileName.endsWith(".space") == true )  sep = ' ';
 
     if(network) { delete(network); }
     netComponents.clear();
@@ -481,7 +486,7 @@ void MainWindow::readEdgeList() {
     setCursor(Qt::WaitCursor);
     appendOutputLine("Importing network . . . ");
     network = new Network("mynetwork", false);
-    network->read_edgelist(fileName.toStdString());
+    network->read_edgelist(fileName.toStdString(), sep);
     network->dumper();
     network->validate();
     netfileLine->setText(fileName);
