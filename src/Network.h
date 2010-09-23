@@ -204,7 +204,7 @@ class Network
          * Network Input/Output (including visualization)
          **************************************************************************/
                                  // read network structure from file
-        void read_edgelist(string filename);
+        void read_edgelist(string filename, char sep = ',');
                                  // write network to file
         void write_edgelist(string filename);
                                  // output a graphviz file

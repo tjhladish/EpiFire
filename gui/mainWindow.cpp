@@ -472,14 +472,8 @@ void MainWindow::saveEdgeList() {
 
 void MainWindow::readEdgeList() {
     QString startdir = ".";
-    QStringList filelist = QFileDialog::getOpenFileNames(
-        this, "Select edge list file to load:", startdir, "All Files(*.*)");
-
-    if (filelist.size() == 0) { 
-        appendOutputLine("Error: edge list file is empty");
-        return;
-    }
-    QString fileName = filelist[0];
+    QString fileName = QFileDialog::getOpenFileName(
+        this, "Select edge list file to load:", startdir, "Comma-separated-values (*.csv)(*.csv);;TAB-delimited (*.tab)(*.tab);;Space-delimited (*.space)(*.space)");
 
     if(network) { delete(network); }
     netComponents.clear();
@@ -723,7 +717,6 @@ void MainWindow::updateRZero() {
         netPredictionLine->setText( "Undefined" );
         return;
     }
-
     double T = getPercTransmissibility();
 
     double R0 = convertTtoR0(T); 
@@ -1109,13 +1102,17 @@ double MainWindow::maExpectedSize(double R0, double P0) {
 
 
 double MainWindow::maExpectedSize(double R0, double P0, double guess) {
-    //This calculation is based on the expected epidemic size
-    //for a mass action model. See Tildesley & Keeling (JTB, 2009).
-    //cerr << "r: " << guess << endl;
-    double S0 = 1.0 - P0;
-    double p = S0*(1-exp(-R0 * guess));
-    if (fabs(p-guess) < 0.0001) {return p;}
-    else return maExpectedSize(R0, P0, p);
+    if (R0 != R0) { // not a bug!  checks to see if R0 is undefined
+        return P0;
+    } else {
+        //This calculation is based on the expected epidemic size
+        //for a mass action model. See Tildesley & Keeling (JTB, 2009).
+        //cerr << "r: " << guess << endl;
+        double S0 = 1.0 - P0;
+        double p = S0*(1-exp(-R0 * guess));
+        if (fabs(p-guess) < 0.0001) {return p;}
+        else return maExpectedSize(R0, P0, p);
+    }
 }
 
 /*
