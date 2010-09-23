@@ -473,7 +473,7 @@ void MainWindow::saveEdgeList() {
 void MainWindow::readEdgeList() {
     QString startdir = ".";
     QString fileName = QFileDialog::getOpenFileName(
-        this, "Select edge list file to load:", startdir, "Comma-separated-values (*.csv);;TAB-delimited (*.tab);;Space-delimited (*.space)");
+        this, "Select edge list file to load:", startdir, "Comma-delimited    *.csv(*.csv);;TAB-delimited    *.tab(*.tab);;Space-delimited    *.space(*.space)");
 
     char sep;
     if ( fileName.endsWith(".csv") == true )  sep = ',';
