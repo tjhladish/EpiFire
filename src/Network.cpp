@@ -831,56 +831,63 @@ void Network::read_edgelist(string filename, char sep) {
     if (myfile.is_open()) {
         string line;
 
+        
         while ( getline(myfile,line) ) {
             //split string based on "," and store results into vector
             vector<string> fields;
-            split(line,sep, fields);
-            const char whitespace[] = " \n\t\r";
-
+            split(line, sep, fields);
+            const char whitespace[] = "\n\t\r";
+            if ( line != "" )
+            {
+            
             //format check
-            if (fields.size() > 2 ) {
-                cerr << "Skipping line: too many fields: " << line << endl;
-                continue;
-            } else if (fields.size() == 1) {
-                Node* node = this->add_new_node();
-                string name1 = strip(fields[0],whitespace);
-                cerr << "Found single node " << name1 << endl;
-                node->name = name1;
-                idmap[name1] = node;
-                continue;
-            } else if (fields.size() < 1) {
-                continue;
-            } else { // there are exactly 2 nodes
-
-                string name1 = strip(fields[0],whitespace);
-                string name2 = strip(fields[1],whitespace);
-
-                //cerr << line << endl;
-                //if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
-                //if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
-                //cerr << "---" << endl;
-
-                //new node;
-                if(idmap.count(name1)==0) {
-                    //allocate memory for new node
-                    Node* node = this->add_new_node();
+                if (fields.size() > 2 ) {
+                    cerr << "Skipping line: too many fields: " << line << endl;
+                    continue;
+                } else if ( fields.size() == 1 ) {    
+		    Node* node = this->add_new_node();
+                    string name1 = strip(fields[0],whitespace);
+                    cerr << "Found single node " << name1 << endl;
                     node->name = name1;
                     idmap[name1] = node;
+                    continue;
+                
                 }
 
-                //new node;
-                if(idmap.count(name2)==0) {
-                    //allocate memory for new node
-                    Node* node = this->add_new_node();
-                    node->name = name2;
-                    idmap[name2]=node;
-                }
+                else { // there are exactly 2 nodes
+           
+                    string name1 = strip(fields[0],whitespace);
+                    string name2 = strip(fields[1],whitespace);
 
-                idmap[name1]->connect_to(idmap[name2]);
-                //Node *n1 = idmap[name1];
-                //Node *n2 = idmap[name2];
-                //n1->connect_to(n2);
+                    //cerr << line << endl;
+                    //if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
+                    //if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
+                    //cerr << "---" << endl;
+
+                    //new node;
+                    if(idmap.count(name1)==0) {
+                        //allocate memory for new node
+                        Node* node = this->add_new_node();
+                        node->name = name1;
+                        idmap[name1] = node;
+                    }
+
+                    //new node;
+                    if(idmap.count(name2)==0) {
+                        //allocate memory for new node
+                        Node* node = this->add_new_node();
+                        node->name = name2;
+                        idmap[name2]=node;
+                    }
+
+                    idmap[name1]->connect_to(idmap[name2]);
+                    //Node *n1 = idmap[name1];
+                    //Node *n2 = idmap[name2];
+                    //n1->connect_to(n2);
+                
+                }
             }
+            else continue;
         }
     }
     dumper();
