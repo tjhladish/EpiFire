@@ -2,6 +2,7 @@
 #define PERCOL_SIMULATOR_H
 
 #include "Simulator.h"
+#include <set>
 
 class Percolation_Sim: public Simulator
 {
@@ -20,12 +21,13 @@ class Percolation_Sim: public Simulator
 
         void set_transmissibility(double t) { this->T = t; }
 
-        void rand_infect (int n) {
+        vector<Node*> rand_infect (int n) {
             assert(n > 0);
             vector<Node*> patients_zero = rand_set_nodes_to_state(n, I);
             for (int i = 0; i < n; i++) {
                 infected.push_back(patients_zero[i]);
             };
+            return patients_zero;
         }
 
         void step_simulation () {
@@ -39,11 +41,11 @@ class Percolation_Sim: public Simulator
                 for (unsigned int j = 0; j < neighbors.size(); j++) {
                     Node* test = neighbors[j];
                     if ( test->get_state() == S && mtrand->rand() < T ) {
-                        test->set_state( I );
+                        set_node_state(test,I);
                         new_infected.push_back( test );
                     }
                 }
-                inode->set_state( R );
+                set_node_state(inode, R ); 
                 recovered.push_back( inode );
             }
             infected = new_infected;
@@ -63,6 +65,24 @@ class Percolation_Sim: public Simulator
             return recovered.size();
         }
 
+        vector<int> epidemic_curve() {
+            vector<int> curve(time+1);
+            vector< vector<Event*> > history=get_history_matrix();
+            set<Node*> infectedQ;
+            for ( unsigned int t = 0; t < history.size(); t++) {
+                for( unsigned int e = 0; e < history[t].size(); e++) {
+                    Node* n = history[t][e]->node;
+                    stateType s = (stateType) history[t][e]->state;
+                    if (s == I) {
+                        infectedQ.insert(n);
+                    } else if (s == R) {
+                        infectedQ.erase(n);
+                    }
+                }
+                curve[t] = infectedQ.size();
+            }
+        }
+
         void reset() {
             reset_time();
 
@@ -71,6 +91,8 @@ class Percolation_Sim: public Simulator
 
             set_these_nodes_to_state(recovered, S);
             recovered.clear();
+
+            events.clear();
         }
 
         void summary() {

@@ -74,7 +74,7 @@ inline T MAX(const T& _a,const T& _b) { return ((_a)>(_b)?(_a):(_b));}
 
 template <typename T>
 inline void delete_element(vector<T> & my_vector, T element) {
-    for(int i = 0; i < my_vector.size(); i++) {
+    for(unsigned int i = 0; i < my_vector.size(); i++) {
         if (my_vector[i] == element) {
             my_vector.erase(my_vector.begin() + i);
             break;

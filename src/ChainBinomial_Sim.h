@@ -23,7 +23,7 @@ class ChainBinomial_Sim: public Simulator
         int    get_infectious_period() { return this->infectious_period; }
         double get_transmissibility()  { return this->T; }
 
-        void rand_infect (int n) {
+        vector<Node*> rand_infect (int n) {
             assert(n > 0);
             vector<Node*> patients_zero = rand_set_nodes_to_state(n, 1);
             for (int i = 0; i < n; i++) {
@@ -50,7 +50,7 @@ class ChainBinomial_Sim: public Simulator
                     // Is this neighbor susceptible and 
                     // has it been exposed?
                     if ( test->get_state() == 0 && mtrand->rand() < T ) {
-                        test->set_state( 1 );
+                        set_node_state( test, 1 );
                         new_infected.push_back( test );
                     }
                 }
@@ -61,7 +61,7 @@ class ChainBinomial_Sim: public Simulator
             // Some nodes may be reaching the end of their infectious period ...
             while (infected.size() > 0 && infected.front()->get_state() > infectious_period) {
                 Node* first = infected.front();
-                first->set_state(-1); // -> recovered
+                set_node_state(first, -1); // -> recovered
                 recovered.push_back( first );
                 infected.pop_front();
             }
@@ -94,7 +94,7 @@ class ChainBinomial_Sim: public Simulator
             reset_time();
 
             while (! infected.empty()) {
-                infected.front()->set_state(0);
+                set_node_state(infected.front(), 0);
                 infected.pop_front();
             }
 

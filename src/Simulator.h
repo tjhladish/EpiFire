@@ -4,6 +4,18 @@
 #include "Network.h"
 #include <assert.h>
 #include <queue>
+#include <deque>
+
+class Event {
+    public:
+        Event(int t, Node* n, stateType s) { time=t; node=n; state=s; }     //1
+        Event(const Event& b) { time=b.time; node=b.node; state=b.state; }   //2
+        Event& operator= (const Event& b) { time=b.time; node=b.node; state=b.state; } //3
+
+    int time;
+    Node* node;
+    stateType state;
+};
 
 class Simulator
 {
@@ -13,6 +25,7 @@ class Simulator
         int time;
         Network* net;
         MTRand* mtrand;
+        deque<Event>events;
 
         Simulator() { time = 0; net=NULL; mtrand=NULL; };
         Simulator(Network* net) { this->net = net; this->time = 0; this->mtrand = net->get_rng(); };
@@ -30,7 +43,12 @@ class Simulator
         };
 
         void set_these_nodes_to_state (vector<Node*> nodes, stateType s) {
-            for (unsigned int i = 0; i < nodes.size(); i++) nodes[i]->set_state(s);
+            for (unsigned int i = 0; i < nodes.size(); i++) set_node_state(nodes[i], s);
+        }
+
+        void set_node_state(Node* node, stateType state) { 
+            node->set_state(state); 
+            add_event(get_time(),node,state); 
         }
 
         // change n random nodes to state s (e.g. vaccinate them or infect them randomly)
@@ -43,7 +61,7 @@ class Simulator
             Node* node;
             for (unsigned int i = 0; i < sample_ids.size(); i++) {
                 node = nodes[ sample_ids[i] ];
-                node->set_state(state);
+                set_node_state(node, state);
                 sample[i] = node;
             };
             return sample;
@@ -65,7 +83,7 @@ class Simulator
         //these functions must be derived in child class
         virtual void step_simulation() {};
         virtual void run_simulation() {};
-        virtual void rand_infect(int) {};
+        virtual vector<Node*> rand_infect(int) {vector<Node*>x; return x;};
                                  // cumulative infected
         virtual int epidemic_size() = 0;
                                  // current infected
@@ -73,6 +91,34 @@ class Simulator
             return 0;
         };
         virtual void reset() {};
+
+        void add_event(int t, Node* n, stateType s)  { events.push_back(Event(t,n,s)); }
+
+        virtual vector<int> epidemic_curve() {vector<int>x; return x;}
+
+        vector< vector<Event*> > get_history_matrix() { 
+             vector< vector<Event*> > history( get_time()+1 );
+             for(int i=0; i < events.size(); i++ ) {
+                if ( events[i].time > get_time() + 1 ) {
+                    cerr << "WOOOPs " << events[i].time << endl;
+                }
+
+
+                history[ events[i].time ].push_back( &events[i] );
+             }
+             return history;
+        }
+        
+
+        void write_event_history(string filename) {
+            ofstream fout(filename.c_str(), ios::out);
+            for(unsigned int i=0; i< events.size(); i++ ) {
+                  fout << events[i].time << "\t" 
+                       << events[i].node << "\t "
+                       << events[i].state << endl;
+            }
+            fout.close();
+        }
 
 };
 

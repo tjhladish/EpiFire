@@ -1,4 +1,5 @@
-CFLAGS=--ansi --pedantic -O3
+#CFLAGS=--ansi --pedantic -O3
+CFLAGS=--ansi --pedantic -g
 INCLUDE= -I../src/
 #LDFLAGS= -L../src/ -lsim 
 LDFLAGS=  ../src/*.o
@@ -10,6 +11,9 @@ test_network: test_network.cpp
 
 ex1_mass_action: ex1_mass_action.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex1_mass_action.cpp -o ex1_mass_action
+
+ex2b_percolation: ex2b_percolation.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex2b_percolation.cpp -o ex2b_percolation
 
 ex2_percolation: ex2_percolation.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex2_percolation.cpp -o ex2_percolation
