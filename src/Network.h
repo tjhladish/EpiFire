@@ -63,11 +63,12 @@ class Network
     friend class Edge;
 
     public:
+        typedef enum { Undirected=0, Directed=1 } netType;
 
         /***************************************************************************
          * Network Constructor and Destructor
          **************************************************************************/
-        Network( string name, bool directed );
+        Network( string name, netType directed );
         Network( const Network& net);
         ~Network();
 
@@ -93,7 +94,7 @@ class Network
         inline bool             has_unit_edges() {
             return unit_edges;
         }
-        inline bool             is_directed() {return directed; }
+        inline bool             is_directed() {return (bool) directed; }
                                  // get a pointer to the random number generator
         inline MTRand*          get_rng() {
             return &mtrand;
@@ -254,7 +255,7 @@ class Network
         string name;
         vector<Node*> node_list;
         bool unit_edges;
-        bool directed;
+        netType directed;
                                  // the generating distribution
         vector<double> gen_deg_dist;
                                  // used to draw random degrees

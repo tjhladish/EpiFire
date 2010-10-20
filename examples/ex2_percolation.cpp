@@ -3,7 +3,7 @@
 int main() {
     
         // Construct Network
-        Network net("name", false);
+        Network net("name", Network::Undirected);
         net.populate(10000);
         net.erdos_renyi(5);
 

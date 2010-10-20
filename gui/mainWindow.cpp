@@ -50,7 +50,7 @@ MainWindow::MainWindow() {
     rightBox      = new QSplitter(Qt::Vertical, this);
     createPlotPanel();
 
-    network = new Network("mynetwork",false);
+    network = new Network("mynetwork",Network::Undirected);
     simulator = NULL;
     networkPlot = new GraphWidget();
     
@@ -480,7 +480,7 @@ void MainWindow::readEdgeList() {
 
     setCursor(Qt::WaitCursor);
     appendOutputLine("Importing network . . . ");
-    network = new Network("mynetwork", false);
+    network = new Network("mynetwork", Network::Undirected);
     network->read_edgelist(fileName.toStdString());
     network->dumper();
     network->validate();
@@ -982,7 +982,7 @@ void MainWindow::generate_network_thread() {
     netfileLine->setText("");
 
     int n = (numnodesLine->text()).toInt();
-    network = new Network("mynetwork", false);
+    network = new Network("mynetwork", Network::Undirected);
     network->populate(n);
 
     backgroundThread->setThreadType(BackgroundThread::GENERATE_NET);

@@ -9,7 +9,7 @@ int main() {
     MTRand mtrand = MTRand();
     for (int i = 0; i < 20; i++ ) {
         cout << i << endl;
-        Network net("test", false );
+        Network net("test", Network::Undirected );
         net.populate(N_NODES);
 	    //cout << net.size() << " ";
         //net.erdos_renyi(4);

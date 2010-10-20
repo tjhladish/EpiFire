@@ -2,7 +2,7 @@
 
 int main() {
     // Construct Network
-    Network net("name", false);
+    Network net("name", Network::Undirected);
     net.populate(10000);
 
     // Let's connect the network using an arbitrary degree distribution

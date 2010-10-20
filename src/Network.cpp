@@ -18,7 +18,7 @@ MTRand Network::mtrand;          // single instance of random number generator f
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-Network::Network( string name, bool directed) {
+Network::Network( string name, netType directed) {
     id = Network::id_counter++;
     this->name = name;
     this->directed = directed;
