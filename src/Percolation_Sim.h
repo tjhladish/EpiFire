@@ -20,12 +20,13 @@ class Percolation_Sim: public Simulator
 
         void set_transmissibility(double t) { this->T = t; }
 
-        void rand_infect (int n) {
+        vector<Node*> rand_infect (int n) {
             assert(n > 0);
             vector<Node*> patients_zero = rand_set_nodes_to_state(n, I);
             for (int i = 0; i < n; i++) {
                 infected.push_back(patients_zero[i]);
             };
+            return patients_zero;
         }
 
         void step_simulation () {
