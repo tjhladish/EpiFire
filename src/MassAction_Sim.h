@@ -10,8 +10,7 @@
 
 using namespace std;
 
-class Event
-{
+class Event {
 
     public:
 
@@ -24,22 +23,18 @@ class Event
 
 };
 
-class compTime
-{
+class compTime {
     public:
-        bool operator() (const Event* lhs, const Event* rhs) const
-        {
+        bool operator() (const Event* lhs, const Event* rhs) const {
             return (lhs->time>rhs->time);
         }
 
-        bool operator() (const Event& lhs, const Event& rhs) const
-        {
+        bool operator() (const Event& lhs, const Event& rhs) const {
             return (lhs.time>rhs.time);
         }
 };
 
-class MassAction_Sim
-{
+class MassAction_Sim {
 
     public:
         //constructo
