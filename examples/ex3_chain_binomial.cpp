@@ -10,7 +10,7 @@ int main() {
     // 3 with degree 3, 2 with degree 4, 1 with degree 5, and 3 with degree 3
     vector<double> degree_dist;
     double tmp_array[] = {0, 0, 1, 3, 2, 1, 3};
-    degree_dist.assign(tmp_array,tmp_array+7); // 5 == the length of tmp_array
+    degree_dist.assign(tmp_array,tmp_array+7); // 7 == the length of tmp_array
 
     // Now make those probabilities that sum to 1
     degree_dist = normalize_dist(degree_dist, sum(degree_dist));
@@ -23,7 +23,7 @@ int main() {
     int infectious_period = 10; // 10 days, hours,  whatever 
     double T = 0.05; // per timestep, per outbound edge probability of transmission
 
-    for (int i = 0; i < 10; i++){
+    for (int i = 0; i < 100; i++){
         // Choose and run simulation
         ChainBinomial_Sim sim(&net, infectious_period, T);
         sim.rand_infect(1);
@@ -33,3 +33,4 @@ int main() {
     }
     return 0;
 }
+

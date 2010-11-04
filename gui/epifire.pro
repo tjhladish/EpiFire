@@ -1,4 +1,4 @@
-CONFIG += qt thread debug
+CONFIG += qt thread release
 
 HEADERS     = mainWindow.h \
              plotView.h \
