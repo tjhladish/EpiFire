@@ -39,8 +39,8 @@ class ChainBinomial_Sim: public Simulator
         list<Node*> infected;
         vector<Node*> recovered;
         vector<double> time_dist; // Probability mass function for day of transmission
-
         priority_queue<Event, vector<Event>, compTime > transmissionQ;
+
     public:
         double T;                // transmissibiltiy per time step
         int infectious_period;
@@ -93,7 +93,8 @@ class ChainBinomial_Sim: public Simulator
             //         2 is infectious day 2
             //         ... up to the infectious period
             //         -1 is recovered
-            assert(infected.size() > 0);
+            int inf_size = infected.size();
+            assert(inf_size > 0);
             time++;
             list<Node*>::iterator inode;
             for (inode=infected.begin(); inode!=infected.end(); inode++) {
@@ -102,8 +103,11 @@ class ChainBinomial_Sim: public Simulator
             }
 
             // Some nodes may be reaching the end of their infectious period ...
-            while (infected.size() > 0 && infected.front()->get_state() > infectious_period) {
+
+            while (inf_size-- > 0) {
                 Node* first = infected.front();
+                if (first->get_state() <= infectious_period) break;
+
                 first->set_state(-1); // -> recovered
                 recovered.push_back( first );
                 infected.pop_front();
@@ -121,7 +125,6 @@ class ChainBinomial_Sim: public Simulator
             
             // As long as someone's still infected, step simulation
             while (infected.size() > 0)  step_simulation();
-
         }
 
         void add_event( Node* sink_node, int time, Node* source_node) {
