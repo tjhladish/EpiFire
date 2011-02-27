@@ -13,6 +13,16 @@ using namespace std;
 
 template <typename T> inline T sum(vector<T> list) { T sum=0; for (unsigned int i=0; i<list.size(); i++) sum += list[i]; return sum;}
 template <typename T> inline double mean(vector<T> list) { return (double) sum(list) / list.size(); }
+template <typename T> 
+inline double median(vector<T> L) { 
+    sort(L.begin(), L.end());
+    int len = L.size();
+    if (len%2 == 1) { // odd number of elements
+        return L[(len-1)/2];
+    } else { 
+        return (L[len/2] + L[(len-2)/2])/2.0;
+    }
+}
 
 long double factorial (int num);
 int min_element(vector<int> list);

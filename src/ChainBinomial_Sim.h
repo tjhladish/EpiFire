@@ -64,9 +64,7 @@ class ChainBinomial_Sim: public Simulator
         vector<Node*> rand_infect (int n) { // randomly infect n nodes
             assert(n > 0);
             vector<Node*> patients_zero = rand_choose_nodes(n);//set_nodes_to_state(n, 1);
-            for (int i = 0; i < n; i++) {
-                infect_node(patients_zero[i]);
-            };
+            for (int i = 0; i < n; i++) infect_node(patients_zero[i]);
             return patients_zero;
         }
 
