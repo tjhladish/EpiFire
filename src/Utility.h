@@ -61,6 +61,12 @@ inline std::string to_string (const T& t) {
     return ss.str();
 }
 
+inline float to_float(const std::string& s){
+    std::istringstream i(s);
+    float x = 0;
+    i >> x;
+    return x;
+}
 
 template <typename T>
 double stdev(vector<T> & numbers) {
