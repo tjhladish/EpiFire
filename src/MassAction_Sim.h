@@ -48,7 +48,7 @@ class MassAction_Sim {
                                  // event queue
         priority_queue<Event, vector<Event>, compTime > EventQ;
         vector<int> States;      // list of states; 0 is "never been infected"
-        vector<int> Rec;         // list of recovery times
+        vector<double> Rec;      // list of recovery times
         double Now;
         int epi_size;            //size of epidemic
 
