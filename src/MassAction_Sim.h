@@ -11,16 +11,12 @@
 using namespace std;
 
 class Event {
-
     public:
-
-        int patient;
         double time;
         char type;
-        Event(const Event& o) {  patient=o.patient; time = o.time; type=o.type; }
-        Event(int p,double t, char e) {  patient=p; time=t; type=e; }
-        Event& operator=(const Event& o) { patient=o.patient; time = o.time; type=o.type; }
-
+        Event(const Event& o) {  time = o.time; type=o.type; }
+        Event(double t, char e) { time=t; type=e; }
+        Event& operator=(const Event& o) { time = o.time; type=o.type; }
 };
 
 class compTime {
@@ -35,114 +31,113 @@ class compTime {
 };
 
 class MassAction_Sim {
-
     public:
-        //constructo
+                                    // constructor
         MassAction_Sim( int n, double gamma, double beta) { N=n; GAMMA=gamma; BETA=beta; reset(); }
 
-        int N;                   // population siz
-        double p0;               // fraction of population starting each epidemic
-        double GAMMA;            // param for exponential recovery time
-        double BETA;             // param for exponential transmission time
+        int N;                      // population size
+        double GAMMA;               // param for exponential recovery time
+        double BETA;                // param for exponential transmission time
 
-                                 // event queue
+                                    // event queue
         priority_queue<Event, vector<Event>, compTime > EventQ;
-        vector<int> States;      // list of states; 0 is "never been infected"
-        vector<double> Rec;      // list of recovery times
-        double Now;
-        int epi_size;            //size of epidemic
+        vector<int> Compartments;   // S, I, R compartments, with counts for each
+        //vector<float> Transmissions;
+        double Now;                 // Current "time" in simulation
 
-        MTRand mtrand;           // = MTRand();
+        MTRand mtrand;              // RNG
 
         void run_simulation() {
-            while (next_event()) continue;
+//            int day = -1;
+            while (next_event()) {
+//                if ((int) Now > day) {
+//                    cout << Now << "\t" << Compartments[1] << endl;
+//                    day = (int) Now;
+//                }
+
+                continue;
+            }
         }
 
         int epidemic_size() {
-            // count the number of recovered individuals at the end of the epidemic
-            int epi_size = 0;
-            for (int i = 0; i<States.size(); i++) {
-                if (States[i] == -1) epi_size++;
-            }
-            return epi_size;
+            return Compartments[2]; // Recovered class
         }
 
         int reset() {
             Now = 0.0;
 
-            States.clear();
-            States.resize(N,0);  // list of states; 0 is "never been infected"
+            Compartments.clear();
+            Compartments.resize(3,0);
+            Compartments[0] = N;
 
-            Rec.clear();
-            Rec.resize(N,NULL);  // list of recovery times
+            //Transmissions.clear();
         }
 
-        vector<int> rand_infect(int k) {
-            vector<int> p_zeros(k);
-
-            rand_nchoosek(N, p_zeros, &mtrand);
-            for (int i = 0; i < p_zeros.size(); i++) {
-                infect(p_zeros[i]);
+        void rand_infect(int k) {   // randomly infect k people
+            for (int i = 0; i < k; i++) {
+                infect();
             }
-            return p_zeros;
-        }
-
-        void infect(int x) {     //x is both index and an individual
-            States[x] = -2;
-            double Tr = rand_exp(GAMMA, &mtrand) + Now;
-            double Tc = rand_exp(BETA, &mtrand) + Now;
-            if ( Tc < Tr ) add_event(x, Tc, 'c');
-            add_event(x,Tr, 'r' );
-            Rec[x] = Tr;
             return;
         }
 
-        double susceptibility(int x) {
-            if (States[x] < 0) return 0.0;
-            else if (States[x] == 0) return 1.0;
+        void infect() {
+            assert(Compartments[0] > 0);
+            Compartments[0]--;      // decrement susceptibles
+            Compartments[1]++;      // increment infecteds
+                                    // time to recovery
+            double Tr = rand_exp(GAMMA, &mtrand) + Now;
+                                    // time to next contact
+            double Tc = rand_exp(BETA, &mtrand) + Now;
+            while ( Tc < Tr ) {     // does contact occur before recovery?
+                add_event(Tc, 'c'); // potential transmission event
+                Tc += rand_exp(BETA, &mtrand);
+            }
+            add_event(Tr, 'r' );
+            //Transmissions.push_back(Now);
+            return;
+        }
+
+        bool is_susceptible(int x) {
+            if (Compartments[0] >= x) return true;
+            else return false;
         }
 
         int next_event() {
             if ( EventQ.empty() ) return 0;
-                                 //get the element
-            Event event = EventQ.top();
-            EventQ.pop();        //remove from Q
+            Event event = EventQ.top(); // get the element
+            EventQ.pop();               // remove from Q
 
-            Now = event.time;
-            int patient = event.patient;
-            if (event.type == 'r') {
-                                 // -1 is 'recovered'
-                States[patient] = -1;
-                Rec[patient] = NULL;
-            }                    // event type must be 'c'
-            else {
-                                 // N-2 because person can't self-infect, and because randint includes endpoints
+            Now = event.time;           // advance time
+            if (event.type == 'r') {    // recovery event
+                Compartments[1]--;      // decrement Infected class
+                Compartments[2]++;      // increment Recovered class
+            } else {                    // event type must be 'c'
+                                 
+                // N-2 because person can't self-infect, and because randint includes endpoints
                 int contact = mtrand.randInt(N-2);
-                                 // this way we never draw the patient himself
-                if (contact >= patient) contact++;
+                if ( is_susceptible(contact) ) infect();
 
-                double s = susceptibility(contact);
-                if (s == 1) infect(contact);
-                else if (s > 0) {
-                    if (mtrand.rand() < s ) infect(contact);
-                }
-
-                // now let's see if patient will infect again
-                                 // time when recovery will occur
-                double Tr = Rec[patient];
-                                 // time of next potential contact
-                double Tc = rand_exp(BETA, &mtrand) + Now;
-                                 // add event if contact will happen before recovery
-                if (Tc < Tr) add_event(patient, Tc, 'c');
             }
-            //    delete event;
             return 1;
         }
 
-        void add_event( int patient, double time, char type) {
-            EventQ.push( Event(patient,time,type) );
+        void add_event( double time, char type) {
+            EventQ.push( Event(time,type) );
             return;
         }
+/*
+        int count_recent_events(double time, double window) {
+            int ct = 0;
+            for (int i = (signed) Transmissions.size() - 1; i != -1; i--) {
+                if (Transmissions[i] > time - window) {
+                    ct++;
+                } else {
+                    break;
+                }
+            }
+            return ct;
+        }
+*/
 
 };
 #endif
