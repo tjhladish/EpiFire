@@ -69,7 +69,8 @@ class MassAction_Sim {
             Compartments.clear();
             Compartments.resize(3,0);
             Compartments[0] = N;
-
+            
+            EventQ = priority_queue<Event, vector<Event>, compTime > ();
             //Transmissions.clear();
         }
 
@@ -114,7 +115,7 @@ class MassAction_Sim {
             } else {                    // event type must be 'c'
                                  
                 // N-2 because person can't self-infect, and because randint includes endpoints
-                int contact = mtrand.randInt(N-2);
+                int contact = mtrand.randInt(N-2) + 1; // add 1 b/c there's no person 0
                 if ( is_susceptible(contact) ) infect();
 
             }
