@@ -208,6 +208,12 @@ class Network
         void read_edgelist(string filename, char sep = ',');
                                  // write network to file
         void write_edgelist(string filename);
+
+        /*                         // read network structure from file
+        void read_adj_matrix(string filename, char sep = ',');
+                                 // write network to file
+        void write_adj_matrix(string filename);*/
+
                                  // output a graphviz file
         void graphviz(string filename);
         void dumper();           // print the network object contents in the terminal

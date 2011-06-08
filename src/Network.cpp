@@ -910,6 +910,55 @@ void Network::write_edgelist(string filename) {
 
 }
 
+/*
+void Network::read_adj_matrix(string filename, char sep) {
+
+    cerr << "Loading " << filename << endl;
+    ifstream myfile(filename.c_str());
+    std::stringstream ss;
+    map<string,Node*> idmap;
+
+    if (myfile.is_open()) {
+        string line;
+
+        int net_size = 0;
+        int row_id = 0;
+
+        while ( getline(myfile,line) ) {
+            //split string based on sep and store results into vector
+            vector<string> fields;
+            split(line, sep, fields);
+            const char whitespace[] = " \n\t\r";
+            
+            if (net_size == 0) {
+                net_size = fields.size();
+                this->populate(net_size);
+            }
+
+            if ((unsigned) net_size != fields.size()) {
+                cerr << "Adjacenty matrix does not appear to be square.  Make sure matrix file has the same number of elements on each line.\n";
+                exit(1);
+            }
+
+            for ( int col_id = 0; col_id<(signed) fields.size(); col_id++) {
+                if (not is_directed() and row_id > col_id) continue;
+                string val = strip(fields[col_id], whitespace);
+
+                if (val == "1") {
+                    get_node(row_id)->connect_to( get_node(col_id) );
+                } else if (val == "0") {
+                    continue;
+                } else {
+                    cerr << "Warning: unknown value found in adjacency matrix file (not 0 or 1): " << val << endl;
+                }
+            }
+            row_id++;
+        }
+    }
+    dumper();
+    cerr << "finished dumping network\n";
+    validate();
+}*/
 
 void Network::graphviz (string filename) {
     /*    if (get_edges().size() > 200) {
