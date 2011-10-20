@@ -1,5 +1,5 @@
-CFLAGS=--ansi --pedantic -O2
-#CFLAGS=--ansi --pedantic -g 
+#CFLAGS=--ansi --pedantic -O2
+CFLAGS=--ansi --pedantic -g 
 INCLUDE= -I../src/
 #LDFLAGS= -L../src/ -lsim 
 LDFLAGS=  ../src/*.o
@@ -17,6 +17,12 @@ ex2_percolation: ex2_percolation.cpp
 
 ex3_chain_binomial: ex3_chain_binomial.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex3_chain_binomial.cpp -o ex3_chain_binomial
+
+ex4_dynamic_net: ex4_dynamic_net.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex4_dynamic_net.cpp -o ex4_dynamic_net
+
+ex5_diff_eq: ex5_diff_eq.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) -L/usr/local/lib -lgsl -lblas ex5_diff_eq.cpp -o ex5_diff_eq
 
 test_rng: test_rng.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_rng.cpp -o test_rng

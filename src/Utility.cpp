@@ -97,7 +97,6 @@ vector<double> gen_trunc_exponential(double lambda, int min, int max) {
 
 
 int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
-    //assert(sum(dist) == 1);  // why doesn't this work?
     double last = 0;
     double rand = mtrand->rand();
     for (unsigned int i = 0; i < dist.size(); i++ ) {
@@ -110,7 +109,7 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
             last = current;
         }
     }
-    if (last != 1) {
+    if (fabs(last - 1) > EPSILON) {
         cerr << "rand_nonuniform_int() expects a normed distribution.  "
             << "Your probabilities sum to " << setprecision(15) << last
             << ".  Fix this using Utilities::normalize_dist()\n";
@@ -185,36 +184,7 @@ double normal_cdf(double x, double mu, double var) {
         return normal_pdf(x, 0, 1)*(b1*t + b2*pow(t,2) + b3*pow(t,3) + b4*pow(t,4) + b5*pow(t,5));
     }
 }
-/*
-double sum(vector<double> list) {
-    double sum = 0;
-    for (int i = 0; i < list.size(); i++) {
-        sum += list[i];
-    }
-    return sum;
-}
 
-int sum(vector<int> list) {
-    int sum = 0;
-    for (int i = 0; i < list.size(); i++) {
-        sum += list[i];
-    }
-    return sum;
-}
-
-template <typename T>
-T sum(vector<T> list) {
-    T sum = 0;
-    for (int i = 0; i < list.size(); i++) {
-        sum += list[i];
-    }
-    return sum;
-}
-
-template <typename T>
-double mean(vector<T> list) {
-    return (double) sum(list) / list.size();
-}*/
 
 long double factorial(int num) {
     assert( num > -1);
@@ -222,24 +192,6 @@ long double factorial(int num) {
     long double result = 0.0;//log(1);
     for (int i = 1; i <= num; i++) result = result + logl((long double) i);
     return expl(result);
-}
-
-
-int min_element(vector<int> list) {
-    int element = list[0];
-    for (unsigned int i = 0; i < list.size(); i++) {
-        element = min(element, list[i]);
-    }
-    return element;
-}
-
-
-int max_element(vector<int> list) {
-    int element = list[0];
-    for (unsigned int i = 0; i < list.size(); i++) {
-        element = max(element, list[i]);
-    }
-    return element;
 }
 
 
@@ -263,6 +215,44 @@ void split(const string& s, char c, vector<string>& v) {
     if (j == string::npos) v.push_back(s.substr(i, s.length( )));
 }
 
+
+vector<double> read_vector_file(string filename) {
+//    cerr << "Loading " << filename << endl;
+    ifstream myfile(filename.c_str());
+    std::stringstream ss;
+
+    vector<double> M;
+    if (myfile.is_open()) {
+        string line;
+        while ( getline(myfile,line) ) {
+            M.push_back(string2double(line));
+        }
+    }
+    return M;
+}
+
+vector<vector<double> > read_2D_vector_file(string filename, char sep) {
+ //   cerr << "Loading " << filename << endl;
+    ifstream myfile(filename.c_str());
+    std::stringstream ss;
+
+    vector<vector<double> > M;
+    if (myfile.is_open()) {
+        string line;
+
+        while ( getline(myfile,line) ) {
+            vector<string> fields;
+            split(line, sep, fields);
+
+            vector<double>row(fields.size());
+            for( unsigned int i=0; i < fields.size(); i++ ) {
+                    row[i] = string2double(fields[i]);
+            }
+            M.push_back(row);
+        }
+    }
+    return M;
+}
 
 
 /*      	// initialize random seed:
