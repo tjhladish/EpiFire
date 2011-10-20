@@ -883,9 +883,9 @@ void Network::read_edgelist(string filename, char sep) {
             }
         }
     }
-    dumper();
-    cerr << "finished dumping network\n";
-    validate();
+    //dumper();
+    //cerr << "finished dumping network\n";
+    //validate();
 }
 
 
