@@ -934,6 +934,10 @@ void Network::write_edgelist(string filename) {
             int start_id = edges[e]->start->id;
             int end_id   = edges[e]->end->id;
             if (!is_directed() and start_id > end_id) continue;
+            if (!is_directed() and start_id == end_id) {
+                Edge* comp = edges[e]->get_complement();
+                if (edge[e]->id > comp->id) continue;
+            }
             pipe << start_id << "," << end_id << endl;
         }
         if (node_list[i]->deg() == 0) pipe << node_list[i]->id << endl;
