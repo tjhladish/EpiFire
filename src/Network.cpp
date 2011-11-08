@@ -289,7 +289,6 @@ bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     if ( is_stopped() ) return false;
     if ( stubs.size() == 0 ) return true;
                                  //get all edges in network
-    vector<Edge*>::iterator itr;
     Edge* m;
     Edge* n;
 
@@ -317,7 +316,6 @@ bool Network::lose_loops() {
     if ( is_stopped() ) return false;
                                  //all (outbound) edges in the network
     vector<Edge*> edges = get_edges();
-    vector<Edge*>::iterator edge1, edge2;
 
     int m, n;
     int failed_attempts = 0;
