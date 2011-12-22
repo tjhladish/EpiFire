@@ -74,6 +74,7 @@ vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
 int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
 double rand_exp (double lambda, MTRand* mtrand);
+int rand_binomial (int n, double p, MTRand* mtrand);
 
 void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
 double normal_pdf(double x, double mu, double var);

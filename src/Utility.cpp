@@ -124,6 +124,29 @@ double rand_exp(double lambda, MTRand* mtrand) {
 }
 
 
+// Devroye's algorithm, as described by Kachitvichyanukul and Schmeiser (1988), 
+// "Binomial random variate generation."  I've correct two mistakes in the publication:
+// the original fails if p = 1, and the conditional for the while loop should be y <= n, 
+// rather than y < n.  The latter precludes ever drawing a deviate of n for p < 1.
+int rand_binomial (int n, double p, MTRand* mtrand) {
+    if ( p == 1.0 ) { return n; }
+    int y = 0; 
+    int x = 0;
+    double c = log( 1 - p );
+    if (c == 0) {
+        return x;
+    }
+    while ( y <= n ) {
+        u = mtrand->rand();
+        y += ((int) log(u)/c) + 1
+        if (y > n) {
+            return x;
+        }
+        x += 1
+    }
+}
+
+
 // N is the size of the sample space--which includes 0, so the int "N" itself will never get
 // returned in the sample.  sample is an empty vector that needs to be of size k; mtrand
 // is a Mersenne Twister RNG.
@@ -164,7 +187,7 @@ void rand_nchoosek(int N, vector<int>& sample, MTRand* mtrand) {
 
 double normal_pdf(double x, double mu, double var) {
     long double PI = 3.1415926535897932384;
-    return exp(-pow(x-mu,2) / 2.0*var) / sqrt(2*PI*var);
+    return exp(-pow(x-mu,2) / (2.0*var)) / sqrt(2*PI*var);
 }
 
 double normal_cdf(double x, double mu, double var) {
