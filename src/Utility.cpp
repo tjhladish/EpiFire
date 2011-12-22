@@ -23,13 +23,13 @@ vector<double> gen_trunc_poisson(double lambda, int min, int max) {
     vector<double> dist(max + 1, 0.0);//initializes distribution to all 0
     double sum = 0.0;
     if (lambda < 500) {
-        for (int k = lambda; k >= min; k--) {
+        for (int k = (int) lambda; k >= min; k--) {
             dist[k] = poisson_pmf(lambda, k);
             sum += dist[k];
             if ( dist[k]/sum < EPSILON) break;
         }
         
-        for (int k = lambda + 1; k <= max; k++) {
+        for (int k = (int) lambda + 1; k <= max; k++) {
             dist[k] = poisson_pmf(lambda, k);
             sum += dist[k];
             if ( dist[k]/sum < EPSILON) {
@@ -40,7 +40,7 @@ vector<double> gen_trunc_poisson(double lambda, int min, int max) {
 
     } else { // use a normal approximation, avoiding the factorial and pow calculations
     // by starting 9 SD's above lambda, we should capture all densities greater than EPSILON
-        int prob_max = lambda + 9 * sqrt(lambda);
+        int prob_max = (int) (lambda + 9.0 * sqrt(lambda));
         max = MIN(max, prob_max);
         dist.resize(max + 1);
         

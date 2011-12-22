@@ -285,8 +285,6 @@ bool Network::_rand_connect() {
 }
 
 
-// rand_connect_stubs() expects ONLY stubs in network, i.e. not some complete edges
-// and some stubs
 bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     if ( is_stopped() ) return false;
     if ( stubs.size() == 0 ) return true;
@@ -743,6 +741,40 @@ void Network::disconnect_edges() {
 }
 
 
+bool Network::shuffle_edges(double frac) {
+    vector<Edge*> stubs;
+    vector<Edge*> edges = get_edges();
+    if (is_directed()) {
+        cerr << "Shuffling edges not implemented for directed networks.\n";
+        exit(1);
+    } else {
+        vector< pair <Edge*, Edge*> > edge_pairs;
+
+        for (unsigned int e = 0; e < edges.size(); e++) {
+            Edge* edge = edges[e];
+            Edge* comp = edge->get_complement();
+            if ( edge->id < comp->id ) {
+                pair<Edge*, Edge*> edge_pair(edge, comp);
+                edge_pairs.push_back(edge_pair);
+            }
+        }
+        int num_pairs_to_shuffle = (int) (frac * edges.size()/2 + 0.5); // rounding instead of truncating
+        vector<int> sample(num_pairs_to_shuffle);
+        rand_nchoosek((int) edge_pairs.size(), sample, &mtrand);
+
+        for (unsigned int i = 0; i < sample.size(); i++) {
+            Edge* edge1 = edge_pairs[ sample[i] ].first;
+            Edge* edge2 = edge_pairs[ sample[i] ].second;
+            edge1->break_end();
+            edge2->break_end();
+            stubs.push_back(edge1);
+            stubs.push_back(edge2);
+        }
+    }
+    return rand_connect_stubs( stubs );
+}
+
+
 void Network::set_node_states(vector<stateType> &states) {
     if ((signed) states.size() != size()) {
         cerr << "Error in Network::set_node_states(): Vector of node states has size " << states.size() << " but there are " << size() << " nodes in network.\n";
@@ -883,9 +915,9 @@ void Network::read_edgelist(string filename, char sep) {
             }
         }
     }
-    dumper();
-    cerr << "finished dumping network\n";
-    validate();
+    //dumper();
+    //cerr << "finished dumping network\n";
+    //validate();
 }
 
 
@@ -902,6 +934,10 @@ void Network::write_edgelist(string filename) {
             int start_id = edges[e]->start->id;
             int end_id   = edges[e]->end->id;
             if (!is_directed() and start_id > end_id) continue;
+            if (!is_directed() and start_id == end_id) {
+                Edge* comp = edges[e]->get_complement();
+                if (edges[e]->id > comp->id) continue;
+            }
             pipe << start_id << "," << end_id << endl;
         }
         if (node_list[i]->deg() == 0) pipe << node_list[i]->id << endl;

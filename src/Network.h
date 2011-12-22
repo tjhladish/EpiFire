@@ -197,6 +197,10 @@ class Network
         // reconnect those edges in a new, randomized way.
         void disconnect_edges();
 
+        // Randomly rewire a fraction of the edges in the network.  Currently only
+        // undirected networks are supported.
+        bool shuffle_edges(double frac);
+
         void set_node_states(vector<stateType> &states);
         
         inline void set_topology_altered(bool flag) { _topology_altered = flag; }
