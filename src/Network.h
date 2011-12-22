@@ -58,7 +58,7 @@ typedef int stateType;
 class Network
 {
     static int id_counter;       //remains in memory until end of the program
-    static MTRand mtrand;        //pointer to a radom number generator
+    static MTRand mtrand;        //pointer to a random number generator
     friend class Node;
     friend class Edge;
 
