@@ -65,6 +65,10 @@ T max_element(vector<T> list) {
     return element;
 }
 
+template <typename T> inline 
+T range(vector<T> list) {
+    return max_element(list) - min_element(list);
+}
 
 
 
