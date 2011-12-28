@@ -77,6 +77,7 @@ int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
 int rand_uniform_int (int min, int max, MTRand* mtrand);
 double rand_uniform (double min, double max, MTRand* mtrand);
 double rand_exp (double lambda, MTRand* mtrand);
+int rand_binomial (int n, double p, MTRand* mtrand);
 
 void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
 double normal_pdf(double x, double mu, double var);
