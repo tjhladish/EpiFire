@@ -15,6 +15,7 @@ class Simulator
         MTRand* mtrand;
 
         Simulator() { time = 0; net=NULL; mtrand=NULL; };
+        virtual ~Simulator();
         Simulator(Network* net) { this->net = net; this->time = 0; this->mtrand = net->get_rng(); };
 
         void set_network( Network* net ) { this->net = net; this->mtrand = net->get_rng(); };
