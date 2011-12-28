@@ -119,6 +119,17 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
 }
 
 
+int rand_uniform_int (int min, int max, MTRand* mtrand) {
+    // uniform integer on [min, max] (inclusive)
+    return mtrand->randInt( max - min ) + min;
+}
+
+   
+double rand_uniform (double min, double max, MTRand* mtrand) {
+    return mtrand->rand( max - min ) + min;
+}
+
+
 double rand_exp(double lambda, MTRand* mtrand) {
     return -log(mtrand->rand()) / lambda;
 }
