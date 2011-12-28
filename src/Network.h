@@ -248,7 +248,7 @@ class Network
                                  // distances == edge costs
         vector< vector<double> > calculate_distances( vector<Node*> destinations );
                                  // edge lengths assumed to be 1
-        vector< vector<int> > calculate_unweighted_distances( vector<Node*> destinations );
+        vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
 
 
 
@@ -316,7 +316,7 @@ class Node
         double mean_min_path();
 
         // if network edge lengths can be assumed to be 1, use min_unweighted_paths()
-        vector<int> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
+        vector<double> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
         vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
@@ -366,12 +366,12 @@ class Edge
         void disconnect_nodes(); //destroys edge & its complement
 
         inline int get_id() { return id; };
-        inline int get_cost() { return cost; };
+        inline double get_cost() { return cost; };
         inline Node* get_start() { return start; };
         inline Node* get_end() { return end; };
         inline Network* get_network() {return network; };
 
-        void set_cost(int c);
+        void set_cost(double c);
 
         Edge* get_complement();
         void swap_ends (Edge* other_edge);
@@ -386,7 +386,7 @@ class Edge
         Edge(Node* start , Node* end);
 
         int id;
-        int cost;
+        double cost;
         Node* start;
         Node* end;
         Network* network;

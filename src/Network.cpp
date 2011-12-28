@@ -640,12 +640,12 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
 
 // if node_set is not provided, default is all nodes.  node_set would generally be
 // all nodes within a single component
-vector< vector<int> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
+vector< vector<double> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
     if (node_set.size() == 0) node_set = node_list;
-    vector< vector<int> > dist( node_set.size() );
+    vector< vector<double> > dist( node_set.size() );
     for(unsigned int i = 0; i < node_set.size(); i++ ) {
         if (is_stopped() ) {
-            vector< vector<int> > empty;
+            vector< vector<double> > empty;
             return empty;
         }
         PROG(100*(i-1)/node_set.size());
@@ -1229,11 +1229,11 @@ double Node::min_path(Node* dest) {
 }
 
 
-vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
+vector<double> Node::min_unweighted_paths(vector<Node*> nodes) {
     if (nodes.size() == 0) nodes = get_network()->node_list;
-    map <Node*, int> known_cost; 
+    map <Node*, double> known_cost; 
     queue<Node*> Q; // nodes to examine next
-    vector<int> distances(nodes.size(), -1);
+    vector<double> distances(nodes.size(), -1);
 
     map <Node*, int> hits; // checking for existence is faster with a map
     for (unsigned int i = 0; i < nodes.size(); i++) {
@@ -1245,7 +1245,7 @@ vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
 
     int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
     while ( ! Q.empty() ) {
-        if (get_network()->process_stopped) {vector<int> empty; return empty;}
+        if (get_network()->process_stopped) {vector<double> empty; return empty;}
         Node* known_node = Q.front();
         Q.pop();
 
@@ -1317,7 +1317,7 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
                                  //Move on if this endpoint already has a known cost
                 if ( known_cost.count(neighbor) > 0 ) continue;
                                  //Otherwise, calculate a cost using this path
-                int cost = known_cost[known_node] + edges[i]->cost;
+                double cost = known_cost[known_node] + edges[i]->cost;
 
                 //Store the new cost as an uncertain cost
                 //if it's better than the others we've seen
@@ -1396,7 +1396,7 @@ void Edge::disconnect_nodes() {
 }
 
 
-void Edge::set_cost(int c) {
+void Edge::set_cost(double c) {
     this->cost=c;
 }
 
