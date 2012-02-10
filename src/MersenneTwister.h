@@ -102,18 +102,18 @@ class MTRand
         // reading 624 consecutive values.
 
         // Access to 32-bit random numbers
-        double rand();           // real number in [0,1]
-                                 // real number in [0,n]
-        double rand( const double& n );
-        double randExc();        // real number in [0,1)
-                                 // real number in [0,n)
-        double randExc( const double& n );
-        double randDblExc();     // real number in (0,1)
-                                 // real number in (0,n)
-        double randDblExc( const double& n );
-        uint32 randInt();        // integer in [0,2^32-1]
-                                 // integer in [0,n] for n < 2^32
-        uint32 randInt( const uint32& n );
+        double rand();                          // real number in [0,1]
+        double rand( const double& n );         // real number in [0,n]
+
+        double randExc();                       // real number in [0,1)
+        double randExc( const double& n );      // real number in [0,n)
+        
+        double randDblExc();                    // real number in (0,1)
+        double randDblExc( const double& n );   // real number in (0,n)
+        
+        uint32 randInt();                       // integer in [0,2^32-1]
+        uint32 randInt( const uint32& n );      // integer in [0,n] for n < 2^32
+        
         double operator()() {    // same as rand()
             return rand();
         }

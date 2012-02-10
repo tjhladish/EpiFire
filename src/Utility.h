@@ -19,8 +19,8 @@ template <typename T> inline double mean(vector<T> list) { return (double) sum(l
 template <typename T> inline
 double median(vector<T> L) { 
     sort(L.begin(), L.end());
-    float idx = (L.size() -1) * 0.5;
-    return (L[ceil(idx)] + L[floor(idx)]) /2.0;
+    float idx = (L.size() - 1.0) * 0.5;
+    return ( L[ (int) ceil(idx) ] + L[ (int) floor(idx) ] ) /2.0;
 }
 
 // five number summary (min, 1st quartile, median, 3rd quartile, max)
@@ -65,6 +65,10 @@ T max_element(vector<T> list) {
     return element;
 }
 
+template <typename T> inline 
+T range(vector<T> list) {
+    return max_element(list) - min_element(list);
+}
 
 
 
@@ -72,8 +76,12 @@ long double poisson_pmf(double lambda, int k);
 vector<double> gen_trunc_poisson (double lambda, int min, int max);
 vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
+
 int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
+int rand_uniform_int (int min, int max, MTRand* mtrand);
+double rand_uniform (double min, double max, MTRand* mtrand);
 double rand_exp (double lambda, MTRand* mtrand);
+int rand_binomial (int n, double p, MTRand* mtrand);
 
 void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
 double normal_pdf(double x, double mu, double var);
@@ -108,16 +116,32 @@ inline float to_float(const std::string& s){
     return x;
 }
 
+inline double to_double(const std::string& s){
+    std::istringstream i(s);
+    double x = 0;
+    i >> x;
+    return x;
+}
+
+inline int to_int(const std::string& s){
+    std::istringstream i(s);
+    int x = 0;
+    i >> x;
+    return x;
+}
+
 template <typename T>
-double stdev(vector<T> & numbers) {
+double variance(vector<T> & numbers) {
     double x = mean(numbers);
     double var_num = 0;
     int N = numbers.size();
     for (int i=0; i<N; i++) var_num += pow(numbers[i] - x, 2);
-    double sd = sqrt(var_num/(N-1));
-    return sd;
+    double var = var_num/(N-1);
+    return var;
 }
 
+template <typename T>
+double stdev(vector<T> & numbers) { return sqrt( variance(numbers) ); }
 
 template <typename T>
 inline int sign(const T& _a) { return (int)((_a)<0 ? (-1) : (1)); }

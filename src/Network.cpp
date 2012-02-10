@@ -285,13 +285,10 @@ bool Network::_rand_connect() {
 }
 
 
-// rand_connect_stubs() expects ONLY stubs in network, i.e. not some complete edges
-// and some stubs
 bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     if ( is_stopped() ) return false;
     if ( stubs.size() == 0 ) return true;
                                  //get all edges in network
-    vector<Edge*>::iterator itr;
     Edge* m;
     Edge* n;
 
@@ -319,7 +316,6 @@ bool Network::lose_loops() {
     if ( is_stopped() ) return false;
                                  //all (outbound) edges in the network
     vector<Edge*> edges = get_edges();
-    vector<Edge*>::iterator edge1, edge2;
 
     int m, n;
     int failed_attempts = 0;
@@ -644,12 +640,12 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
 
 // if node_set is not provided, default is all nodes.  node_set would generally be
 // all nodes within a single component
-vector< vector<int> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
+vector< vector<double> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
     if (node_set.size() == 0) node_set = node_list;
-    vector< vector<int> > dist( node_set.size() );
+    vector< vector<double> > dist( node_set.size() );
     for(unsigned int i = 0; i < node_set.size(); i++ ) {
         if (is_stopped() ) {
-            vector< vector<int> > empty;
+            vector< vector<double> > empty;
             return empty;
         }
         PROG(100*(i-1)/node_set.size());
@@ -740,6 +736,40 @@ void Network::disconnect_edges() {
         for (unsigned int j=0; j< edges.size(); j++ ) edges[j]->break_end();
     }
     set_topology_altered(true);
+}
+
+
+bool Network::shuffle_edges(double frac) {
+    vector<Edge*> stubs;
+    vector<Edge*> edges = get_edges();
+    if (is_directed()) {
+        cerr << "Shuffling edges not implemented for directed networks.\n";
+        exit(1);
+    } else {
+        vector< pair <Edge*, Edge*> > edge_pairs;
+
+        for (unsigned int e = 0; e < edges.size(); e++) {
+            Edge* edge = edges[e];
+            Edge* comp = edge->get_complement();
+            if ( edge->id < comp->id ) {
+                pair<Edge*, Edge*> edge_pair(edge, comp);
+                edge_pairs.push_back(edge_pair);
+            }
+        }
+        int num_pairs_to_shuffle = (int) (frac * edges.size()/2 + 0.5); // rounding instead of truncating
+        vector<int> sample(num_pairs_to_shuffle);
+        rand_nchoosek((int) edge_pairs.size(), sample, &mtrand);
+
+        for (unsigned int i = 0; i < sample.size(); i++) {
+            Edge* edge1 = edge_pairs[ sample[i] ].first;
+            Edge* edge2 = edge_pairs[ sample[i] ].second;
+            edge1->break_end();
+            edge2->break_end();
+            stubs.push_back(edge1);
+            stubs.push_back(edge2);
+        }
+    }
+    return rand_connect_stubs( stubs );
 }
 
 
@@ -902,6 +932,10 @@ void Network::write_edgelist(string filename) {
             int start_id = edges[e]->start->id;
             int end_id   = edges[e]->end->id;
             if (!is_directed() and start_id > end_id) continue;
+            if (!is_directed() and start_id == end_id) {
+                Edge* comp = edges[e]->get_complement();
+                if (edges[e]->id > comp->id) continue;
+            }
             pipe << start_id << "," << end_id << endl;
         }
         if (node_list[i]->deg() == 0) pipe << node_list[i]->id << endl;
@@ -1195,11 +1229,11 @@ double Node::min_path(Node* dest) {
 }
 
 
-vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
+vector<double> Node::min_unweighted_paths(vector<Node*> nodes) {
     if (nodes.size() == 0) nodes = get_network()->node_list;
-    map <Node*, int> known_cost; 
+    map <Node*, double> known_cost; 
     queue<Node*> Q; // nodes to examine next
-    vector<int> distances(nodes.size(), -1);
+    vector<double> distances(nodes.size(), -1);
 
     map <Node*, int> hits; // checking for existence is faster with a map
     for (unsigned int i = 0; i < nodes.size(); i++) {
@@ -1211,7 +1245,7 @@ vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
 
     int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
     while ( ! Q.empty() ) {
-        if (get_network()->process_stopped) {vector<int> empty; return empty;}
+        if (get_network()->process_stopped) {vector<double> empty; return empty;}
         Node* known_node = Q.front();
         Q.pop();
 
@@ -1283,7 +1317,7 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
                                  //Move on if this endpoint already has a known cost
                 if ( known_cost.count(neighbor) > 0 ) continue;
                                  //Otherwise, calculate a cost using this path
-                int cost = known_cost[known_node] + edges[i]->cost;
+                double cost = known_cost[known_node] + edges[i]->cost;
 
                 //Store the new cost as an uncertain cost
                 //if it's better than the others we've seen
@@ -1362,7 +1396,7 @@ void Edge::disconnect_nodes() {
 }
 
 
-void Edge::set_cost(int c) {
+void Edge::set_cost(double c) {
     this->cost=c;
 }
 

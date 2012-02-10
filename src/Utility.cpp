@@ -23,13 +23,13 @@ vector<double> gen_trunc_poisson(double lambda, int min, int max) {
     vector<double> dist(max + 1, 0.0);//initializes distribution to all 0
     double sum = 0.0;
     if (lambda < 500) {
-        for (int k = lambda; k >= min; k--) {
+        for (int k = (int) lambda; k >= min; k--) {
             dist[k] = poisson_pmf(lambda, k);
             sum += dist[k];
             if ( dist[k]/sum < EPSILON) break;
         }
         
-        for (int k = lambda + 1; k <= max; k++) {
+        for (int k = (int) lambda + 1; k <= max; k++) {
             dist[k] = poisson_pmf(lambda, k);
             sum += dist[k];
             if ( dist[k]/sum < EPSILON) {
@@ -40,7 +40,7 @@ vector<double> gen_trunc_poisson(double lambda, int min, int max) {
 
     } else { // use a normal approximation, avoiding the factorial and pow calculations
     // by starting 9 SD's above lambda, we should capture all densities greater than EPSILON
-        int prob_max = lambda + 9 * sqrt(lambda);
+        int prob_max = (int) (lambda + 9.0 * sqrt(lambda));
         max = MIN(max, prob_max);
         dist.resize(max + 1);
         
@@ -119,8 +119,52 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
 }
 
 
+int rand_uniform_int (int min, int max, MTRand* mtrand) {
+    // uniform integer on [min, max] (inclusive)
+    return mtrand->randInt( max - min ) + min;
+}
+
+   
+double rand_uniform (double min, double max, MTRand* mtrand) {
+    return mtrand->rand( max - min ) + min;
+}
+
+
 double rand_exp(double lambda, MTRand* mtrand) {
     return -log(mtrand->rand()) / lambda;
+}
+
+
+// Devroye's algorithm, as described by Kachitvichyanukul and Schmeiser (1988), 
+// "Binomial random variate generation."  I've correct two mistakes in the publication:
+// the original fails if p = 1, and the conditional for the while loop should be y <= n, 
+// rather than y < n.  The latter precludes ever drawing a deviate of n for p < 1.
+
+// Algorithm BG
+// 1. Set y <-- 0, x <-- 0, c <-- ln(1 - p).
+// 2. If c == 0, return x.
+// 3. Generate u ~ U(0, 1).
+// 4. y <-- y + floor(ln(u)/c) + 1.
+// 5. If y < n, set x <-- x + 1, and goto 3.
+// 6. Return x.
+
+int rand_binomial (int n, double p, MTRand* mtrand) {
+    if ( p == 1.0 ) { return n; }
+    int y = 0; 
+
+    int x = 0;
+    double c = log( 1 - p );
+    if (c == 0) return x;
+
+    while ( y <= n ) {
+        double u = mtrand->rand();
+        y += (int) (log(u)/c) + 1;
+        if (y > n) {
+            return x;
+        }
+        x += 1;
+    }
+    return -1; // bad input was provided
 }
 
 
@@ -164,7 +208,7 @@ void rand_nchoosek(int N, vector<int>& sample, MTRand* mtrand) {
 
 double normal_pdf(double x, double mu, double var) {
     long double PI = 3.1415926535897932384;
-    return exp(-pow(x-mu,2) / 2.0*var) / sqrt(2*PI*var);
+    return exp(-pow(x-mu,2) / (2.0*var)) / sqrt(2*PI*var);
 }
 
 double normal_cdf(double x, double mu, double var) {

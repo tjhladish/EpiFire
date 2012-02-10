@@ -17,6 +17,7 @@ class Percolation_Sim: public Simulator
 
         Percolation_Sim():Simulator() {};
         Percolation_Sim(Network* net):Simulator(net) {};
+        ~Percolation_Sim() { };
 
         void set_transmissibility(double t) { this->T = t; }
 
