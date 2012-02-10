@@ -329,7 +329,7 @@ void MainWindow::createSimulatorSettingsBox() {
     infectiousPeriodLine->setValidator( new QIntValidator(1,INT_MAX,infectiousPeriodLine) );
     infectiousPeriodLine->setToolTip("Duration of infectious state (units = time steps)\nRange: positive integers");
 
-    QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
+    QLabel *pzeroLabel = new QLabel(tr("Initially infected:"));
     QLabel *transLabel = new QLabel(tr("Transmissibility:"));
     infectiousPeriodLabel = new QLabel(tr("Infectious period:"));
     changeSimType(0); 
