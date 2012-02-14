@@ -120,13 +120,15 @@ Node* Network::get_node(int node_id) {
 }
 
 
-bool Network::ring_lattice(int k) {
-    if (k > (size() - 1) / 2) {
-        cerr << "Cannot construct a ring lattice with k-nearest neighbors where k > (network size - 1) / 2\n";
+bool Network::ring_lattice(int N, int K) {
+    if (K > (N - 1) / 2) {
+        cerr << "Cannot construct a ring lattice with K-nearest neighbors where K > (network size - 1) / 2\n";
         return false;
     }
+    clear_nodes();
+    populate(N);
     for (unsigned int i = 0; i < node_list.size(); i++) {
-        for (int j = 1; j <= k; j++) {
+        for (int j = 1; j <= K; j++) {
             int dest = (i+j) % node_list.size();
             node_list[i]->connect_to(node_list[dest]);
         }
@@ -174,7 +176,50 @@ bool Network::square_lattice(int R, int C, bool diag) {
 }
 
 
-//void Network::small_world(double p) {}
+bool Network::small_world(int N, int K, double beta) {
+    if ( ring_lattice(N, K) ) {
+        vector<Node*> nodes = get_nodes();
+        for (int i=0; i<size(); i++) {
+            Node* node = nodes[i];
+            int degree = node->deg();
+            // How many of node's edges will be shuffled?
+            int m = rand_binomial( degree, beta, &mtrand );
+            // Which edges will be shuffled?
+            vector<int> edge_indeces(m);
+            rand_nchoosek( degree, edge_indeces, &mtrand );
+            
+            vector<Edge*> edges = node->get_edges_out();
+            for (unsigned int e=0; e<edge_indeces.size(); e++) {
+                // Get the current neighbor associated with this edge
+                Node* neighbor = edges[e]->get_end();
+                
+                // Make sure that there are nodes that can be connected to
+                int prospective_neighborhood = N - 1 - degree;
+                if (prospective_neighborhood > 0) {
+                    bool success = false;
+                    int attempts = 0;
+                    while (! success) {
+                        // Grab a node from the network
+                        Node* prospective = get_rand_node();
+                        // If it's not this node, and not a current neighbor
+                        if ( prospective != node and ! node->is_neighbor(prospective) ) {
+                            // then connect to it, and ditch the old neighbor
+                            success = node->change_neighbors( neighbor, prospective );
+                        }
+                        if (++attempts > 1000) {
+                            // Give up if we've tried to rewire this edge 1000 times
+                            cerr << "Failed to find a prospective neighbor after trying 1000 times in small world generator.\n";
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        return false; // making ring lattice failed
+    }
+    return true;
+}
 
 // generates a poisson network vi the Erdos & Renyi algorithm
 bool Network::erdos_renyi(double lambda) {
@@ -1144,6 +1189,43 @@ bool Node::is_neighbor (Node* node2) {
 }
 
 
+// Move an edge going from this node from a "current" neighbor to a "future" neighbor
+bool Node::change_neighbors (Node* current, Node* future) {
+    // try to find an edge going to "current" node
+    Edge* edge_in;
+    Edge* edge_out;
+    for (unsigned int i = 0; i < edges_out.size(); i++) {
+        if ( current == edges_out[i]->end ) {
+            edge_out = edges_out[i];
+            break;
+        }
+    }
+    
+    if (edge_out == NULL) {
+        return false;
+    } else {
+        edge_out->break_end();
+        edge_out->define_end(future);
+    }
+
+    if (! get_network()->is_directed()) {
+        for (unsigned int i = 0; i < edges_in.size(); i++) {
+            if ( current == edges_in[i]->start ) {
+                edge_in = edges_in[i];
+                break;
+            }
+        }
+        if (edge_in == NULL) {
+            return false;
+        } else {
+            edge_in->_move_edge(future);
+        }
+    }
+
+    return true;
+}
+
+
 void Node::connect_to (Node* end) {
     Edge* edge1 = add_stub_out();
     edge1->define_end(end);
@@ -1160,14 +1242,31 @@ void Node::_add_inbound_edge (Edge* edge) {
 }
 
 
+void Node::_add_outbound_edge (Edge* edge) {
+    edges_out.push_back(edge);
+    network->set_topology_altered(true);
+}
+
+
 //this doesn't delete the edge object, it merely disconnects it from the node that it was going to.
 void Node::_del_inbound_edge (Edge* inbound) {
     if (! inbound->end->id == this->id ) {
         cerr << "The 'inbound' edge does not connect to the node provided." << endl;
-        exit(1);
+        exit(100);
     }
     vector<Edge*>::iterator itr = find(edges_in.begin(), edges_in.end(), inbound);
     edges_in.erase(itr);
+}
+
+
+//this doesn't delete the edge object, it merely disconnects it from the node that it was coming from.
+void Node::_del_outbound_edge (Edge* outbound) {
+    if (! outbound->start->id == this->id ) {
+        cerr << "The 'outbound' edge does not start from the node provided." << endl;
+        exit(101);
+    }
+    vector<Edge*>::iterator itr = find(edges_out.begin(), edges_out.end(), outbound);
+    edges_out.erase(itr);
 }
 
 
@@ -1456,6 +1555,17 @@ void Edge::break_end () {
 void Edge::define_end (Node* end_node) {
     end = end_node;
     end->_add_inbound_edge(this);
+    network->set_topology_altered(true);
+}
+
+
+void Edge::_move_edge (Node* new_start_node) {
+    if (start != NULL) {
+        start->_del_outbound_edge(this);
+        start = NULL;
+    }
+    start = new_start_node;
+    start->_add_outbound_edge(this);
     network->set_topology_altered(true);
 }
 
