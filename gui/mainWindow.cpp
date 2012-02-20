@@ -322,7 +322,7 @@ void MainWindow::createSimulatorSettingsBox() {
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
     pzeroLine->setValidator( new QIntValidator(1,INT_MAX,pzeroLine) );
-    pzeroLine->setToolTip("Number of randomly chosen individuals to start epidemic\nRange: positive integers");
+    pzeroLine->setToolTip("Number of randomly chosen individuals to start epidemic\nRange: [0, network size]");
 
     infectiousPeriodLine = new QLineEdit();
     infectiousPeriodLine->setAlignment(Qt::AlignRight);
@@ -706,7 +706,14 @@ bool MainWindow::validateParameters() {
         appendOutputLine("Transmissibility must be between 0.0 and 1.0"); 
         return false;
     }
-   return true; 
+
+    int n = network->size();
+    int p = pzeroLine->text().toInt(); 
+    if (p < 0 || p > n) {
+        appendOutputLine("Number of introductions must be between 0 and network size"); 
+        return false;
+    }
+    return true; 
 }
 
 
@@ -722,14 +729,18 @@ void MainWindow::updateRZero() {
     double R0 = convertTtoR0(T); 
     rzeroLine->setText( QString::number(R0));
 
-    // mass action prediction
+    // final size predictions (mass action and network)
     int patient_zero_ct = pzeroLine->text().toInt(); 
     int n = network->size();
-    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * maExpectedSize(R0, 0, 0.5);
-    maPredictionLine->setText( frequencyFormat( predictedSize, (double) n ) );
+    double predictedSize = 0;
+    double netPredictedSize = 0;
 
-    // network prediction
-    double netPredictedSize = n * netExpectedSize(T, ((double) patient_zero_ct)/n);
+    if (patient_zero_ct > 0 && patient_zero_ct <= n) {
+        predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * maExpectedSize(R0, 0.0, 1.0);
+        netPredictedSize = n * netExpectedSize(T, ((double) patient_zero_ct)/n);
+    }
+
+    maPredictionLine->setText( frequencyFormat( predictedSize, (double) n ) );
     netPredictionLine->setText( frequencyFormat( netPredictedSize, (double) n ) );
 }
 
@@ -749,7 +760,24 @@ void MainWindow::simulatorWrapper() {
         simulatorBusy = true;
     }
 
-    if (!network || network->size() == 0 ) { appendOutputLine("Network must be generated first."); return; }
+    {   // Double check that simulation can be performed using current values
+        int patient_zero_ct = pzeroLine->text().toInt(); 
+        bool failure = false;
+        if (!network || network->size() == 0 ) { 
+            appendOutputLine("Network must be generated first.");
+            failure = true;
+        } else if (patient_zero_ct < 1) {
+            appendOutputLine("Number of initial infections must be at least 1.");
+            failure = true;
+        } else if (patient_zero_ct > network->size()) {
+            appendOutputLine("Number of initial infections cannot be greater than network size.");
+            failure = true;
+        }
+        if (failure) {
+            simulatorBusy = false;
+            return;
+        }
+    }
 
     // Get values from textboxes
     double T = (transLine->text()).toDouble();
@@ -1101,6 +1129,7 @@ double MainWindow::maExpectedSize(double R0, double P0) {
 }*/
 
 
+/*
 double MainWindow::maExpectedSize(double R0, double P0, double guess) {
     if (R0 != R0) { // not a bug!  checks to see if R0 is undefined
         return P0;
@@ -1114,27 +1143,35 @@ double MainWindow::maExpectedSize(double R0, double P0, double guess) {
         else return maExpectedSize(R0, P0, p);
     }
 }
+*/
 
-/*
-double MainWindow::maExpectedSizeB(double R0, double P0) {
+
+double MainWindow::maExpectedSize(double R0, double lower, double upper) {
     //Bisection method
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
-    cerr << "b" << endl;
-    double guess = 0.5;
-    double S0 = 1.0 - P0;
-    for (int i = 0; i < 10; i++) {
-        cerr << "b: " << guess << endl;
-        double p = S0*(1-exp(-R0 * guess));
+    double S0 = 1.0; // assume no one is recovered or immune
+    double guess = lower + (upper - lower) / 2.0;
+    double p = S0*(1-exp(-R0 * guess));
+
+    int max_itr = 100;
+    int itr = 0;
+    double epsilon = pow(10,-5);
+
+    while (fabs(p-guess) > epsilon && itr < 100) {
+        itr++;
+
         if (guess < p) {
-            guess += 1.0/pow(2, i+2);
+            lower = guess;
         } else if (guess > p) {
-            guess -= 1.0/pow(2, i+2);
+            upper = guess;
         }
+        guess = lower + (upper - lower) / 2.0;
+        p = S0*(1-exp(-R0 * guess));
     }
-    return guess;
+    return p;
 }
-*/
+
 
 
 // Calculate the theoretical epidemic size (and probability) based on

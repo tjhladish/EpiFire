@@ -232,7 +232,7 @@ class MainWindow : public QMainWindow
         double convertTtoR0(double T);
         double convertTtoTCB (double T, int d);
         double convertTCBtoT (double TCB, int d);
-        double maExpectedSize(double R0, double P0_frac, double guess);
+        double maExpectedSize(double R0, double lower_bound, double upper_bound);
         double netExpectedSize(double T, double P0_frac);
         
         int percent_complete(int current, double predicted);
