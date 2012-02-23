@@ -21,8 +21,13 @@ ex3_chain_binomial: ex3_chain_binomial.cpp
 ex4_dynamic_net: ex4_dynamic_net.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) ex4_dynamic_net.cpp -o ex4_dynamic_net
 
-ex5_diff_eq: ex5_diff_eq.cpp
-	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) -L/usr/local/lib -lgsl -lblas ex5_diff_eq.cpp -o ex5_diff_eq
+ex5adiff_eq: ex5_diff_eq.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) -lgsl -lblas ex5_diff_eq.cpp -o ex5adiff_eq
+
+ex5b_diff_eq: ex5_diff_eq.cpp
+	g++ $(CFLAGS) -o ex5b_diff_eq ex5_diff_eq.cpp $(INCLUDE) $(LDFLAGS) -L../gsl_subset -lgsl_subset -I../gsl_subset 
+
+
 
 test_rng: test_rng.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_rng.cpp -o test_rng
