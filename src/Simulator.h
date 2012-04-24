@@ -83,7 +83,7 @@ class Simulator
         virtual void reset() {};
 
         protected:
-            ~Simulator() { };
+            //~Simulator() { };
 
 };
 
