@@ -183,6 +183,7 @@ void GNode::paint(QPainter *painter, const QStyleOptionGraphicsItem*, QWidget *)
     painter->setBrush(QBrush(_brush));
     painter->drawEllipse(-nodesize/2,-nodesize/2,nodesize,nodesize);
 	setBoundingBox(_boxWidth+1,_boxHeight+1);
+
 }
 
 

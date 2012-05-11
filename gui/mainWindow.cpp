@@ -481,7 +481,12 @@ void MainWindow::readEdgeList() {
     setCursor(Qt::WaitCursor);
     appendOutputLine("Importing network . . . ");
     network = new Network("mynetwork", Network::Undirected);
-    network->read_edgelist(fileName.toStdString());
+
+    char sep = ',';
+    if ( fileName.endsWith(".tab", Qt::CaseInsensitive)) sep = '\t';
+    else if ( fileName.endsWith(".space", Qt::CaseInsensitive)) sep = ' ';
+
+    network->read_edgelist(fileName.toStdString(), sep);
     network->dumper();
     network->validate();
     netfileLine->setText(fileName);
@@ -934,13 +939,13 @@ void MainWindow::plotNetwork() {
     for(unsigned int i=0; i < edges.size(); i++ ) {
         if (seen.count(edges[i]->get_complement())) continue;
         seen[edges[i]] = true;
-        //int id1 = edges[i]->get_start()->get_id();
-        //int id2 = edges[i]->get_end()->get_id();
-        //string name1 = QString::number(id1).toStdString();
-        //string name2 = QString::number(id2).toStdString();
-        //GNode* n1 = networkPlot->addGNode(name1,0);
-        //GNode* n2 = networkPlot->addGNode(name2,0);
-        //GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
+        int id1 = edges[i]->get_start()->get_id();
+        int id2 = edges[i]->get_end()->get_id();
+        string name1 = QString::number(id1).toStdString();
+        string name2 = QString::number(id2).toStdString();
+        GNode* n1 = networkPlot->addGNode(name1,0);
+        GNode* n2 = networkPlot->addGNode(name2,0);
+        GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
     }
     networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();

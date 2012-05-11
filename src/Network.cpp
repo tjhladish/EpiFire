@@ -909,7 +909,7 @@ void Network::read_edgelist(string filename, char sep) {
         while ( getline(myfile,line) ) {
             //split string based on "," and store results into vector
             vector<string> fields;
-            split(line,sep, fields);
+            split(line, sep, fields);
             const char whitespace[] = " \n\t\r";
 
             //format check
@@ -1192,8 +1192,9 @@ bool Node::is_neighbor (Node* node2) {
 // Move an edge going from this node from a "current" neighbor to a "future" neighbor
 bool Node::change_neighbors (Node* current, Node* future) {
     // try to find an edge going to "current" node
-    Edge* edge_in;
-    Edge* edge_out;
+    Edge* edge_in = NULL;
+    Edge* edge_out = NULL;
+
     for (unsigned int i = 0; i < edges_out.size(); i++) {
         if ( current == edges_out[i]->end ) {
             edge_out = edges_out[i];
