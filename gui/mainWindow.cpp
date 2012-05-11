@@ -1154,7 +1154,7 @@ double MainWindow::maExpectedSize(double R0, double lower, double upper) {
     double guess = lower + (upper - lower) / 2.0;
     double p = S0*(1-exp(-R0 * guess));
 
-    int max_itr = 100;
+    //int max_itr = 100;
     int itr = 0;
     double epsilon = pow(10,-5);
 
