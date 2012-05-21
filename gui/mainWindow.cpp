@@ -1149,7 +1149,7 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
         return net->rand_connect_user(dist);
     }
     else if (dist == SMW) {
-        if (param1 <= 0 || ((int) param2) % 2 != 0) { appendOutputLine("Small-world K parameter must be even and > 0"); return false; }
+        if (param1 <= 0 || ((int) param1) % 2 != 0) { appendOutputLine("Small-world K parameter must be even and > 0"); return false; }
         if (param2 < 0.0 || param2 > 1.0) { appendOutputLine("Small-world beta parameter must be between 0 and 1"); return false; }
         return net->small_world( net->size(), (int) (param1/2), param2 );
     }
