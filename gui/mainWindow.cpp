@@ -243,7 +243,13 @@ void MainWindow::createNetworkSettingsBox() {
     powKappaLine = new QLineEdit();
     powKappaLine->setAlignment(Qt::AlignRight);
     powKappaLine->setValidator( new QDoubleValidator(0.0, numeric_limits<double>::max(), 20, powKappaLine) );
-    
+    smwKLine = new QLineEdit();
+    smwKLine->setAlignment(Qt::AlignRight);
+    smwKLine->setValidator( new QIntValidator(1, INT_MAX, smwKLine) );
+    smwBetaLine = new QLineEdit();
+    smwBetaLine->setAlignment(Qt::AlignRight);
+    smwBetaLine->setValidator( new QDoubleValidator(0.0, 1.0, 20, smwBetaLine) );
+
     netsourceLabel = new QLabel(tr("Network source:"));
     netfileLabel = new QLabel(tr("Filename"));
     netfileLine = new QLineEdit();
@@ -266,6 +272,7 @@ void MainWindow::createNetworkSettingsBox() {
     distBox->addItem("Power law");
     distBox->addItem("Urban");
     distBox->addItem("Constant");
+    distBox->addItem("Small world");
 
     // Initialize layout to parameters for first distribution listed, and listen for changes
     defaultNetworkParameters();
@@ -297,8 +304,10 @@ void MainWindow::createNetworkSettingsBox() {
     layout->addWidget(expBetaLine, 3, 1);
     layout->addWidget(powAlphaLine, 3, 1);
     layout->addWidget(conValueLine, 3, 1);
+    layout->addWidget(smwKLine, 3, 1);
     layout->addWidget(param2Label, 4, 0);
     layout->addWidget(powKappaLine, 4, 1);
+    layout->addWidget(smwBetaLine, 4, 1);
     
     networkSettingsGroupBox->setLayout(layout);
 }
@@ -580,9 +589,14 @@ void MainWindow::defaultNetworkParameters() {
         expBetaLine->hide();
         powAlphaLine->hide();
         conValueLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
+
         expBetaLine->setText(default_exp_param1);
         powAlphaLine->setText(default_pow_param1);
         conValueLine->setText(default_con_param1);
+        smwKLine->setText(default_smw_param1);
+        smwBetaLine->setText(default_smw_param2);
 
         param2Label->setText("Kappa:");
         param2Label->hide();
@@ -604,6 +618,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         conValueLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
         
         param1Label->setText("Lambda:");
         param1Label->show();
@@ -615,6 +631,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         conValueLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
 
         param1Label->setText("Beta:");
         param1Label->show();
@@ -624,6 +642,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         poiLambdaLine->hide();
         expBetaLine->hide();
         conValueLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
 
         param1Label->setText("Alpha:");
         param1Label->show();
@@ -640,6 +660,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         conValueLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
     }
     else if (dist_type == 4) { // Constant
         poiLambdaLine->hide();
@@ -647,10 +669,26 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         powAlphaLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
 
         param1Label->setText("Fixed degree:");
         param1Label->show();
         conValueLine->show();
+    }
+    else if (dist_type == 5) { // Small world
+        poiLambdaLine->hide();
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        powKappaLine->hide();
+        conValueLine->hide();
+
+        param1Label->show();
+        param1Label->setText("Mean degree (even):");
+        param2Label->show();
+        param2Label->setText("Shuffled fraction:");
+        smwKLine->show();
+        smwBetaLine->show();
     }
 }
 
@@ -838,8 +876,9 @@ void MainWindow::simulatorWrapper() {
 
 void MainWindow::addStateData() {
     vector<int> node_states(100);
+    vector<Node*> nodelist = network->get_nodes();
     for (int i = 0; i < network->size() && (unsigned) i < node_states.size(); i++) {
-        node_states[i] = (int) network->get_node(i)->get_state();
+        node_states[i] = (int) nodelist[i]->get_state();
     }
 
     statePlot->addData(node_states);
@@ -945,7 +984,7 @@ void MainWindow::plotNetwork() {
         string name2 = QString::number(id2).toStdString();
         GNode* n1 = networkPlot->addGNode(name1,0);
         GNode* n2 = networkPlot->addGNode(name2,0);
-        GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
+        networkPlot->addGEdge(n1,n2,"edgeTag",0);
     }
     networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();
@@ -1053,7 +1092,10 @@ bool MainWindow::generate_network() {
         par2 = (powKappaLine->text()).toDouble();
     } else if (dist_type == CON) {
         par1 = (conValueLine->text()).toDouble();
-    } 
+    } else if (dist_type == SMW) {
+        par1 = (smwKLine->text()).toDouble();
+        par2 = (smwBetaLine->text()).toDouble();
+    }
 
     // 'true' on success, 'false' if interrupted or impossible
     return connect_network(network, dist_type, par1, par2);
@@ -1106,6 +1148,12 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
         dist[param1] = 1;
         return net->rand_connect_user(dist);
     }
+    else if (dist == SMW) {
+        if (param1 <= 0 || ((int) param2) % 2 != 0) { appendOutputLine("Small-world K parameter must be even and > 0"); return false; }
+        if (param2 < 0.0 || param2 > 1.0) { appendOutputLine("Small-world beta parameter must be between 0 and 1"); return false; }
+        return net->small_world( net->size(), (int) (param1/2), param2 );
+    }
+
     return false;
 }
 

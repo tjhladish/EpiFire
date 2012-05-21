@@ -36,6 +36,8 @@ const QString default_exp_param1 = "0.3";
 const QString default_pow_param1 = "1.5";
 const QString default_pow_param2 = "10.0";
 const QString default_con_param1 = "5";
+const QString default_smw_param1 = "6";
+const QString default_smw_param2 = "0.01";
 
 const QString generateNetMsg = "Click Generate network to begin";
 const QString loadNetMsg = "Click Import edge list to begin";
@@ -89,7 +91,7 @@ class MainWindow : public QMainWindow
         QTextEdit* logEditor;
         QProgressDialog* progressDialog;
 
-        enum DistType  { POI, EXP, POW, URB, CON};
+        enum DistType  { POI, EXP, POW, URB, CON, SMW};
         int rep_ct;
         vector< vector<Node*> > netComponents;
         void updateProgress(int x);
@@ -177,9 +179,11 @@ class MainWindow : public QMainWindow
         QLineEdit* expBetaLine;
         QLineEdit* powAlphaLine;
         QLineEdit* conValueLine;
+        QLineEdit* smwKLine;
 
         QLabel* param2Label;
         QLineEdit* powKappaLine;
+        QLineEdit* smwBetaLine;
 
         QLabel* netfileLabel;
         QLineEdit* netfileLine;
