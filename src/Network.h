@@ -57,8 +57,8 @@ typedef int stateType;
 
 class Network
 {
-    static int id_counter;       //remains in memory until end of the program
-    static MTRand mtrand;        //pointer to a random number generator
+    static int id_counter;       // remains in memory until end of the program
+    static MTRand mtrand;        // random number generator
     friend class Node;
     friend class Edge;
 
@@ -153,10 +153,13 @@ class Network
         bool sparse_random_graph(double lambda);
         //fast_random_graph() tries to pick the fastest algorithm based on parameters given
         bool fast_random_graph(double lambda);
-        bool ring_lattice(int k);
+        // Ring lattice with N nodes, each connected to K nearest neighbors
+        bool ring_lattice(int N, int K);
                                  // RxC lattice, including diagonals if diag
         bool square_lattice(int R, int C, bool diag);
-        bool small_world(double p);
+        //Watts-Strogatz small world network with N nodes initially connected to K neighbors
+        // and shuffled with probability beta
+        bool small_world(int N, int K, double beta);
         bool rand_connect_poisson(double lambda);
         bool rand_connect_powerlaw(double alpha, double kappa);
         bool rand_connect_exponential(double lambda);
@@ -248,7 +251,7 @@ class Network
                                  // distances == edge costs
         vector< vector<double> > calculate_distances( vector<Node*> destinations );
                                  // edge lengths assumed to be 1
-        vector< vector<int> > calculate_unweighted_distances( vector<Node*> destinations );
+        vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
 
 
 
@@ -316,7 +319,7 @@ class Node
         double mean_min_path();
 
         // if network edge lengths can be assumed to be 1, use min_unweighted_paths()
-        vector<int> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
+        vector<double> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
         vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
@@ -326,6 +329,7 @@ class Node
         bool is_neighbor(Node* node2);
                                  // a->connect_to(b) == b->connect_to(a) for undirected networks
         void connect_to (Node* end);
+        bool change_neighbors(Node* old_neighbor, Node* new_neighbor);
         bool operator==( const Node& n2 );
         friend ostream& operator<< (ostream &out, Node* node);
         void dumper();
@@ -350,7 +354,10 @@ class Node
         stateType state;
         void _add_inbound_edge (Edge* edge);
         void _del_inbound_edge (Edge* inbound);
+        void _add_outbound_edge (Edge* edge);
+        void _del_outbound_edge (Edge* outbound);
 };
+
 
 class Edge
 {
@@ -366,12 +373,12 @@ class Edge
         void disconnect_nodes(); //destroys edge & its complement
 
         inline int get_id() { return id; };
-        inline int get_cost() { return cost; };
+        inline double get_cost() { return cost; };
         inline Node* get_start() { return start; };
         inline Node* get_end() { return end; };
         inline Network* get_network() {return network; };
 
-        void set_cost(int c);
+        void set_cost(double c);
 
         Edge* get_complement();
         void swap_ends (Edge* other_edge);
@@ -384,9 +391,10 @@ class Edge
 
     private:
         Edge(Node* start , Node* end);
+        void _move_edge(Node* new_start_node);
 
         int id;
-        int cost;
+        double cost;
         Node* start;
         Node* end;
         Network* network;

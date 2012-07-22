@@ -243,7 +243,13 @@ void MainWindow::createNetworkSettingsBox() {
     powKappaLine = new QLineEdit();
     powKappaLine->setAlignment(Qt::AlignRight);
     powKappaLine->setValidator( new QDoubleValidator(0.0, numeric_limits<double>::max(), 20, powKappaLine) );
-    
+    smwKLine = new QLineEdit();
+    smwKLine->setAlignment(Qt::AlignRight);
+    smwKLine->setValidator( new QIntValidator(1, INT_MAX, smwKLine) );
+    smwBetaLine = new QLineEdit();
+    smwBetaLine->setAlignment(Qt::AlignRight);
+    smwBetaLine->setValidator( new QDoubleValidator(0.0, 1.0, 20, smwBetaLine) );
+
     netsourceLabel = new QLabel(tr("Network source:"));
     netfileLabel = new QLabel(tr("Filename"));
     netfileLine = new QLineEdit();
@@ -266,6 +272,7 @@ void MainWindow::createNetworkSettingsBox() {
     distBox->addItem("Power law");
     distBox->addItem("Urban");
     distBox->addItem("Constant");
+    distBox->addItem("Small world");
 
     // Initialize layout to parameters for first distribution listed, and listen for changes
     defaultNetworkParameters();
@@ -297,8 +304,10 @@ void MainWindow::createNetworkSettingsBox() {
     layout->addWidget(expBetaLine, 3, 1);
     layout->addWidget(powAlphaLine, 3, 1);
     layout->addWidget(conValueLine, 3, 1);
+    layout->addWidget(smwKLine, 3, 1);
     layout->addWidget(param2Label, 4, 0);
     layout->addWidget(powKappaLine, 4, 1);
+    layout->addWidget(smwBetaLine, 4, 1);
     
     networkSettingsGroupBox->setLayout(layout);
 }
@@ -322,14 +331,14 @@ void MainWindow::createSimulatorSettingsBox() {
     pzeroLine = new QLineEdit();
     pzeroLine->setAlignment(Qt::AlignRight);
     pzeroLine->setValidator( new QIntValidator(1,INT_MAX,pzeroLine) );
-    pzeroLine->setToolTip("Number of randomly chosen individuals to start epidemic\nRange: positive integers");
+    pzeroLine->setToolTip("Number of randomly chosen individuals to start epidemic\nRange: [0, network size]");
 
     infectiousPeriodLine = new QLineEdit();
     infectiousPeriodLine->setAlignment(Qt::AlignRight);
     infectiousPeriodLine->setValidator( new QIntValidator(1,INT_MAX,infectiousPeriodLine) );
     infectiousPeriodLine->setToolTip("Duration of infectious state (units = time steps)\nRange: positive integers");
 
-    QLabel *pzeroLabel = new QLabel(tr("Patient zero count:"));
+    QLabel *pzeroLabel = new QLabel(tr("Initially infected:"));
     QLabel *transLabel = new QLabel(tr("Transmissibility:"));
     infectiousPeriodLabel = new QLabel(tr("Infectious period:"));
     changeSimType(0); 
@@ -481,7 +490,12 @@ void MainWindow::readEdgeList() {
     setCursor(Qt::WaitCursor);
     appendOutputLine("Importing network . . . ");
     network = new Network("mynetwork", Network::Undirected);
-    network->read_edgelist(fileName.toStdString());
+
+    char sep = ',';
+    if ( fileName.endsWith(".tab", Qt::CaseInsensitive)) sep = '\t';
+    else if ( fileName.endsWith(".space", Qt::CaseInsensitive)) sep = ' ';
+
+    network->read_edgelist(fileName.toStdString(), sep);
     network->dumper();
     network->validate();
     netfileLine->setText(fileName);
@@ -575,9 +589,14 @@ void MainWindow::defaultNetworkParameters() {
         expBetaLine->hide();
         powAlphaLine->hide();
         conValueLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
+
         expBetaLine->setText(default_exp_param1);
         powAlphaLine->setText(default_pow_param1);
         conValueLine->setText(default_con_param1);
+        smwKLine->setText(default_smw_param1);
+        smwBetaLine->setText(default_smw_param2);
 
         param2Label->setText("Kappa:");
         param2Label->hide();
@@ -599,6 +618,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         conValueLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
         
         param1Label->setText("Lambda:");
         param1Label->show();
@@ -610,6 +631,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         conValueLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
 
         param1Label->setText("Beta:");
         param1Label->show();
@@ -619,6 +642,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         poiLambdaLine->hide();
         expBetaLine->hide();
         conValueLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
 
         param1Label->setText("Alpha:");
         param1Label->show();
@@ -635,6 +660,8 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         conValueLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
     }
     else if (dist_type == 4) { // Constant
         poiLambdaLine->hide();
@@ -642,10 +669,26 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         powAlphaLine->hide();
         param2Label->hide();
         powKappaLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
 
         param1Label->setText("Fixed degree:");
         param1Label->show();
         conValueLine->show();
+    }
+    else if (dist_type == 5) { // Small world
+        poiLambdaLine->hide();
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        powKappaLine->hide();
+        conValueLine->hide();
+
+        param1Label->show();
+        param1Label->setText("Mean degree (even):");
+        param2Label->show();
+        param2Label->setText("Shuffled fraction:");
+        smwKLine->show();
+        smwBetaLine->show();
     }
 }
 
@@ -706,7 +749,14 @@ bool MainWindow::validateParameters() {
         appendOutputLine("Transmissibility must be between 0.0 and 1.0"); 
         return false;
     }
-   return true; 
+
+    int n = network->size();
+    int p = pzeroLine->text().toInt(); 
+    if (p < 0 || p > n) {
+        appendOutputLine("Number of introductions must be between 0 and network size"); 
+        return false;
+    }
+    return true; 
 }
 
 
@@ -722,14 +772,18 @@ void MainWindow::updateRZero() {
     double R0 = convertTtoR0(T); 
     rzeroLine->setText( QString::number(R0));
 
-    // mass action prediction
+    // final size predictions (mass action and network)
     int patient_zero_ct = pzeroLine->text().toInt(); 
     int n = network->size();
-    double predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * maExpectedSize(R0, 0, 0.5);
-    maPredictionLine->setText( frequencyFormat( predictedSize, (double) n ) );
+    double predictedSize = 0;
+    double netPredictedSize = 0;
 
-    // network prediction
-    double netPredictedSize = n * netExpectedSize(T, ((double) patient_zero_ct)/n);
+    if (patient_zero_ct > 0 && patient_zero_ct <= n) {
+        predictedSize = (double) patient_zero_ct +  ((double) n - patient_zero_ct) * maExpectedSize(R0, 0.0, 1.0);
+        netPredictedSize = n * netExpectedSize(T, ((double) patient_zero_ct)/n);
+    }
+
+    maPredictionLine->setText( frequencyFormat( predictedSize, (double) n ) );
     netPredictionLine->setText( frequencyFormat( netPredictedSize, (double) n ) );
 }
 
@@ -749,7 +803,24 @@ void MainWindow::simulatorWrapper() {
         simulatorBusy = true;
     }
 
-    if (!network || network->size() == 0 ) { appendOutputLine("Network must be generated first."); return; }
+    {   // Double check that simulation can be performed using current values
+        int patient_zero_ct = pzeroLine->text().toInt(); 
+        bool failure = false;
+        if (!network || network->size() == 0 ) { 
+            appendOutputLine("Network must be generated first.");
+            failure = true;
+        } else if (patient_zero_ct < 1) {
+            appendOutputLine("Number of initial infections must be at least 1.");
+            failure = true;
+        } else if (patient_zero_ct > network->size()) {
+            appendOutputLine("Number of initial infections cannot be greater than network size.");
+            failure = true;
+        }
+        if (failure) {
+            simulatorBusy = false;
+            return;
+        }
+    }
 
     // Get values from textboxes
     double T = (transLine->text()).toDouble();
@@ -805,8 +876,9 @@ void MainWindow::simulatorWrapper() {
 
 void MainWindow::addStateData() {
     vector<int> node_states(100);
+    vector<Node*> nodelist = network->get_nodes();
     for (int i = 0; i < network->size() && (unsigned) i < node_states.size(); i++) {
-        node_states[i] = (int) network->get_node(i)->get_state();
+        node_states[i] = (int) nodelist[i]->get_state();
     }
 
     statePlot->addData(node_states);
@@ -906,13 +978,13 @@ void MainWindow::plotNetwork() {
     for(unsigned int i=0; i < edges.size(); i++ ) {
         if (seen.count(edges[i]->get_complement())) continue;
         seen[edges[i]] = true;
-        //int id1 = edges[i]->get_start()->get_id();
-        //int id2 = edges[i]->get_end()->get_id();
-        //string name1 = QString::number(id1).toStdString();
-        //string name2 = QString::number(id2).toStdString();
-        //GNode* n1 = networkPlot->addGNode(name1,0);
-        //GNode* n2 = networkPlot->addGNode(name2,0);
-        //GEdge* e = networkPlot->addGEdge(n1,n2,"edgeTag",0);
+        int id1 = edges[i]->get_start()->get_id();
+        int id2 = edges[i]->get_end()->get_id();
+        string name1 = QString::number(id1).toStdString();
+        string name2 = QString::number(id2).toStdString();
+        GNode* n1 = networkPlot->addGNode(name1,0);
+        GNode* n2 = networkPlot->addGNode(name2,0);
+        networkPlot->addGEdge(n1,n2,"edgeTag",0);
     }
     networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();
@@ -1020,7 +1092,10 @@ bool MainWindow::generate_network() {
         par2 = (powKappaLine->text()).toDouble();
     } else if (dist_type == CON) {
         par1 = (conValueLine->text()).toDouble();
-    } 
+    } else if (dist_type == SMW) {
+        par1 = (smwKLine->text()).toDouble();
+        par2 = (smwBetaLine->text()).toDouble();
+    }
 
     // 'true' on success, 'false' if interrupted or impossible
     return connect_network(network, dist_type, par1, par2);
@@ -1073,6 +1148,12 @@ bool MainWindow::connect_network (Network* net, DistType dist, double param1, do
         dist[param1] = 1;
         return net->rand_connect_user(dist);
     }
+    else if (dist == SMW) {
+        if (param1 <= 0 || ((int) param1) % 2 != 0) { appendOutputLine("Small-world K parameter must be even and > 0"); return false; }
+        if (param2 < 0.0 || param2 > 1.0) { appendOutputLine("Small-world beta parameter must be between 0 and 1"); return false; }
+        return net->small_world( net->size(), (int) (param1/2), param2 );
+    }
+
     return false;
 }
 
@@ -1101,6 +1182,7 @@ double MainWindow::maExpectedSize(double R0, double P0) {
 }*/
 
 
+/*
 double MainWindow::maExpectedSize(double R0, double P0, double guess) {
     if (R0 != R0) { // not a bug!  checks to see if R0 is undefined
         return P0;
@@ -1114,27 +1196,35 @@ double MainWindow::maExpectedSize(double R0, double P0, double guess) {
         else return maExpectedSize(R0, P0, p);
     }
 }
+*/
 
-/*
-double MainWindow::maExpectedSizeB(double R0, double P0) {
+
+double MainWindow::maExpectedSize(double R0, double lower, double upper) {
     //Bisection method
     //This calculation is based on the expected epidemic size
     //for a mass action model. See Tildesley & Keeling (JTB, 2009).
-    cerr << "b" << endl;
-    double guess = 0.5;
-    double S0 = 1.0 - P0;
-    for (int i = 0; i < 10; i++) {
-        cerr << "b: " << guess << endl;
-        double p = S0*(1-exp(-R0 * guess));
+    double S0 = 1.0; // assume no one is recovered or immune
+    double guess = lower + (upper - lower) / 2.0;
+    double p = S0*(1-exp(-R0 * guess));
+
+    //int max_itr = 100;
+    int itr = 0;
+    double epsilon = pow(10,-5);
+
+    while (fabs(p-guess) > epsilon && itr < 100) {
+        itr++;
+
         if (guess < p) {
-            guess += 1.0/pow(2, i+2);
+            lower = guess;
         } else if (guess > p) {
-            guess -= 1.0/pow(2, i+2);
+            upper = guess;
         }
+        guess = lower + (upper - lower) / 2.0;
+        p = S0*(1-exp(-R0 * guess));
     }
-    return guess;
+    return p;
 }
-*/
+
 
 
 // Calculate the theoretical epidemic size (and probability) based on

@@ -120,13 +120,15 @@ Node* Network::get_node(int node_id) {
 }
 
 
-bool Network::ring_lattice(int k) {
-    if (k > (size() - 1) / 2) {
-        cerr << "Cannot construct a ring lattice with k-nearest neighbors where k > (network size - 1) / 2\n";
+bool Network::ring_lattice(int N, int K) {
+    if (K > (N - 1) / 2) {
+        cerr << "Cannot construct a ring lattice with K-nearest neighbors where K > (network size - 1) / 2\n";
         return false;
     }
+    clear_nodes();
+    populate(N);
     for (unsigned int i = 0; i < node_list.size(); i++) {
-        for (int j = 1; j <= k; j++) {
+        for (int j = 1; j <= K; j++) {
             int dest = (i+j) % node_list.size();
             node_list[i]->connect_to(node_list[dest]);
         }
@@ -174,7 +176,50 @@ bool Network::square_lattice(int R, int C, bool diag) {
 }
 
 
-//void Network::small_world(double p) {}
+bool Network::small_world(int N, int K, double beta) {
+    if ( ring_lattice(N, K) ) {
+        vector<Node*> nodes = get_nodes();
+        for (int i=0; i<size(); i++) {
+            Node* node = nodes[i];
+            int degree = node->deg();
+            // How many of node's edges will be shuffled?
+            int m = rand_binomial( degree, beta, &mtrand );
+            // Which edges will be shuffled?
+            vector<int> edge_indeces(m);
+            rand_nchoosek( degree, edge_indeces, &mtrand );
+            
+            vector<Edge*> edges = node->get_edges_out();
+            for (unsigned int e=0; e<edge_indeces.size(); e++) {
+                // Get the current neighbor associated with this edge
+                Node* neighbor = edges[e]->get_end();
+                
+                // Make sure that there are nodes that can be connected to
+                int prospective_neighborhood = N - 1 - degree;
+                if (prospective_neighborhood > 0) {
+                    bool success = false;
+                    int attempts = 0;
+                    while (! success) {
+                        // Grab a node from the network
+                        Node* prospective = get_rand_node();
+                        // If it's not this node, and not a current neighbor
+                        if ( prospective != node and ! node->is_neighbor(prospective) ) {
+                            // then connect to it, and ditch the old neighbor
+                            success = node->change_neighbors( neighbor, prospective );
+                        }
+                        if (++attempts > 1000) {
+                            // Give up if we've tried to rewire this edge 1000 times
+                            cerr << "Failed to find a prospective neighbor after trying 1000 times in small world generator.\n";
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        return false; // making ring lattice failed
+    }
+    return true;
+}
 
 // generates a poisson network vi the Erdos & Renyi algorithm
 bool Network::erdos_renyi(double lambda) {
@@ -289,7 +334,6 @@ bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     if ( is_stopped() ) return false;
     if ( stubs.size() == 0 ) return true;
                                  //get all edges in network
-    vector<Edge*>::iterator itr;
     Edge* m;
     Edge* n;
 
@@ -317,7 +361,6 @@ bool Network::lose_loops() {
     if ( is_stopped() ) return false;
                                  //all (outbound) edges in the network
     vector<Edge*> edges = get_edges();
-    vector<Edge*>::iterator edge1, edge2;
 
     int m, n;
     int failed_attempts = 0;
@@ -642,12 +685,12 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
 
 // if node_set is not provided, default is all nodes.  node_set would generally be
 // all nodes within a single component
-vector< vector<int> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
+vector< vector<double> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
     if (node_set.size() == 0) node_set = node_list;
-    vector< vector<int> > dist( node_set.size() );
+    vector< vector<double> > dist( node_set.size() );
     for(unsigned int i = 0; i < node_set.size(); i++ ) {
         if (is_stopped() ) {
-            vector< vector<int> > empty;
+            vector< vector<double> > empty;
             return empty;
         }
         PROG(100*(i-1)/node_set.size());
@@ -866,7 +909,7 @@ void Network::read_edgelist(string filename, char sep) {
         while ( getline(myfile,line) ) {
             //split string based on "," and store results into vector
             vector<string> fields;
-            split(line,sep, fields);
+            split(line, sep, fields);
             const char whitespace[] = " \n\t\r";
 
             //format check
@@ -1146,6 +1189,44 @@ bool Node::is_neighbor (Node* node2) {
 }
 
 
+// Move an edge going from this node from a "current" neighbor to a "future" neighbor
+bool Node::change_neighbors (Node* current, Node* future) {
+    // try to find an edge going to "current" node
+    Edge* edge_in = NULL;
+    Edge* edge_out = NULL;
+
+    for (unsigned int i = 0; i < edges_out.size(); i++) {
+        if ( current == edges_out[i]->end ) {
+            edge_out = edges_out[i];
+            break;
+        }
+    }
+    
+    if (edge_out == NULL) {
+        return false;
+    } else {
+        edge_out->break_end();
+        edge_out->define_end(future);
+    }
+
+    if (! get_network()->is_directed()) {
+        for (unsigned int i = 0; i < edges_in.size(); i++) {
+            if ( current == edges_in[i]->start ) {
+                edge_in = edges_in[i];
+                break;
+            }
+        }
+        if (edge_in == NULL) {
+            return false;
+        } else {
+            edge_in->_move_edge(future);
+        }
+    }
+
+    return true;
+}
+
+
 void Node::connect_to (Node* end) {
     Edge* edge1 = add_stub_out();
     edge1->define_end(end);
@@ -1162,14 +1243,31 @@ void Node::_add_inbound_edge (Edge* edge) {
 }
 
 
+void Node::_add_outbound_edge (Edge* edge) {
+    edges_out.push_back(edge);
+    network->set_topology_altered(true);
+}
+
+
 //this doesn't delete the edge object, it merely disconnects it from the node that it was going to.
 void Node::_del_inbound_edge (Edge* inbound) {
     if (! inbound->end->id == this->id ) {
         cerr << "The 'inbound' edge does not connect to the node provided." << endl;
-        exit(1);
+        exit(100);
     }
     vector<Edge*>::iterator itr = find(edges_in.begin(), edges_in.end(), inbound);
     edges_in.erase(itr);
+}
+
+
+//this doesn't delete the edge object, it merely disconnects it from the node that it was coming from.
+void Node::_del_outbound_edge (Edge* outbound) {
+    if (! outbound->start->id == this->id ) {
+        cerr << "The 'outbound' edge does not start from the node provided." << endl;
+        exit(101);
+    }
+    vector<Edge*>::iterator itr = find(edges_out.begin(), edges_out.end(), outbound);
+    edges_out.erase(itr);
 }
 
 
@@ -1231,11 +1329,11 @@ double Node::min_path(Node* dest) {
 }
 
 
-vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
+vector<double> Node::min_unweighted_paths(vector<Node*> nodes) {
     if (nodes.size() == 0) nodes = get_network()->node_list;
-    map <Node*, int> known_cost; 
+    map <Node*, double> known_cost; 
     queue<Node*> Q; // nodes to examine next
-    vector<int> distances(nodes.size(), -1);
+    vector<double> distances(nodes.size(), -1);
 
     map <Node*, int> hits; // checking for existence is faster with a map
     for (unsigned int i = 0; i < nodes.size(); i++) {
@@ -1247,7 +1345,7 @@ vector<int> Node::min_unweighted_paths(vector<Node*> nodes) {
 
     int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
     while ( ! Q.empty() ) {
-        if (get_network()->process_stopped) {vector<int> empty; return empty;}
+        if (get_network()->process_stopped) {vector<double> empty; return empty;}
         Node* known_node = Q.front();
         Q.pop();
 
@@ -1319,7 +1417,7 @@ vector<double> Node::min_paths(vector<Node*> nodes) {
                                  //Move on if this endpoint already has a known cost
                 if ( known_cost.count(neighbor) > 0 ) continue;
                                  //Otherwise, calculate a cost using this path
-                int cost = known_cost[known_node] + edges[i]->cost;
+                double cost = known_cost[known_node] + edges[i]->cost;
 
                 //Store the new cost as an uncertain cost
                 //if it's better than the others we've seen
@@ -1398,7 +1496,7 @@ void Edge::disconnect_nodes() {
 }
 
 
-void Edge::set_cost(int c) {
+void Edge::set_cost(double c) {
     this->cost=c;
 }
 
@@ -1458,6 +1556,17 @@ void Edge::break_end () {
 void Edge::define_end (Node* end_node) {
     end = end_node;
     end->_add_inbound_edge(this);
+    network->set_topology_altered(true);
+}
+
+
+void Edge::_move_edge (Node* new_start_node) {
+    if (start != NULL) {
+        start->_del_outbound_edge(this);
+        start = NULL;
+    }
+    start = new_start_node;
+    start->_add_outbound_edge(this);
     network->set_topology_altered(true);
 }
 

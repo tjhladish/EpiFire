@@ -119,6 +119,17 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
 }
 
 
+int rand_uniform_int (int min, int max, MTRand* mtrand) {
+    // uniform integer on [min, max] (inclusive)
+    return mtrand->randInt( max - min ) + min;
+}
+
+   
+double rand_uniform (double min, double max, MTRand* mtrand) {
+    return mtrand->rand( max - min ) + min;
+}
+
+
 double rand_exp(double lambda, MTRand* mtrand) {
     return -log(mtrand->rand()) / lambda;
 }
@@ -128,22 +139,35 @@ double rand_exp(double lambda, MTRand* mtrand) {
 // "Binomial random variate generation."  I've correct two mistakes in the publication:
 // the original fails if p = 1, and the conditional for the while loop should be y <= n, 
 // rather than y < n.  The latter precludes ever drawing a deviate of n for p < 1.
+
+// Algorithm BG
+// 1. Set y <-- 0, x <-- 0, c <-- ln(1 - p).
+// 2. If c == 0, return x.
+// 3. Generate u ~ U(0, 1).
+// 4. y <-- y + floor(ln(u)/c) + 1.
+// 5. If y < n, set x <-- x + 1, and goto 3.
+// 6. Return x.
+
 int rand_binomial (int n, double p, MTRand* mtrand) {
-    if ( p == 1.0 ) { return n; }
+    if ( p == 1.0 ) {
+        return n;
+    } else if ( p == 0.0 or n == 0 ) {
+        return 0;
+    }
+
     int y = 0; 
     int x = 0;
-    double c = log( 1 - p );
-    if (c == 0) {
-        return x;
-    }
+    double c = log( 1 - p ); // p can't be 0, but we've already checked that
+
     while ( y <= n ) {
-        u = mtrand->rand();
-        y += ((int) log(u)/c) + 1
+        double u = mtrand->rand();
+        y += (int) (log(u)/c) + 1;
         if (y > n) {
             return x;
         }
-        x += 1
+        x += 1;
     }
+    return -1; // bad input was provided
 }
 
 

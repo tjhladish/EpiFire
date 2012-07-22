@@ -1,6 +1,6 @@
 CC=g++ 
-CFLAGS=-c -O3 -Wall --pedantic
-#CFLAGS=-c -g
+CFLAGS=-c -O2 -Wall --pedantic
+#CFLAGS=-c -g -O0
 SOURCES= Network.cpp Utility.cpp 
 INCLUDE= -I./
 LDFLAGS= 

@@ -17,7 +17,7 @@
 int main() {
 
     // Create and populate a network
-    Network net("name", false);
+    Network net("name", Network::Undirected);
     net.populate(120); // very small, but this way we can visualize it
     
     // Parameterize degree distribution, a truncated Poisson(5)
