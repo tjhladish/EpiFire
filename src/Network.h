@@ -226,9 +226,9 @@ class Network
          * Network Properties
          **************************************************************************/
         bool gen_deg_series(vector<int> &deg_series);
-        vector<int> get_states();// get the states of all nodes
+        vector<stateType> get_states();// get the states of all nodes
                                  // get the state sequences, indexed by degree
-        vector< vector<int> > get_states_by_degree();
+        vector< vector<stateType> > get_states_by_degree();
 
         bool validate();
 
