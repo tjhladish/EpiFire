@@ -245,13 +245,14 @@ class Network
                                  // measure of clustering of nodes in node_set;
         double transitivity(vector<Node*> node_set);
                                  // if node_set is empty, use all nodes
+        bool is_weighted();      // do any edges have edge costs other than 1?
         double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
                                
                                  // distances == edge costs
         vector< vector<double> > calculate_distances( vector<Node*> destinations );
-                                 // edge lengths assumed to be 1
-        vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
+        //                         // edge lengths assumed to be 1 -- much faster than calculate_distances!
+        //vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
 
 
 
@@ -318,8 +319,6 @@ class Node
 
         double mean_min_path();
 
-        // if network edge lengths can be assumed to be 1, use min_unweighted_paths()
-        vector<double> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
         vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
@@ -356,6 +355,9 @@ class Node
         void _del_inbound_edge (Edge* inbound);
         void _add_outbound_edge (Edge* edge);
         void _del_outbound_edge (Edge* outbound);
+
+        vector<double> _min_paths(vector<Node*>& node_set); // infinite distances == -1 
+        vector<double> _min_unweighted_paths(vector<Node*>& node_set); // infinite distances == -1 
 };
 
 

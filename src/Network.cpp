@@ -120,6 +120,17 @@ Node* Network::get_node(int node_id) {
 }
 
 
+bool Network::is_weighted() { 
+    vector<Edge*> edges = get_edges();
+    for( unsigned int i = 0; i<edges.size(); i++) {
+        if (edges[i]->get_cost() != 1) {
+            return true;
+        }
+    }
+    return false;
+}
+
+
 bool Network::ring_lattice(int N, int K) {
     if (K > (N - 1) / 2) {
         cerr << "Cannot construct a ring lattice with K-nearest neighbors where K > (network size - 1) / 2\n";
@@ -682,23 +693,6 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
     double mean = grand_total / ( size()*( size()-1 ) ); // don't consider distance from nodes to themselves
     return mean;
 }
-
-// if node_set is not provided, default is all nodes.  node_set would generally be
-// all nodes within a single component
-vector< vector<double> > Network::calculate_unweighted_distances(vector<Node*> node_set) {
-    if (node_set.size() == 0) node_set = node_list;
-    vector< vector<double> > dist( node_set.size() );
-    for(unsigned int i = 0; i < node_set.size(); i++ ) {
-        if (is_stopped() ) {
-            vector< vector<double> > empty;
-            return empty;
-        }
-        PROG(100*(i-1)/node_set.size());
-            dist[i] = node_set[i]->min_unweighted_paths(node_set);
-    }
-    return dist;
-}
-
 
 
 // if node_set is not provided, default is all nodes.  node_set would generally be
@@ -1329,7 +1323,7 @@ double Node::min_path(Node* dest) {
 }
 
 
-vector<double> Node::min_unweighted_paths(vector<Node*> nodes) {
+vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) {
     if (nodes.size() == 0) nodes = get_network()->node_list;
     map <Node*, double> known_cost; 
     queue<Node*> Q; // nodes to examine next
@@ -1379,10 +1373,17 @@ vector<double> Node::min_unweighted_paths(vector<Node*> nodes) {
     return distances;
 }
 
+vector<double> Node::min_paths(vector<Node*> nodes) {
+    if (network->is_weighted()) {
+        return _min_paths(nodes);
+    } else {
+        return _min_unweighted_paths(nodes);
+    }
+}
 
 // Calculates length of the minimum path (if possible) between *this* and everything in *nodes*
 // If *nodes* is empty, default is all nodes
-vector<double> Node::min_paths(vector<Node*> nodes) {
+vector<double> Node::_min_paths(vector<Node*>& nodes) {
     if (nodes.size() == 0) nodes = get_network()->node_list;
     map <Node*, double> known_cost; //Per Dijkstra's Algorithm, these are the two lists
     map <Node*, double>::iterator itr;
