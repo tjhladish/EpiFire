@@ -6,6 +6,9 @@ LDFLAGS=  ../src/*.o
 
 all: test_network ex1_mass_action ex2_percolation ex3_chain_binomial test_rng
 
+path_length_test: path_length_test.cpp 
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) path_length_test.cpp -o path_length_test  
+
 test_network: test_network.cpp 
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_network.cpp -o test_network  
 
