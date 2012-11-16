@@ -1,5 +1,5 @@
-#CFLAGS=--ansi --pedantic -O2
-CFLAGS=--ansi --pedantic -g 
+CFLAGS=--ansi --pedantic -O2
+#CFLAGS=--ansi --pedantic -g 
 INCLUDE= -I../src/
 #LDFLAGS= -L../src/ -lsim 
 LDFLAGS=  ../src/*.o
