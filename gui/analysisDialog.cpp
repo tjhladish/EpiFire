@@ -369,20 +369,20 @@ void AnalysisDialog::calculateDistances() {
     mw->progressDialog->setLabelText("Finding shortest paths in component ...");
     // calculate the shortest path lengths within it
     //for(unsigned int t = 0; t< (*giant_comp).size(); t++) cerr << (*giant_comp)[t]->get_id() << endl;
-    vector< vector<double> > pathLengths = network->calculate_unweighted_distances(giant_comp);
+    vector< vector<double> > pathLengths;
+    network->calculate_distances(giant_comp, pathLengths);
     double diam = 0.0;
     double mean = 0.0;
     for (unsigned int i = 0; i<pathLengths.size(); i++) {
         double node_mean = 0.0;
         for (unsigned int j = 0; j<pathLengths[i].size(); j++) {
-            if (i==j) continue;
+            //if (i==j) continue;
             diam = pathLengths[i][j] > diam ? pathLengths[i][j] : diam;
             node_mean += pathLengths[i][j];
         }
-        node_mean /= pathLengths[i].size() - 1;
+        node_mean /= pathLengths[i].size();
         mean += node_mean;
     }
-    
     mean /= pathLengths.size();
     diameterEdit->setText(QString::number( diam ));
     meanDistanceEdit->setText(QString::number( mean ));
