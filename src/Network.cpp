@@ -120,6 +120,16 @@ Node* Network::get_node(int node_id) {
 }
 
 
+Node* Network::get_node_by_name(string node_name) {
+    vector<Node*>::iterator itr;
+    for (itr = node_list.begin(); itr < node_list.end(); itr++) {
+        if ((*itr)->name == node_name) return *itr;
+    }
+    cerr << "Couldn't find a node with name  " << node_name << endl;
+    return NULL;
+}
+
+
 bool Network::is_weighted() { 
     vector<Edge*> edges = get_edges();
     for( unsigned int i = 0; i<edges.size(); i++) {
@@ -685,30 +695,62 @@ double Network::transitivity (vector<Node*> node_set) {
 
 double Network::mean_dist(vector<Node*> node_set) {    // average distance between nodes in network
     if (node_set.size() == 0) node_set = node_list;
-    vector< vector<double> > distance_matrix = calculate_distances(node_set);
+    vector< vector<double> > distance_matrix;
+    calculate_distances(node_set, distance_matrix);
+
     double grand_total = 0;
+    int ct = 0;
     for( unsigned int i=0; i < distance_matrix.size(); i++ ) {
-        grand_total += sum(distance_matrix[i]);
+        for( unsigned int j=0; j < distance_matrix[i].size(); j++ ) {
+            if (i != j) {  // don't consider distance from nodes to themselves
+                grand_total += distance_matrix[i][j];
+                ct++;
+            }
+        }
     }
-    double mean = grand_total / ( size()*( size()-1 ) ); // don't consider distance from nodes to themselves
+    double mean = grand_total / ct; 
     return mean;
 }
 
 
 // if node_set is not provided, default is all nodes.  node_set would generally be
 // all nodes within a single component
-vector< vector<double> > Network::calculate_distances(vector<Node*> node_set)  {
-    if (node_set.size() == 0) node_set = node_list;
-    vector< vector<double> > dist( node_set.size() );
-    for(unsigned int i = 0; i < node_set.size(); i++ ) {
-        if (is_stopped() ) {
-            vector< vector<double> > empty;
-            return empty;
+// Assumes undirected network
+void Network::calculate_distances(vector<Node*>& full_node_set, vector< vector<double> >& dist)  {
+    if (full_node_set.size() == 0) full_node_set = node_list;
+    for(unsigned int i = 0; i < full_node_set.size() - 1; i++ ) {
+        vector<Node*> node_set;
+        for(unsigned int j = i+1; j < full_node_set.size(); j++ ) {
+            node_set.push_back(full_node_set[j]);
         }
+        
+        vector<double> empty;
+        dist.push_back(empty);
+
+        if (is_stopped() ) {
+            return;
+        }
+
         PROG(100*(i-1)/node_set.size());
-            dist[i] = node_set[i]->min_paths(node_set);
+        dist[i] = full_node_set[i]->min_paths(node_set);
     }
-    return dist;
+    return;
+}
+
+
+// if node_set is not provided, default is all nodes.  node_set would generally be
+// all nodes within a single component
+// Assumes undirected network
+void Network::print_distances(vector<Node*>& full_node_set)  {
+    vector< vector<double> > dist;
+    calculate_distances(full_node_set, dist);
+
+    for(unsigned int i = 0; i < full_node_set.size() - 1; i++ ) {
+        for(unsigned int j = i+1; j < full_node_set.size(); j++ ) {
+            cout << full_node_set[i]->name << "\t" << full_node_set[j]->name << "\t" << dist[i][j-i-1] << endl;
+        }
+    }
+    return;
 }
 
 
@@ -891,8 +933,6 @@ bool Network::validate() {
 
 // read_edgelist currently supports only undirected networks
 void Network::read_edgelist(string filename, char sep) {
-
-    cerr << "Loading " << filename << endl;
     ifstream myfile(filename.c_str());
     std::stringstream ss;
     map<string,Node*> idmap;
@@ -901,7 +941,7 @@ void Network::read_edgelist(string filename, char sep) {
         string line;
 
         while ( getline(myfile,line) ) {
-            //split string based on "," and store results into vector
+            //split string based on "," and store results in vector
             vector<string> fields;
             split(line, sep, fields);
             const char whitespace[] = " \n\t\r";
@@ -910,51 +950,38 @@ void Network::read_edgelist(string filename, char sep) {
             if (fields.size() > 2 ) {
                 cerr << "Skipping line: too many fields: " << line << endl;
                 continue;
-            } else if (fields.size() == 1) {
+            } else if (fields.size() == 1) { // unconnected node
                 Node* node = this->add_new_node();
                 string name1 = strip(fields[0],whitespace);
                 cerr << "Found single node " << name1 << endl;
                 node->name = name1;
                 idmap[name1] = node;
                 continue;
-            } else if (fields.size() < 1) {
+            } else if (fields.size() < 1) { // empty line
                 continue;
             } else { // there are exactly 2 nodes
 
                 string name1 = strip(fields[0],whitespace);
                 string name2 = strip(fields[1],whitespace);
 
-                //cerr << line << endl;
-                //if(idmap.count(name1)) cerr << name1 << " " << idmap[name1] << endl ;
-                //if(idmap.count(name2)) cerr << name2 << " " << idmap[name2] << endl ;
-                //cerr << "---" << endl;
-
-                //new node;
+                //node1 is new; allocate memory
                 if(idmap.count(name1)==0) {
-                    //allocate memory for new node
                     Node* node = this->add_new_node();
                     node->name = name1;
                     idmap[name1] = node;
                 }
 
-                //new node;
+                //node2 is new; allocate memory
                 if(idmap.count(name2)==0) {
-                    //allocate memory for new node
                     Node* node = this->add_new_node();
                     node->name = name2;
                     idmap[name2]=node;
                 }
 
                 idmap[name1]->connect_to(idmap[name2]);
-                //Node *n1 = idmap[name1];
-                //Node *n2 = idmap[name2];
-                //n1->connect_to(n2);
             }
         }
     }
-    //dumper();
-    //cerr << "finished dumping network\n";
-    //validate();
 }
 
 
@@ -1303,7 +1330,7 @@ double Node::mean_min_path() {
     vector<Node*> empty;
     vector<double> distances = min_paths(empty);
     double sum = 0;
-    for (int i = 0; i < (signed) distances.size(); i++) {
+    for (unsigned int i = 0; i < distances.size(); i++) {
         if (distances[i] > -1 && id != i) {
             component_size++;
             sum += distances[i];
@@ -1358,7 +1385,10 @@ vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) {
                     j++;
                 }
                 if (j == (int) nodes.size()) { // we've found all the nodes we want
-                    for ( unsigned int i=0; i<nodes.size(); i++) distances[i] = known_cost[nodes[i]];
+                    for ( unsigned int i=0; i<nodes.size(); i++) {
+                        //if (known_cost[nodes[i]] > 255) cerr << "large cost: " << known_cost[nodes[i]] << endl;
+                        distances[i] = known_cost[nodes[i]];
+                    }
                     return distances;
                 }
             }
@@ -1367,13 +1397,14 @@ vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) {
 
     for ( unsigned int i=0; i<nodes.size(); i++) {
         if (known_cost.count(nodes[i]) == 1) {
+            //if (known_cost[nodes[i]] > 255) cerr << "large cost: " << known_cost[nodes[i]] << endl;
             distances[i] = known_cost[nodes[i]];
         }
     }
     return distances;
 }
 
-vector<double> Node::min_paths(vector<Node*> nodes) {
+vector<double> Node::min_paths(vector<Node*>& nodes) {
     if (network->is_weighted()) {
         return _min_paths(nodes);
     } else {

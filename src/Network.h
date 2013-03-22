@@ -109,6 +109,8 @@ class Network
         }
                                  // get a particular node
         Node*                get_node(int node_id);
+                                 // get a particular node
+        Node*                get_node_by_name(string node_name);
                                  // get a random node
         Node*                get_rand_node();
                                  // get all edges
@@ -250,7 +252,8 @@ class Network
                                  // 2D matrix of distances
                                
                                  // distances == edge costs
-        vector< vector<double> > calculate_distances( vector<Node*> destinations );
+        void calculate_distances( vector<Node*>& destinations, vector< vector<double> >& distances );
+        void print_distances(vector<Node*>& full_node_set);
         //                         // edge lengths assumed to be 1 -- much faster than calculate_distances!
         //vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
 
@@ -319,7 +322,7 @@ class Node
 
         double mean_min_path();
 
-        vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
+        vector<double> min_paths(vector<Node*>& node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
 
