@@ -637,6 +637,36 @@ double Network::mean_deg () {
 }
 
 
+map<Node*, int> Network::k_shell_decomposition() {
+    map<Node*, int> ks;
+    for (int i = 0; i < size(); i++) ks[node_list[i]] = node_list[i]->deg();
+    list<Node*> core(node_list.begin(), node_list.end());
+    int current_shell = 0;
+    list<Node*>::iterator itr;
+    bool hit = false;
+    while(core.size() > 0) {
+        cerr << "core size: " << core.size() << endl;
+        for (itr = core.begin(); itr !=core.end(); ) {
+            int k_current = ks[*itr];
+            if (k_current <= current_shell) {
+                vector<Edge*> edges_out = (*itr)->edges_out;
+                for (unsigned int i = 0; i < edges_out.size(); i++) {
+                    Node* neighbor = edges_out[i]->end; 
+                    if (ks[neighbor] > current_shell) ks[neighbor]--;
+                }
+                itr = core.erase(itr);
+                hit = true;
+            } else {
+                ++itr; 
+            }
+        }
+        if (hit == false) current_shell++;
+        hit = false;
+    }
+    return ks;
+}
+
+
 vector<int> Network::get_states() {
     vector<int> states(size());
     vector<Node*> nodes = get_nodes();
@@ -1330,7 +1360,7 @@ double Node::mean_min_path() {
     vector<Node*> empty;
     vector<double> distances = min_paths(empty);
     double sum = 0;
-    for (unsigned int i = 0; i < distances.size(); i++) {
+    for (int i = 0; i < (signed) distances.size(); i++) {
         if (distances[i] > -1 && id != i) {
             component_size++;
             sum += distances[i];
