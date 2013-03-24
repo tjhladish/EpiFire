@@ -103,6 +103,12 @@ Node* Network::add_new_node() {
 
 
 void Network::delete_node(Node* node) {
+    while (node->edges_in.size() > 0) {
+        node->edges_in.back()->delete_edge();
+    }
+    while (node->edges_out.size() > 0) {
+        node->edges_out.back()->delete_edge();
+    }
     vector<Node*>::iterator itr;
     itr = find(node_list.begin(), node_list.end(), node);
     node_list.erase(itr);
