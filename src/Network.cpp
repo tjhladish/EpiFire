@@ -34,19 +34,27 @@ Network::Network( string name, netType directed) {
 
 Network* Network::duplicate() {
     Network* dup = new Network( name, directed );
-    dup->unit_edges = unit_edges;
-    dup->node_id_counter = node_id_counter;
-    dup->edge_id_counter = edge_id_counter;
-    dup->mtrand = mtrand;
+    dup->unit_edges         = unit_edges;
+    dup->node_id_counter    = node_id_counter;
+    dup->edge_id_counter    = edge_id_counter;
+    dup->_topology_altered  = _topology_altered;
+    dup->mtrand             = mtrand;
+    dup->process_stopped    = process_stopped;
+    dup->known_nodes        = known_nodes;
+    dup->gen_deg_dist       = gen_deg_dist;
 
     // Make copies of all nodes
     for (int i = 0; i < size(); i++) {
         Node* node = node_list[i];
         Node* node_copy = new Node();
-        node_copy->id   = node->get_id();
+        node_copy->id    = node->get_id();
+        node_copy->name  = node->get_name();
+        node_copy->loc   = node->get_loc();
+        node_copy->state = node->get_state();
         node_copy->set_network(dup);
 
-        // Create a stub for each outbound edge (since not all nodes have been created, we can't connect everything yet)
+        // Create a stub for each outbound edge 
+        // (since not all nodes have been created, we can't connect everything yet)
         node_copy->add_stubs( node->deg() );
         dup->node_list.push_back(node_copy);
     }
@@ -62,7 +70,7 @@ Network* Network::duplicate() {
         for (unsigned int j = 0; j < edges.size(); j++) {
             edge_copies[j]->id    = edges[j]->get_id();
             edge_copies[j]->cost  = edges[j]->get_cost();
-            edge_copies[j]->end   = edges[j]->get_end();
+            edge_copies[j]->end   = dup->get_node( edges[j]->get_end()->get_id() );
         }
     }
     return dup;
