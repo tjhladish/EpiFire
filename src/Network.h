@@ -247,6 +247,8 @@ class Network
                                  // measure of clustering of nodes in node_set;
                                  // Calculate k-shell decomposition for all nodes
         map<Node*,int> k_shell_decomposition();
+                                 // Implemented, but slower
+        //map<string,int> k_shell_decomposition_alt();
         double transitivity(vector<Node*> node_set);
                                  // if node_set is empty, use all nodes
         bool is_weighted();      // do any edges have edge costs other than 1?
