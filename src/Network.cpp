@@ -70,7 +70,7 @@ Network* Network::duplicate() {
         for (unsigned int j = 0; j < edges.size(); j++) {
             edge_copies[j]->id    = edges[j]->get_id();
             edge_copies[j]->cost  = edges[j]->get_cost();
-            edge_copies[j]->end   = dup->get_node( edges[j]->get_end()->get_id() );
+            edge_copies[j]->define_end( dup->get_node( edges[j]->get_end()->get_id() ) );
         }
     }
     return dup;
