@@ -34,19 +34,27 @@ Network::Network( string name, netType directed) {
 
 Network* Network::duplicate() {
     Network* dup = new Network( name, directed );
-    dup->unit_edges = unit_edges;
-    dup->node_id_counter = node_id_counter;
-    dup->edge_id_counter = edge_id_counter;
-    dup->mtrand = mtrand;
+    dup->unit_edges         = unit_edges;
+    dup->node_id_counter    = node_id_counter;
+    dup->edge_id_counter    = edge_id_counter;
+    dup->_topology_altered  = _topology_altered;
+    dup->mtrand             = mtrand;
+    dup->process_stopped    = process_stopped;
+    dup->known_nodes        = known_nodes;
+    dup->gen_deg_dist       = gen_deg_dist;
 
     // Make copies of all nodes
     for (int i = 0; i < size(); i++) {
         Node* node = node_list[i];
         Node* node_copy = new Node();
-        node_copy->id   = node->get_id();
+        node_copy->id    = node->get_id();
+        node_copy->name  = node->get_name();
+        node_copy->loc   = node->get_loc();
+        node_copy->state = node->get_state();
         node_copy->set_network(dup);
 
-        // Create a stub for each outbound edge (since not all nodes have been created, we can't connect everything yet)
+        // Create a stub for each outbound edge 
+        // (since not all nodes have been created, we can't connect everything yet)
         node_copy->add_stubs( node->deg() );
         dup->node_list.push_back(node_copy);
     }
@@ -62,7 +70,7 @@ Network* Network::duplicate() {
         for (unsigned int j = 0; j < edges.size(); j++) {
             edge_copies[j]->id    = edges[j]->get_id();
             edge_copies[j]->cost  = edges[j]->get_cost();
-            edge_copies[j]->end   = edges[j]->get_end();
+            edge_copies[j]->define_end( dup->get_node( edges[j]->get_end()->get_id() ) );
         }
     }
     return dup;
@@ -71,9 +79,15 @@ Network* Network::duplicate() {
 
 Network::~Network() {
     for (unsigned int i = 0; i < node_list.size(); i++) {
-        delete node_list[i];
+        Node* n = node_list[i];
+
+        for (unsigned int e = 0; e < n->edges_out.size(); e++) delete n->edges_out[e];
+        n->edges_out.clear();
+
+        n->edges_in.clear();
+
+        delete n;
     }
-    //delete mtrand;
 }
 
 
@@ -95,11 +109,7 @@ Node* Network::add_new_node() {
 
 
 void Network::delete_node(Node* node) {
-    vector<Node*>::iterator itr;
-    itr = find(node_list.begin(), node_list.end(), node);
-    node_list.erase(itr);
-    delete node;
-    set_topology_altered(true);
+    node->delete_node();
 }
 
 
@@ -639,25 +649,30 @@ double Network::mean_deg () {
 
 map<Node*, int> Network::k_shell_decomposition() {
     map<Node*, int> ks;
+    // Initialize values to the nodes' degrees
     for (int i = 0; i < size(); i++) ks[node_list[i]] = node_list[i]->deg();
+
+    // Nodes that haven't been categorized yet (the high k-shell nodes)
     list<Node*> core(node_list.begin(), node_list.end());
-    int current_shell = 0;
     list<Node*>::iterator itr;
-    bool hit = false;
+    int current_shell = 0;
+    bool hit = false; // Have we categorized any nodes in this pass?
+    // As long as there are nodes left to categorize
     while(core.size() > 0) {
-        cerr << "core size: " << core.size() << endl;
-        for (itr = core.begin(); itr !=core.end(); ) {
-            int k_current = ks[*itr];
-            if (k_current <= current_shell) {
+        for (itr = core.begin(); itr !=core.end(); ) { // Do not increment itr here!
+            if (ks[*itr] == current_shell) {
+                // This node has a ks equal to the current_shell
                 vector<Edge*> edges_out = (*itr)->edges_out;
                 for (unsigned int i = 0; i < edges_out.size(); i++) {
+                    // Decrement the tentative k-shell for this node's neighbors ...
                     Node* neighbor = edges_out[i]->end; 
+                    // ... but only if they're in the core
                     if (ks[neighbor] > current_shell) ks[neighbor]--;
                 }
-                itr = core.erase(itr);
+                itr = core.erase(itr); // increment itr after erasing
                 hit = true;
             } else {
-                ++itr; 
+                ++itr;                 // increment itr without erasing
             }
         }
         if (hit == false) current_shell++;
@@ -665,6 +680,38 @@ map<Node*, int> Network::k_shell_decomposition() {
     }
     return ks;
 }
+
+
+/*
+// Algorithmically correct, simpler than k_shell_decomposition,
+// but slower, too.  Used it to validate the faster algorithm.
+map<string, int> Network::k_shell_decomposition_alt() {
+    map<string, int> ks;
+    Network* tmp = this->duplicate();
+    bool hit = false;
+    int current_shell = 0;
+    vector<Node*> to_delete;
+    while(tmp->size() > 0) {
+        for (int i = 0; i < tmp->size(); i++) {
+            if (tmp->node_list[i]->deg() <= current_shell) {
+                ks[tmp->node_list[i]->get_name()] = current_shell;
+                hit = true;
+                to_delete.push_back(tmp->node_list[i]);
+            }
+        }
+
+        for (unsigned int i = 0; i<to_delete.size(); i++) {
+            to_delete[i]->delete_node();
+        }
+        to_delete.clear();
+        
+        if (hit == false) current_shell++;
+        hit = false;
+    }
+    delete tmp;
+    return ks;
+}
+*/
 
 
 vector<int> Network::get_states() {
@@ -1170,10 +1217,19 @@ Node::Node() {                   //empty constructor
 }
 
 
-Node::~Node() {                  //destructor
-    //cerr << "~Node() " << id << endl;
-    for(unsigned int i=0; i< edges_out.size(); i++ ) delete edges_out[i];
-    edges_out.clear();
+Node::~Node() { /* cerr << "~Node called on node with id " << id << endl; */ }
+
+
+void Node::delete_node() {
+    // cerr << "Deleting node with id " << id << endl;
+    while(edges_in.size() > 0)  { edges_in.back()->delete_edge(); }
+    while(edges_out.size() > 0) { edges_out.back()->delete_edge(); }
+
+    vector<Node*>::iterator itr = find(network->node_list.begin(), network->node_list.end(), this);
+    network->node_list.erase(itr);
+
+    network->set_topology_altered(true);
+    delete this;
 }
 
 
@@ -1354,7 +1410,7 @@ double Node::mean_min_path() {
         }
     }
     double mean = (double) sum / (double) component_size;
-                                 //quantum computing!! NAN != NAN is true
+                                 // Illogically, NAN != NAN is true
     if (mean != mean) cerr << "Mean_minimum_path is not meaningful for one-node components.\n" << endl;
     return mean;
 }
@@ -1519,18 +1575,45 @@ Edge::Edge(Node* start, Node* end) {
 }
 
 
-Edge::~Edge() {  /*cerr << "removing edge " << id << endl;*/ }
+Edge::~Edge() {  /* cerr << "~Edge called on edge with id " << id << endl; */ }
+
 
 void Edge::delete_edge() {
     vector<Edge*>::iterator itr;
 
     if (end != NULL) {
         itr = find(end->edges_in.begin(), end->edges_in.end(), this);
-        end->edges_in.erase(itr);
+        if (itr != end->edges_in.end()) {
+            end->edges_in.erase(itr);
+        }
     }
 
-    itr = find(start->edges_out.begin(), start->edges_out.end(), this);
-    start->edges_out.erase(itr);
+    if (start != NULL) {
+        itr = find(start->edges_out.begin(), start->edges_out.end(), this);
+        if (itr != start->edges_out.end()) {
+            start->edges_out.erase(itr);
+        }
+    }
+
+    /* Using a reverse iterator seems to be slightly faster,
+       but it's substantially more obscure
+
+    vector<Edge*>::reverse_iterator rit;
+
+    if (end != NULL) {
+        rit = find(end->edges_in.rbegin(), end->edges_in.rend(), this);
+        if (rit != end->edges_in.rend()) {
+            end->edges_in.erase(--(rit.base()));
+        }
+    }
+
+    if (start != NULL) {
+        rit = find(start->edges_out.rbegin(), start->edges_out.rend(), this);
+        if (rit != start->edges_out.rend()) {
+            start->edges_out.erase(--(rit.base()));
+        }
+    }
+    */
 
     network->set_topology_altered(true);
     delete this;
@@ -1579,20 +1662,6 @@ void Edge::swap_ends (Edge* other_edge) {
     other_comp->define_end(start);
 }
 
-
-/*
-    sub swap_ends {
-        my ( $self, $other_edge ) = @_;
-        my @edges = ( $self, $self->get_complement(), $other_edge, $other_edge->get_complement() );
-        my @rev_edges = reverse @edges;
-        for my $i ( 0 .. 3 ) {
-            my $edge = $edges[$i];
-            $edge->break_end();
-            $edge->define_end( $rev_edges[$i]->get_start() );
-        }
-        return;
-    }
-*/
 
 void Edge::break_end () {
     if (end == NULL) return;
