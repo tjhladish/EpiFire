@@ -64,6 +64,7 @@ void GraphWidget::clear() {
 }
 
 GNode* GraphWidget::addGNode(string id, void* data) {
+   qDebug() << "addGNode() " << id.c_str();
 	if ( nodelist.count(id.c_str()) == 0 ) {
 			GNode* n = new GNode(0,scene());
 			n->setId(id.c_str());
@@ -263,7 +264,7 @@ void GraphWidget::resetZoom() {
 
     foreach (QGraphicsItem *item, scene()->items()) {
 			if ( item->isVisible() ) {
-					if (GNode *node = qgraphicsitem_cast<GNode *>(item)) {
+					if (qgraphicsitem_cast<GNode *>(item)) {
 							if (item->pos().x() < minX) minX = item->pos().x();
 							if (item->pos().x() > maxX) maxX = item->pos().x();
 							if (item->pos().y() < minY) minY = item->pos().y();
@@ -292,18 +293,18 @@ void GraphWidget::resetZoom() {
 	if (W<300) W=300;
 	if (H<300) H=300;
     
-	foreach (QGraphicsItem *item, scene()->items()) {
-			if ( item->isVisible() ) {
-					if (GNode *node = qgraphicsitem_cast<GNode *>(item)) {
-						float x = item->pos().x();
-						float y = item->pos().y();
-						float newx =  (x-centerX)*scale;
-						float newy =  (y-centerY)*scale;
-						item->setPos(newx, newy);
+    foreach (QGraphicsItem *item, scene()->items()) {
+        if ( item->isVisible() ) {
+            if (qgraphicsitem_cast<GNode *>(item)) {
+                float x = item->pos().x();
+                float y = item->pos().y();
+                float newx =  (x-centerX)*scale;
+                float newy =  (y-centerY)*scale;
+                item->setPos(newx, newy);
 
-					} 
-			}
-	}
+            } 
+        }
+    }
 
 	float aH = H*0.1;
 	float aW = W*0.1;

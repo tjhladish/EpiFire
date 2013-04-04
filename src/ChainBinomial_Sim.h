@@ -39,22 +39,30 @@ class ChainBinomial_Sim: public Simulator
         list<Node*> infected;
         vector<Node*> recovered;
         vector<double> time_dist; // Probability mass function for day of transmission
+        bool update_time_dist;
         priority_queue<Event, vector<Event>, compTime > transmissionQ;
+        
+        vector< int > epi_curve;  // new infections at each time step (incidence)
+        vector< pair<int, Node*> > detailed_epi_curve; // track node->infected node state changes as (time, node_id) pairs
 
     public:
         double T;                // transmissibiltiy per time step
         int infectious_period;
 
-        ChainBinomial_Sim() { this->time = 0; };
+        ChainBinomial_Sim():Simulator() { this->time = 0; this->update_time_dist=true;};
         ChainBinomial_Sim(Network* net, int infectious_period, double T):Simulator(net) { this->infectious_period=infectious_period; this->T=T; define_time_dist();};
 
-        void set_infectious_period(int d) { this->infectious_period = d; }
-        void set_transmissibility(double t) { this->T = t; }
+        void set_network(Network* net) { this->net=net; }
+        void set_infectious_period(int d) { this->infectious_period = d; this->update_time_dist=true;}
+        void set_transmissibility(double t) { this->T = t; this->update_time_dist=true;}
+
         vector<double> define_time_dist() {
+            time_dist.clear();
             for (int i = 0; i < infectious_period; i++) {
                 time_dist.push_back( pow(1-T, i) * T );
             }
             time_dist.push_back( pow(1-T, infectious_period) );
+            this->update_time_dist = false;
             return time_dist;
         }
 
@@ -72,6 +80,10 @@ class ChainBinomial_Sim: public Simulator
             if (node->get_state() != 0) return; //already infected or recovered
             node->set_state(1);
             infected.push_back(node);
+            epi_curve.resize(time+1, 0);
+            epi_curve[time]++;
+            detailed_epi_curve.push_back( make_pair(time, node) );
+
             vector<Node*> neighbors = node->get_neighbors();
             for (unsigned int i = 0; i<neighbors.size(); i++) {
                 if (neighbors[i]->get_state() == 0) {
@@ -86,6 +98,7 @@ class ChainBinomial_Sim: public Simulator
         }
 
         void step_simulation () {
+            if (update_time_dist == true) define_time_dist();
             // States: 0 (default) is susceptible
             //         1 is infectious day 1
             //         2 is infectious day 2
@@ -120,6 +133,7 @@ class ChainBinomial_Sim: public Simulator
 
         void run_simulation() {
             assert(infectious_period > 0 && T >= 0 && T <= 1);
+            if (update_time_dist == true) define_time_dist();
             
             // As long as someone's still infected, step simulation
             while (infected.size() > 0)  step_simulation();
@@ -139,6 +153,26 @@ class ChainBinomial_Sim: public Simulator
             return recovered.size();
         }
 
+        vector< int > get_epi_curve() {
+            return epi_curve;
+        }
+
+        vector< int > get_prevalence_curve() {
+            int len = epi_curve.size() + infectious_period - 1;
+            vector< int > p_curve(len, 0);
+            int epi_size = 0;
+            for (int i = 0; i < len; i++) {
+                if (i < (signed) epi_curve.size()) epi_size += epi_curve[i];
+                if (i > infectious_period - 1) epi_size -= epi_curve[i - infectious_period];
+                p_curve[i] = epi_size;
+            }
+            return p_curve;
+        }
+
+        vector< pair<int, Node*> > get_detailed_epi_curve() {
+            return detailed_epi_curve;
+        }
+
         void reset() {
             reset_time();
 
@@ -149,6 +183,7 @@ class ChainBinomial_Sim: public Simulator
 
             set_these_nodes_to_state(recovered, 0);
             recovered.clear();
+            detailed_epi_curve.clear();
         }
 
         void summary() {

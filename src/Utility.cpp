@@ -149,12 +149,15 @@ double rand_exp(double lambda, MTRand* mtrand) {
 // 6. Return x.
 
 int rand_binomial (int n, double p, MTRand* mtrand) {
-    if ( p == 1.0 ) { return n; }
-    int y = 0; 
+    if ( p == 1.0 ) {
+        return n;
+    } else if ( p == 0.0 or n == 0 ) {
+        return 0;
+    }
 
+    int y = 0; 
     int x = 0;
-    double c = log( 1 - p );
-    if (c == 0) return x;
+    double c = log( 1 - p ); // p can't be 0, but we've already checked that
 
     while ( y <= n ) {
         double u = mtrand->rand();

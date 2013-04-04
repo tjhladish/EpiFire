@@ -109,6 +109,8 @@ class Network
         }
                                  // get a particular node
         Node*                get_node(int node_id);
+                                 // get a particular node
+        Node*                get_node_by_name(string node_name);
                                  // get a random node
         Node*                get_rand_node();
                                  // get all edges
@@ -153,10 +155,13 @@ class Network
         bool sparse_random_graph(double lambda);
         //fast_random_graph() tries to pick the fastest algorithm based on parameters given
         bool fast_random_graph(double lambda);
-        bool ring_lattice(int k);
+        // Ring lattice with N nodes, each connected to K nearest neighbors
+        bool ring_lattice(int N, int K);
                                  // RxC lattice, including diagonals if diag
         bool square_lattice(int R, int C, bool diag);
-        bool small_world(double p);
+        //Watts-Strogatz small world network with N nodes initially connected to K neighbors
+        // and shuffled with probability beta
+        bool small_world(int N, int K, double beta);
         bool rand_connect_poisson(double lambda);
         bool rand_connect_powerlaw(double alpha, double kappa);
         bool rand_connect_exponential(double lambda);
@@ -226,9 +231,9 @@ class Network
          * Network Properties
          **************************************************************************/
         bool gen_deg_series(vector<int> &deg_series);
-        vector<int> get_states();// get the states of all nodes
+        vector<stateType> get_states();// get the states of all nodes
                                  // get the state sequences, indexed by degree
-        vector< vector<int> > get_states_by_degree();
+        vector< vector<stateType> > get_states_by_degree();
 
         bool validate();
 
@@ -240,15 +245,21 @@ class Network
         vector<double> get_gen_deg_dist ();
         double mean_deg();       // calculated mean of the degree series
                                  // measure of clustering of nodes in node_set;
+                                 // Calculate k-shell decomposition for all nodes
+        map<Node*,int> k_shell_decomposition();
+                                 // Implemented, but slower
+        //map<string,int> k_shell_decomposition_alt();
         double transitivity(vector<Node*> node_set);
                                  // if node_set is empty, use all nodes
+        bool is_weighted();      // do any edges have edge costs other than 1?
         double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
                                
                                  // distances == edge costs
-        vector< vector<double> > calculate_distances( vector<Node*> destinations );
-                                 // edge lengths assumed to be 1
-        vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
+        void calculate_distances( vector<Node*>& destinations, vector< vector<double> >& distances );
+        void print_distances(vector<Node*>& full_node_set);
+        //                         // edge lengths assumed to be 1 -- much faster than calculate_distances!
+        //vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
 
 
 
@@ -315,9 +326,7 @@ class Node
 
         double mean_min_path();
 
-        // if network edge lengths can be assumed to be 1, use min_unweighted_paths()
-        vector<double> min_unweighted_paths(vector<Node*> node_set); // infinite distances == -1 
-        vector<double> min_paths(vector<Node*> node_set); // infinite distances == -1 
+        vector<double> min_paths(vector<Node*>& node_set); // infinite distances == -1 
 
         void add_stubs(int deg);
 
@@ -326,6 +335,7 @@ class Node
         bool is_neighbor(Node* node2);
                                  // a->connect_to(b) == b->connect_to(a) for undirected networks
         void connect_to (Node* end);
+        bool change_neighbors(Node* old_neighbor, Node* new_neighbor);
         bool operator==( const Node& n2 );
         friend ostream& operator<< (ostream &out, Node* node);
         void dumper();
@@ -350,7 +360,13 @@ class Node
         stateType state;
         void _add_inbound_edge (Edge* edge);
         void _del_inbound_edge (Edge* inbound);
+        void _add_outbound_edge (Edge* edge);
+        void _del_outbound_edge (Edge* outbound);
+
+        vector<double> _min_paths(vector<Node*>& node_set); // infinite distances == -1 
+        vector<double> _min_unweighted_paths(vector<Node*>& node_set); // infinite distances == -1 
 };
+
 
 class Edge
 {
@@ -384,6 +400,7 @@ class Edge
 
     private:
         Edge(Node* start , Node* end);
+        void _move_edge(Node* new_start_node);
 
         int id;
         double cost;

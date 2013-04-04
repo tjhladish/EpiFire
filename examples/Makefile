@@ -1,10 +1,15 @@
-#CFLAGS=--ansi --pedantic -O2
-CFLAGS=--ansi --pedantic -g 
+CFLAGS=--ansi --pedantic -O2
+#CFLAGS=--ansi --pedantic -g 
 INCLUDE= -I../src/
-#LDFLAGS= -L../src/ -lsim 
 LDFLAGS=  ../src/*.o
 
-all: test_network ex1_mass_action ex2_percolation ex3_chain_binomial test_rng
+all: epifire test_network ex1_mass_action ex2_percolation ex3_chain_binomial test_rng
+
+epifire: 
+	$(MAKE) -C ../src/
+
+path_length_test: path_length_test.cpp 
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) path_length_test.cpp -o path_length_test  
 
 test_network: test_network.cpp 
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_network.cpp -o test_network  
@@ -30,7 +35,8 @@ ex6_network_diff_eq: ex6_network_diff_eq.cpp
 test_rng: test_rng.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_rng.cpp -o test_rng
 
+ex5b_diff_eq: ex5_diff_eq.cpp
+	g++ $(CFLAGS) -o ex5b_diff_eq ex5_diff_eq.cpp $(INCLUDE) $(LDFLAGS) -L../gsl_subset -lgsl_subset -I../gsl_subset 
 
 clean:
 	rm -f test_network ex1_mass_action ex2_percolation ex3_chain_binomial
-
