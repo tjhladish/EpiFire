@@ -24,6 +24,9 @@ ex4_dynamic_net: ex4_dynamic_net.cpp
 ex5_diff_eq: ex5_diff_eq.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) -L/usr/local/lib -lgsl -lblas ex5_diff_eq.cpp -o ex5_diff_eq
 
+ex6_network_diff_eq: ex6_network_diff_eq.cpp
+	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) -L/usr/local/lib -lgsl -lblas ex6_network_diff_eq.cpp -o ex6_network_diff_eq
+
 test_rng: test_rng.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_rng.cpp -o test_rng
 

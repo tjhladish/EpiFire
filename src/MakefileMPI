@@ -1,5 +1,5 @@
 CC=mpicxx 
-CFLAGS=-c -fast 
+CFLAGS=-c -O2
 #CFLAGS=-c -g
 SOURCES= Network.cpp Utility.cpp 
 INCLUDE= -I./
