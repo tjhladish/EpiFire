@@ -249,8 +249,10 @@ class Network
         map<Node*,int> k_shell_decomposition();
                                  // Implemented, but slower
         //map<string,int> k_shell_decomposition_alt();
-        double transitivity(vector<Node*> node_set);
+
+        double transitivity() { return transitivity(get_nodes()); }
                                  // if node_set is empty, use all nodes
+        double transitivity(vector<Node*> node_set);
         bool is_weighted();      // do any edges have edge costs other than 1?
         double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
