@@ -1103,52 +1103,39 @@ void Network::graphviz (string filename) {
 
     map< int, map <int, int> > seen_edges;
     pipe << graph_type << " NETWORK {\n\t\trankdir=LR;\n";
-    cout << graph_type << " NETWORK {\n\t\trankdir=LR;\n";
 
-    vector<Node*>::iterator node_it;
-    node_it = node_list.begin();
+    for (int i = 0; i<size(); i++) {    
+        Node* node = node_list[i];
+        int start = node->id;
 
-    while (node_it != node_list.end() ) {
-
-        int start = (*node_it)->id;
-
-        string start_name = to_string( (*node_it)->get_name_or_id() );
+        string start_name = to_string( node->get_name_or_id() );
         pipe << start << " [label=\"" << start_name << "\"]\n";
-        cout << start << " [label=\"" << start_name << "\"]\n";
-
-        if ( (*node_it)->deg() == 0 ) {
-            cerr << "Encountered unconnected node when trying to draw network.  This is currently not supported for visualization: node will be ignored.\n";
+        if ( node->deg() == 0 ) {
+            cerr << "Encountered unconnected node when trying to draw network.  This is currently not supported for graphviz output: node will be ignored.\n";
             continue;
         }
-        vector<Edge*>::iterator edge_it;
-        edge_it = (*node_it)->edges_out.begin();
 
-        while (edge_it != (*node_it)->edges_out.end() ) {
+        vector<Edge*> edges_out = node->edges_out;
+        for (unsigned int j = 0; j<edges_out.size(); j++) {
+            Edge* edge = edges_out[j];
+            int end = edge->end->id;
 
-            int end = (*edge_it)->end->id;
-
-            string end_name = to_string( (*edge_it)->end->get_name_or_id() );
+            string end_name = to_string( edge->end->get_name_or_id() );
 
             if ( seen_edges[end][start] > 0 ) {
                 seen_edges[end][start]--;
                 seen_edges[start][end]--;
-                edge_it++;
                 continue;
-            }
-            else {
+            } else {
                 seen_edges[start][end]++;
             }
             string edge_op = directed ? " -> " : " -- ";
-            int edge_id = (*edge_it)->id;
+            int edge_id = edge->id;
 
-            cout << "\t\t" << start << edge_op << end << " [label=\"" << edge_id << "\"];\n";
             pipe << "\t\t" << start << edge_op << end << " [label=\"" << edge_id << "\"];\n";
-            edge_it++;
         }
-        node_it++;
     }
 
-    cout << "}\n";
     pipe << "}\n";
 
     pipe.close();
