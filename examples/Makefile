@@ -32,11 +32,5 @@ ex5_diff_eq: ex5_diff_eq.cpp
 ex6_network_diff_eq: ex6_network_diff_eq.cpp
 	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) -L/usr/local/lib -lgsl -lblas ex6_network_diff_eq.cpp -o ex6_network_diff_eq
 
-test_rng: test_rng.cpp
-	g++ $(CFLAGS) $(INCLUDE) $(LDFLAGS) test_rng.cpp -o test_rng
-
-ex5b_diff_eq: ex5_diff_eq.cpp
-	g++ $(CFLAGS) -o ex5b_diff_eq ex5_diff_eq.cpp $(INCLUDE) $(LDFLAGS) -L../gsl_subset -lgsl_subset -I../gsl_subset 
-
 clean:
 	rm -f test_network ex1_mass_action ex2_percolation ex3_chain_binomial
