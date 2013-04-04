@@ -3,10 +3,13 @@ CFLAGS=--ansi --pedantic -O2
 INCLUDE= -I../src/
 LDFLAGS=  ../src/*.o
 
-all: epifire test_network path_length_test ex1_mass_action ex2_percolation ex3_chain_binomial ex4_dynamic_net ex5_diff_eq ex6_network_diff_eq
+all: epifire gsl test_network path_length_test ex1_mass_action ex2_percolation ex3_chain_binomial ex4_dynamic_net ex5_diff_eq ex6_network_diff_eq
 
 epifire: 
 	$(MAKE) -C ../src/
+
+gsl:
+	$(MAKE) -C ../gsl_subset/
 
 test_network: test_network.cpp 
 	g++ $(CFLAGS) test_network.cpp $(INCLUDE) $(LDFLAGS) -o test_network  
@@ -27,11 +30,10 @@ ex4_dynamic_net: ex4_dynamic_net.cpp
 	g++ $(CFLAGS) ex4_dynamic_net.cpp $(INCLUDE) $(LDFLAGS) -o ex4_dynamic_net
 
 ex5_diff_eq: ex5_diff_eq.cpp
-	g++ $(CFLAGS) ex5_diff_eq.cpp $(INCLUDE) $(LDFLAGS) -lgsl -lblas -o ex5_diff_eq
+	g++ $(CFLAGS) ex5_diff_eq.cpp $(INCLUDE) -I../gsl_subset/ $(LDFLAGS) ../gsl_subset/*.o -o ex5_diff_eq
 
 ex6_network_diff_eq: ex6_network_diff_eq.cpp
-	g++ $(CFLAGS) ex6_network_diff_eq.cpp $(INCLUDE) $(LDFLAGS) -L/usr/local/lib -lgsl -lblas -o ex6_network_diff_eq
-
+	g++ $(CFLAGS) ex6_network_diff_eq.cpp $(INCLUDE) -I../gsl_subset/ $(LDFLAGS) ../gsl_subset/*.o -o ex6_network_diff_eq
 
 clean:
 	rm -f test_network ex1_mass_action ex2_percolation ex3_chain_binomial ex4_dynamic_net ex5_diff_eq
