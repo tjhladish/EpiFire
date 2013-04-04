@@ -13,7 +13,12 @@ int main() {
 
     SIR sim(BETA, GAMMA);
     sim.initialize(S, I, R);
-    sim.run_simulation();
+
+    while (sim.y[1] > 0.1*I) {
+        sim.printY();
+        sim.step_simulation(1);
+    }
+    sim.printY();
 
     return 0;
 }

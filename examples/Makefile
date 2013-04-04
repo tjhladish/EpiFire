@@ -26,9 +26,11 @@ ex3_chain_binomial: ex3_chain_binomial.cpp
 ex4_dynamic_net: ex4_dynamic_net.cpp
 	g++ $(CFLAGS) ex4_dynamic_net.cpp $(INCLUDE) $(LDFLAGS) -o ex4_dynamic_net
 
-ex5_diff_eq: ex5_diff_eq.cpp
-	g++ $(CFLAGS) ex5_diff_eq.cpp $(INCLUDE) $(LDFLAGS) -lgsl -lblas -o ex5_diff_eq
+ex5_diff_eq: gsl ex5_diff_eq.cpp
+	g++ $(CFLAGS) ex5_diff_eq.cpp $(INCLUDE) -I../gsl_subset/ $(LDFLAGS) ../gsl_subset/*.o -o ex5_diff_eq
 
+gsl:
+	$(MAKE) -C ../gsl_subset/
 
 clean:
 	rm -f test_network ex1_mass_action ex2_percolation ex3_chain_binomial ex4_dynamic_net ex5_diff_eq
