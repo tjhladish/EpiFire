@@ -64,6 +64,7 @@ class Network
 
     public:
         typedef enum { Undirected=0, Directed=1 } netType;
+        typedef enum { NodeNames=0, NodeIDs=1 } outputType;
 
         /***************************************************************************
          * Network Constructor and Destructor
@@ -216,7 +217,7 @@ class Network
                                  // read network structure from file
         void read_edgelist(string filename, char sep = ',');
                                  // write network to file
-        void write_edgelist(string filename);
+        void write_edgelist(string filename, outputType names_or_ids, char sep = ',');
 
         /*                         // read network structure from file
         void read_adj_matrix(string filename, char sep = ',');

@@ -1062,12 +1062,10 @@ void Network::read_edgelist(string filename, char sep) {
 }
 
 
-void Network::write_edgelist(string filename) {
+void Network::write_edgelist(string filename, outputType ot, char sep) {
     if (filename == "") filename = "edgelist.out";
 
     ofstream pipe(filename.c_str(), ios::out);
-    //vector<Edge*> edges = get_edges();
-    //for (unsigned int i = 0; i < edges.size(); i++) {
     vector<Edge*> edges;
     for (unsigned int i = 0; i < node_list.size(); i++) {
         edges = node_list[i]->get_edges_out();
@@ -1079,12 +1077,21 @@ void Network::write_edgelist(string filename) {
                 Edge* comp = edges[e]->get_complement();
                 if (edges[e]->id > comp->id) continue;
             }
-            pipe << start_id << "," << end_id << endl;
+            if (ot == NodeNames) {
+                pipe << edges[e]->start->name << sep << edges[e]->end->name << endl;
+            } else {
+                pipe << start_id << sep << end_id << endl;
+            }
         }
-        if (node_list[i]->deg() == 0) pipe << node_list[i]->id << endl;
+        if (node_list[i]->deg() == 0) {
+            if (ot == NodeNames) {
+                pipe << node_list[i]->name << endl;
+            } else {
+                pipe << node_list[i]->id << endl;
+            }
+        }
     }
     pipe.close();
-
 }
 
 /*
