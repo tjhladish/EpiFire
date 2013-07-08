@@ -475,7 +475,12 @@ void MainWindow::saveEdgeList() {
 
     if (filename.size() == 0) return;
 
-    network->write_edgelist(filename.toStdString());
+    // It would probably be best to have a flag for whether the network was generated (no names) or read in (has names)
+    if (network->size() > 0 and network->get_nodes()[0]->get_name() != "") { // Nodes have names 
+        network->write_edgelist(filename.toStdString(), Network::NodeNames, ',');
+    } else {
+        network->write_edgelist(filename.toStdString(), Network::NodeIDs, ',');
+    }
 }
 
 
@@ -496,7 +501,7 @@ void MainWindow::readEdgeList() {
     else if ( fileName.endsWith(".space", Qt::CaseInsensitive)) sep = ' ';
 
     network->read_edgelist(fileName.toStdString(), sep);
-    network->dumper();
+    //network->dumper();
     network->validate();
     netfileLine->setText(fileName);
     numnodesLine->setText(QString::number(network->size()));

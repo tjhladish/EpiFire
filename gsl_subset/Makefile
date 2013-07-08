@@ -1,6 +1,6 @@
 CFLAGS=--ansi --pedantic -O2
 
-all: objects  libgsl_subset
+all: objects libgsl_subset
 
 objects: 
 	gcc -c cblas/*.c blas/*.c err/*.c ode-initval/*.c -I. 
