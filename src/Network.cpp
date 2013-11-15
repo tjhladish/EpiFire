@@ -535,10 +535,7 @@ vector< vector<Node*> > Network::get_components() {
     	if (seen_nodes.count(node_list[i]) == 0) {
     		temp_comp = get_component(node_list[i]);
     		components.push_back(temp_comp);
-
-    		//for (int j=0; j<temp_comp.size(); j++) seen_nodes.insert(temp_comp[j]);
     		std::copy( temp_comp.begin(), temp_comp.end(), std::inserter( seen_nodes, seen_nodes.end() ) );
-
     	}
     }
 
