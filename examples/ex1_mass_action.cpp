@@ -1,4 +1,4 @@
-#include "MassAction_Sim.h"
+#include "Gillespie_MassAction_Sim.h"
 
 int main() { 
 
@@ -7,7 +7,7 @@ int main() {
     double BETA  = 1/(double) 4;
 
     for(int i=0; i<50; i++ ) {
-        MassAction_Sim sim(N,GAMMA,BETA);
+        Gillespie_MassAction_Sim sim(N,GAMMA,BETA);
         sim.rand_infect(100);
         sim.run_simulation();
         cout << sim.epidemic_size() << endl;

@@ -1,5 +1,5 @@
-#ifndef MASSIM_H
-#define MASSIM_H
+#ifndef GILMASSIM_H
+#define GILMASSIM_H
 
 #include <stdlib.h>
 #include <vector>
@@ -30,10 +30,10 @@ class compTime {
         }
 };
 
-class MassAction_Sim {
+class Gillespie_MassAction_Sim {
     public:
                                     // constructor
-        MassAction_Sim( int n, double gamma, double beta) { N=n; GAMMA=gamma; BETA=beta; reset(); }
+        Gillespie_MassAction_Sim( int n, double gamma, double beta) { N=n; GAMMA=gamma; BETA=beta; reset(); }
 
         int N;                      // population size
         double GAMMA;               // param for exponential recovery time
