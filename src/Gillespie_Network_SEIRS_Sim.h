@@ -7,6 +7,7 @@
 #include <queue>
 #include "Utility.h"
 #include "Network.h"
+#include <limits>
 
 using namespace std;
 
@@ -60,21 +61,23 @@ class Gillespie_Network_SEIRS_Sim {
         double Now;                 // Current "time" in simulation
 
         MTRand mtrand;              // RNG
+        
+        void print_state_counts() {
+            cout << (int) Now << " :\t"  << state_counts[SUSCEPTIBLE] << "\t" 
+                                  << state_counts[EXPOSED] << "\t" 
+                                  << state_counts[INFECTIOUS] << "\t" 
+                                  << state_counts[RESISTANT] << endl; 
+        }
 
-        void run_simulation(double duration) {
+        int run_simulation(double duration) {
+            //cout << Now << " " << next_event_time() << " ";
             double start_time = Now;
-            int day = (int) Now;
-            while (next_event() and Now < start_time + duration) {
-                if ((int) Now > day) {
-                    cout << (int) Now << " : "  << state_counts[SUSCEPTIBLE] << "\t" 
-                                          << state_counts[EXPOSED] << "\t" 
-                                          << state_counts[INFECTIOUS] << "\t" 
-                                          << state_counts[RESISTANT] << endl; 
-                    day = (int) Now;
-                }
-
-                continue;
+            while (next_event_time() < start_time + duration and EventQ.size() > 0) {
+                next_event();
             }
+            Now = start_time + duration;
+            //cout << Now << endl;
+            return EventQ.size();
         }
 
         int current_epidemic_size() {
@@ -119,6 +122,7 @@ class Gillespie_Network_SEIRS_Sim {
         }
 
         void infect(Node* node) {
+            if (node->get_state() != SUSCEPTIBLE) return;
             assert(state_counts[SUSCEPTIBLE] > 0);
             node->set_state(EXPOSED);
             state_counts[SUSCEPTIBLE]--;  // decrement susceptible groupjj
@@ -140,6 +144,11 @@ class Gillespie_Network_SEIRS_Sim {
             double Ts = Tr + immunity_duration; 
             add_event(Ts, 's', node);
             return;
+        }
+
+        double next_event_time() {
+            if ( EventQ.empty() ) return numeric_limits<double>::max();
+            return EventQ.top().time;
         }
 
         int next_event() {

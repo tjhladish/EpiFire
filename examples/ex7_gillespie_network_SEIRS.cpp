@@ -11,11 +11,20 @@ int main() {
     double gamma = 1.0/6.0; // I -> R transition rate
     double immunity_duration = 365;
 
-    for(int i=0; i<1; i++ ) {
-        Gillespie_Network_SEIRS_Sim sim(&net, mu, beta, gamma, immunity_duration);
-        sim.rand_infect(1);
-        sim.run_simulation(1000);
-        //cout << sim.current_epidemic_size() << endl;
+    Gillespie_Network_SEIRS_Sim sim(&net, mu, beta, gamma, immunity_duration);
+    //sim.rand_infect(1);
+    sim.print_state_counts();
+
+    for(int i=0; i<1000; i++ ) {
+        if (i % 365 == 0) {
+            cout << "Introducing new infections\n";
+            sim.rand_infect(5);
+        }
+        if (sim.run_simulation(1) == 0) {
+            sim.print_state_counts();
+            break;
+        }
+        sim.print_state_counts();
     }
 
     return 0;
