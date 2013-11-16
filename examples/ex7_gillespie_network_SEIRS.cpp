@@ -10,8 +10,9 @@ int main(int argc, char* argv[]) {
 	int sourceStep;
 	sscanf (argv[2],"%d",&sourceStep);
 
+	// TODO parse these from args?
     double mu    = 1.0/2.0; // E -> I transition rate
-    double beta  = 1.0/1.5; // contact rate
+    double beta  = 1.0/0.5; // contact rate
     double gamma = 1.0/6.0; // I -> R transition rate
     double immunity_duration = 365;
 
