@@ -62,10 +62,10 @@ class Gillespie_Network_SEIRS_Sim {
 
         MTRand mtrand;              // RNG
         
-        void print_state_counts() {
-            cout << (int) Now << " :\t"  << state_counts[SUSCEPTIBLE] << "\t" 
-                                  << state_counts[EXPOSED] << "\t" 
-                                  << state_counts[INFECTIOUS] << "\t" 
+        void print_state_counts(char sep='\t') {
+            cout << (int) Now << sep << state_counts[SUSCEPTIBLE] << sep
+                                  << state_counts[EXPOSED] << sep
+                                  << state_counts[INFECTIOUS] << sep
                                   << state_counts[RESISTANT] << endl; 
         }
 
