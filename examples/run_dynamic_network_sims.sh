@@ -1,0 +1,12 @@
+./ex7_gillespie_network_SEIRS ./input_data/day1els.o 1 > ./output_data/1a.o &
+./ex7_gillespie_network_SEIRS ./input_data/day1els.o 1 > ./output_data/1b.o &
+./ex7_gillespie_network_SEIRS ./input_data/day7els.o 7 > ./output_data/7a.o &
+./ex7_gillespie_network_SEIRS ./input_data/day7els.o 7 > ./output_data/7b.o &
+./ex7_gillespie_network_SEIRS ./input_data/day30els.o 30 > ./output_data/30a.o &
+./ex7_gillespie_network_SEIRS ./input_data/day30els.o 30 > ./output_data/30b.o &
+./ex7_gillespie_network_SEIRS ./input_data/day30els.o 90 > ./output_data/90a.o &
+./ex7_gillespie_network_SEIRS ./input_data/day30els.o 90 > ./output_data/90b.o &
+./ex7_gillespie_network_SEIRS ./input_data/day180els.o 180 > ./output_data/180a.o &
+./ex7_gillespie_network_SEIRS ./input_data/day180els.o 180 > ./output_data/180b.o &
+./ex7_gillespie_network_SEIRS ./input_data/day365els.o 365 > ./output_data/365a.o &
+./ex7_gillespie_network_SEIRS ./input_data/day365els.o 365 > ./output_data/365b.o &
