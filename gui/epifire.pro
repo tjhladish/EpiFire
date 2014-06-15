@@ -31,7 +31,8 @@ HEADERS     = mainWindow.h \
                analysisDialog.cpp \
                backgroundthread.cpp
 
-
+INCLUDEPATH +=    ../src/ ../gsl_subset/
+LIBS +=       -L ../gsl_subset/ -lgsl_subset
 
  # install
  target.path = ./

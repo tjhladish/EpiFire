@@ -30,6 +30,7 @@ PlotView::PlotView(QWidget*, QString title, QString xlabel, QString ylabel) {
     connect( saveDataAction, SIGNAL(triggered()), this, SLOT(saveData()) );
 }
 
+
 void PlotView::contextMenuEvent(QContextMenuEvent* event) {
     QMenu menu(this);
  
@@ -74,7 +75,6 @@ int find_min_val(vector< vector <int> > data) {
     }
     return minY;
 }
-
 
 
 int find_max_val(vector< vector <int> > data) {
@@ -313,31 +313,23 @@ void PlotView::drawEpiCurvePlot() {
         }
     }
 
-    if(newDataCursor == 0 ) {
-        qDebug() << "creating line\n";
-        //plot predicted
-        vector<double> predX;
-        vector<double> predY;
-
-
-        //for( unsigned int i=0; i<predictedData.size(); i++ ) {
-        //for( unsigned int i=0; i<100; i++ ) {
-        for( unsigned int i=0; i<data[0].size(); i++ ) {
-            predX.push_back(i); // i won't work if granularity isn't the same
-            predY.push_back(data[0][i]);
-        }
-
+    if(predX.size() > 0 and predY.size() == predX.size() ) {
         Line* predCurve = new Line(myscene->dataArea, myscene);
-        predCurve->setX(predX);
-        predCurve->setY(predY);
+        predCurve->setRawData(predX, predY);
         predCurve->setZValue(2);
-
     }
 
     newDataCursor = data.size();
     myscene->update();
 
 }
+
+
+void PlotView::setPredictedData(vector<double> _predX, vector<double> _predY) { 
+    predX = _predX; 
+    predY = _predY;
+}
+
 
 void PlotView::drawNodeStatePlot() {
 
@@ -419,6 +411,7 @@ void PlotView::addData( vector<int> X ) {
     }
 }
 
+
 void PlotView::clearPlot() { 
     myscene->clearPlot();
 }
@@ -429,6 +422,7 @@ void PlotView::clearData() {
     recentDataCursor = 0;
     newDataCursor = 0;
 }
+
 
 void PlotView::saveData() {
     QString startdir = ".";

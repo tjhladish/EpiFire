@@ -238,6 +238,7 @@ class MainWindow : public QMainWindow
         double convertTCBtoT (double TCB, int d);
         double maExpectedSize(double R0, double lower_bound, double upper_bound);
         double netExpectedSize(double T, double P0_frac);
+        void calculatePredictedCurve(vector<double>& x, vector<double>& y); 
         
         int percent_complete(int current, double predicted);
 };

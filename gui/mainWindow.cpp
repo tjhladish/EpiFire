@@ -1,5 +1,5 @@
 #include "mainWindow.h"
-
+#include "../src/Deterministic_Network_SIR_Sim.h"
 
 /*#############################################################################
 #
@@ -870,6 +870,40 @@ void MainWindow::simulatorWrapper() {
     statusBar()->showMessage(simDoneMsg, 1000);
     progressDialog->setLabelText("");
 
+    vector<double>_x;
+    vector<double>_y;
+    _x.push_back(1);
+    _x.push_back(2);
+    _x.push_back(3);
+    _x.push_back(4);
+    _x.push_back(5);
+    _x.push_back(6);
+    _x.push_back(7);
+    _x.push_back(8);
+    _x.push_back(9);
+    _x.push_back(10);
+    _x.push_back(11);
+    _x.push_back(12);
+
+    _y.push_back(10);
+    _y.push_back(20);
+    _y.push_back(30);
+    _y.push_back(40);
+    _y.push_back(50);
+    _y.push_back(60);
+    _y.push_back(70);
+    _y.push_back(80);
+    _y.push_back(90);
+    _y.push_back(100);
+    _y.push_back(110);
+    _y.push_back(120);
+
+    vector<double> predX;
+    vector<double> predY;
+
+    calculatePredictedCurve(predX, predY);
+    epiCurvePlot->setPredictedData(predX, predY);
+
     //MAKE PLOTS
     if ( rightBox->sizes()[1] > 0) epiCurvePlot->replot(); // epicurveplot needs to be done 1st
     if ( rightBox->sizes()[0] > 0) statePlot->replot(); // b/c stateplot uses epicurve axis
@@ -1231,7 +1265,6 @@ double MainWindow::maExpectedSize(double R0, double lower, double upper) {
 }
 
 
-
 // Calculate the theoretical epidemic size (and probability) based on
 // a network's degree distribution and transmissibility.  Based on 
 // Lauren's AMS 2007 paper.
@@ -1334,6 +1367,34 @@ double MainWindow::convertTtoTCB (double T, int d) { return 1.0 - pow(1.0 - T, 1
 
 
 double MainWindow::convertTCBtoT (double TCB, int d) { return 1.0 - pow(1.0 - TCB, d); }
+
+
+void MainWindow::calculatePredictedCurve(vector<double>& x, vector<double>& y) { 
+    x.clear();
+    y.clear();
+    const double step_size = 1.0;
+    double time = 0;
+    double R0 = (rzeroLine->text()).toDouble();
+    // R0 == r/mu
+    double mu = 0.05;
+    double r  = R0*mu;
+    vector<double> degree_dist = normalize_dist( network->get_deg_dist() );
+
+    double theta = 1.0;
+    const int net_size = network->size();
+    double pI = 1.0/net_size;
+    double pS = 1.0 - pI;
+    double I = pI;
+
+    Deterministic_Network_SIR_Sim det_sim(r, mu, degree_dist);
+    det_sim.initialize(theta, pS, pI, I);
+    while (det_sim.y[3] > 0.1*I) {
+        x.push_back(time);
+        y.push_back(det_sim.y[3]*net_size);
+        det_sim.step_simulation(step_size);
+        time += step_size;
+    }
+}
 
 
 int MainWindow::percent_complete(int current, double predicted) { return current > predicted ? 99 : (int) (100 * current/predicted); }

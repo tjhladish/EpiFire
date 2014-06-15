@@ -38,9 +38,8 @@ class PlotView : public QGraphicsView
     public slots:
         void replot();
         void addData(vector<int> X );
-        void setPredictedData(vector<double> X) { predictedData = X; }
+        void setPredictedData(vector<double> _predX, vector<double> _predY);
         void clearData();
-        void clearPredictedData() { predictedData.clear(); }
         void clearPlot();
         void saveData();
         void savePlot();
@@ -62,8 +61,9 @@ class PlotView : public QGraphicsView
 
 
     private:
-        vector<double> predictedData;
         vector< vector<int> > data;
+        vector<double> predX;
+        vector<double> predY;
 
         PlotType plotType;
         double rangeMin;
