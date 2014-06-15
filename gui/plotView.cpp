@@ -1,6 +1,7 @@
 #include "plotView.h"
 #include "plotScene.h"
 #include "plotPoint.h"
+#include "plotLine.h"
 #include <math.h>
 #include "../src/Utility.h"
 
@@ -292,6 +293,9 @@ void PlotView::drawEpiCurvePlot() {
             p->setBrush(brush);
             p->updatePosition();
         }
+        if (Line* line = qgraphicsitem_cast<Line*>(item)) {
+            line->updatePosition();
+        }
     }
 
     QColor recent_color = Qt::red;
@@ -308,7 +312,28 @@ void PlotView::drawEpiCurvePlot() {
             dot->setZValue(zval);
         }
     }
-    
+
+    if(newDataCursor == 0 ) {
+        qDebug() << "creating line\n";
+        //plot predicted
+        vector<double> predX;
+        vector<double> predY;
+
+
+        //for( unsigned int i=0; i<predictedData.size(); i++ ) {
+        //for( unsigned int i=0; i<100; i++ ) {
+        for( unsigned int i=0; i<data[0].size(); i++ ) {
+            predX.push_back(i); // i won't work if granularity isn't the same
+            predY.push_back(data[0][i]);
+        }
+
+        Line* predCurve = new Line(myscene->dataArea, myscene);
+        predCurve->setX(predX);
+        predCurve->setY(predY);
+        predCurve->setZValue(2);
+
+    }
+
     newDataCursor = data.size();
     myscene->update();
 

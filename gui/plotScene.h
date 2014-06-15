@@ -7,6 +7,7 @@
 #include <QVector2D>
 #include "plotRegion.h"
 #include "plotAxis.h"
+#include "plotLine.h"
 #include "plotText.h"
 
 class PlotRegion;

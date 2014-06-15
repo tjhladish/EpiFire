@@ -4,6 +4,7 @@ HEADERS     = mainWindow.h \
              plotView.h \
              plotAxis.h \
              plotPoint.h \
+             plotLine.h \
              plotScene.h \ 
              plotRegion.h \
              plotText.h \
@@ -21,6 +22,7 @@ HEADERS     = mainWindow.h \
                plotScene.cpp \
                plotAxis.cpp \
                plotPoint.cpp  \
+               plotLine.cpp \
                plotRegion.cpp \
                node.cpp \
                edge.cpp \

@@ -10,7 +10,7 @@
 class Point : public QGraphicsItem
 {
     public:
-        enum { Type = UserType + 1 };
+        enum { Type = UserType + 3012 };
         int type() const { return Type; }
 
         Point( float nx, float ny, float nr, QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsItem(parent,scene) { x=nx; y=ny; r=nr; brush=QBrush(Qt::black); };
