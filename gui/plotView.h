@@ -5,6 +5,9 @@
 #include <QGraphicsView>
 #include <QFile>
 #include <QTextStream>
+#include <QAction>
+#include <QMenu>
+#include <QFileDialog>
 #include <vector>
 #include <QVector>
 #include "plotAxis.h"

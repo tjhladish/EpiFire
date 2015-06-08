@@ -13,7 +13,13 @@ class Point : public QGraphicsItem
         enum { Type = UserType + 1 };
         int type() const { return Type; }
 
-        Point( float nx, float ny, float nr, QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsItem(parent,scene) { x=nx; y=ny; r=nr; brush=QBrush(Qt::black); };
+        Point( float nx, float ny, float nr, QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsItem(parent) {
+            if (scene) scene->addItem(this);
+            x=nx;
+            y=ny;
+            r=nr;
+            brush=QBrush(Qt::black);
+        }
         void setBrush(QBrush& x) { brush = x; }
         void updatePosition(); 
 

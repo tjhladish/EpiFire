@@ -1,5 +1,8 @@
 CONFIG += qt thread release
 
+TEMPLATE += app
+QT += gui widgets
+
 HEADERS     = mainWindow.h \
              plotView.h \
              plotAxis.h \

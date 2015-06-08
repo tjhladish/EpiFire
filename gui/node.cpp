@@ -2,12 +2,13 @@
 #include <iostream>
 #include <QDebug>
 
-GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent,scene)
+GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
 {
+    if (scene) scene->addItem(this);
     setFlag(ItemIsMovable);
     setFlag(ItemIsSelectable);
     setFlag(ItemIsFocusable);
-    setAcceptsHoverEvents(true);
+    setAcceptHoverEvents(true);
     setVisible(true);
 	setHighlighted(false);
 
@@ -22,7 +23,7 @@ GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent,
     _boxWidth=10;
     _nodeSize=5;
     
-    _brush = QBrush(Qt::white);
+    _brush = QBrush(Qt::gray);
 	_graph = NULL;
 }
 
@@ -178,9 +179,11 @@ void GNode::paint(QPainter *painter, const QStyleOptionGraphicsItem*, QWidget *)
 	int nodesize = computeGNodeSize(10);
 	_boxWidth=nodesize;
 	_boxHeight=nodesize;
-    painter->setBrush(QBrush(Qt::gray));
-    painter->drawEllipse(-nodesize/2+1,-nodesize/2+1,nodesize,nodesize);
+//    painter->setBrush(QBrush(Qt::gray));
+//    painter->setPen(Qt::NoPen);
+//    painter->drawEllipse(-nodesize/2+1,-nodesize/2+1,nodesize,nodesize);
     painter->setBrush(QBrush(_brush));
+    painter->setPen(Qt::black);
     painter->drawEllipse(-nodesize/2,-nodesize/2,nodesize,nodesize);
 	setBoundingBox(_boxWidth+1,_boxHeight+1);
 

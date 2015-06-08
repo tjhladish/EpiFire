@@ -2,6 +2,9 @@
 #define ANALYSISDIALOG
 
 #include <QDialog>
+#include <QGridLayout>
+#include <QLineEdit>
+#include <QMessageBox>
 #include "mainWindow.h"
 #include "backgroundthread.h"
 #include "../src/Network.h"

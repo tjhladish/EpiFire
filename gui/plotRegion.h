@@ -22,7 +22,11 @@ class PlotRegion : public QObject, public QGraphicsRectItem
     public:
         enum { Type = UserType + 1 };
         int type() const { return Type; }
-        PlotRegion(int iw, int ih, QGraphicsScene* scene=0):QGraphicsRectItem(0,scene) { w=iw; h=ih; }
+        PlotRegion(int iw, int ih, QGraphicsScene* scene=0):QGraphicsRectItem() {
+            if(scene) scene->addItem(this);
+            w=iw;
+            h=ih;
+        }
 
         void setWidthHeight(int iw, int ih) { w=iw; h=ih; }
         int width()  { return w; }

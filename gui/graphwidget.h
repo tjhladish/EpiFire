@@ -1,7 +1,7 @@
 #ifndef GRAPHWIDGET_H
 #define GRAPHWIDGET_H
 
-#include <QtGui/QGraphicsView>
+#include <QGraphicsView>
 #include <QPointer>
 #include <QKeyEvent>
 #include <QTreeWidget>

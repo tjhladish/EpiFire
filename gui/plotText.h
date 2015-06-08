@@ -10,9 +10,12 @@
 class PlotText : public QGraphicsTextItem {
 
     public:
-        PlotText(QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsTextItem(parent,scene) {};
+        PlotText(QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsTextItem(parent) {
+            if (scene) scene->addItem(this);
+        };
 
-        PlotText(QString l, QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsTextItem(parent,scene) {
+        PlotText(QString l, QGraphicsItem* parent=0, QGraphicsScene* scene=0):QGraphicsTextItem(parent) {
+            if (scene) scene->addItem(this);
             setPlainText(l);
         }
 

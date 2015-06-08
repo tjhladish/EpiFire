@@ -35,7 +35,7 @@ void PlotScene::initialize() {
     ylabel->setParentItem(leftMargin);
     title->setParentItem(topMargin);
 
-    ylabel->rotate(-90);
+    ylabel->setRotation(-90);
     
     xAxis->hide();
     yAxis->hide();

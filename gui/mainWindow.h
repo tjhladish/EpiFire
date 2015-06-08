@@ -7,6 +7,19 @@
 #include <QApplication>
 #include <QMainWindow>
 #include <QSizePolicy>
+#include <QProgressDialog>
+#include <QSplitter>
+#include <QTextEdit>
+#include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QStatusBar>
+#include <QMenuBar>
+#include <QLabel>
+#include <QComboBox>
+#include <QGroupBox>
+#include <QPushButton>
+#include <QCheckBox>
+#include <QFileDialog>
 
 #include "debug.h"
 #include "plotView.h"

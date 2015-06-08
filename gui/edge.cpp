@@ -6,7 +6,7 @@ GEdge::GEdge() {
 	_color = Qt::black;
     setVisible(true);
     setFlag(ItemIsSelectable);
-	setAcceptsHoverEvents(true);
+    setAcceptHoverEvents(true);
 	setZValue(0);
 }
 
