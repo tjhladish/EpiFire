@@ -523,62 +523,55 @@ vector<Node*> Network::get_biggest_component() {
 vector< vector<Node*> > Network::get_components() {
     vector< vector<Node*> > components;
     vector<Node*> temp_comp(0);
-    map<Node*,bool> remaining_nodes;
+    set<Node*> seen_nodes;
     PROG(0);
-    for (int i = 0; i<size(); i++) remaining_nodes.insert( make_pair(get_nodes()[i], true) );
 
-    known_nodes = 0;
-    while ( known_nodes < size() ) {
-        if (is_stopped()) {
-            vector< vector<Node*> > empty;
-            return empty;
-        }
+    for (unsigned int i=0; i<node_list.size(); i++) {
+    	if (is_stopped()) {
+    		vector< vector<Node*> > empty;
+    	    return empty;
+    	}
 
-        map<Node*, bool>::iterator it;
-
-        for (it = remaining_nodes.begin(); it != remaining_nodes.end(); ++it){
-            if (it->second == true){
-                Node* next = it->first;
-
-                temp_comp = get_component( next );
-                components.push_back(temp_comp);
-                known_nodes += temp_comp.size();
-
-                for (unsigned int i = 0; i<temp_comp.size(); i++) remaining_nodes[ temp_comp[i] ] = false;
-            }
-        }
+    	if (seen_nodes.count(node_list[i]) == 0) {
+    		temp_comp = get_component(node_list[i]);
+    		components.push_back(temp_comp);
+    		std::copy( temp_comp.begin(), temp_comp.end(), std::inserter( seen_nodes, seen_nodes.end() ) );
+    	}
     }
+
     return components;
 }
 
 
 vector<Node*> Network::get_component(Node* node) {
     vector<Node*> hot_nodes;
-    vector<Node*> cold_nodes;
-    map<int,int> state;          // 1 means "hot", 2 means "cold", 0 means we haven't looked at it yet
-
+    set<Node*> cold_nodes;
     hot_nodes.push_back(node);
-    state[node->id] = 1;
+
 
     while (hot_nodes.size() > 0) {
-        if (process_stopped) return cold_nodes;
+        if (process_stopped) {
+        	vector<Node*> output(cold_nodes.begin(), cold_nodes.end());
+        	return output;
+        }
         
         vector<Node*> new_hot_nodes;
         for (unsigned int i = 0; i < hot_nodes.size(); i++) {
+
             vector<Node*> neighbors = hot_nodes[i]->get_neighbors();
             for (unsigned int j = 0; j < neighbors.size(); j++) {
-                                 // maybe you've already looked at this node
-                if ( state[neighbors[j]->id] > 0 ) continue;
-                state[neighbors[j]->id] = 1;
+
+                if ( cold_nodes.count(neighbors[j]) != 0 ) continue; // maybe you've already looked at this node
                 new_hot_nodes.push_back( neighbors[j] );
             }
-            state[hot_nodes[i]->id] = 2;
-            cold_nodes.push_back( hot_nodes[i] );
+
             PROG((int) 100*((float) (known_nodes + cold_nodes.size())/size() ));
         }
+        std::copy( hot_nodes.begin(), hot_nodes.end(), std::inserter( cold_nodes, cold_nodes.end() ) );
         hot_nodes = new_hot_nodes;
     }
-    return cold_nodes;
+    vector<Node*> output(cold_nodes.begin(), cold_nodes.end());
+    return output;
 }
 
 
@@ -1058,6 +1051,56 @@ void Network::read_edgelist(string filename, char sep) {
                 idmap[name1]->connect_to(idmap[name2]);
             }
         }
+    }
+}
+
+bool Network::add_edgelist(ifstream& source, char sep, string breaker) {
+    std::stringstream ss;
+    const char whitespace[] = " \n\t\r";
+    if (source.is_open()) {
+        string line;
+
+        while ( getline(source,line) && line.compare(breaker) != 0 ) {
+            //split string based on "," and store results in vector
+            vector<string> fields;
+            split(line, sep, fields);
+
+
+            //format check
+            if (fields.size() > 2 ) {
+                cerr << "Skipping line: too many fields: " << line << endl;
+                continue;
+            } else if (fields.size() == 1) { // unconnected node
+                unsigned int id;
+                std::istringstream(strip(fields[0],whitespace)) >> id;
+                cerr << "Found single node " << id << " which is in idmap: " << (id < node_list.size()) << endl;
+                continue;
+            } else if (fields.size() < 1) { // empty line
+            	cerr << "Found an empty line." << endl;
+            	continue;
+            } else { // there are exactly 2 nodes
+
+                unsigned int idA;
+                std::istringstream(strip(fields[0],whitespace)) >> idA;
+                unsigned int idB;
+                std::istringstream(strip(fields[1],whitespace)) >> idB;
+
+                if(node_list.size() < idA) {
+                	cerr << "Found an id not in network: " << idA << endl;
+                	continue;
+                }
+
+                if(node_list.size() < idB) {
+                	cerr << "Found an id not in network: " << idB << endl;
+                	continue;
+                }
+
+                node_list[idA]->connect_to(node_list[idB]);
+            }
+        }
+        return breaker.compare(line) == 0;
+    } else {
+    	return false;
     }
 }
 
