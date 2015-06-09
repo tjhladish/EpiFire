@@ -6,6 +6,7 @@
 #include <QKeyEvent>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
+#include <QTime>
 
 #include "node.h"
 #include "edge.h"
@@ -46,8 +47,8 @@ public:
 
 	void clear();
     void itemMoved();
-    GEdge* addGEdge(GNode* a, GNode* b, string id, void* data);
-	GNode* addGNode(string id, void* data);
+    GEdge* addGEdge(GNode* a, GNode* b, string id, void* nodeStates);
+    GNode* addGNode(string id, void* nodeStates);
 	GNode* locateGNode(QString id);
 	void removeGNode(GNode* n);
 	GEdge* findGEdge(GNode* n1, GNode* n2);
@@ -89,7 +90,6 @@ public slots:
 	void  setLayoutAlgorithm(LayoutAlgorithm x) { _layoutAlgorithm = x; }
 	void  setGNodeSizeNormalization(sizeNormalization x) { _nodeSizeNormalization = x; }
 
-
 	void dump();
     void layoutOGDF();
     void randomLayout();
@@ -100,6 +100,9 @@ public slots:
     void clearLayout();
 	void removeSelectedGNodes();
     void addToTree(GNode* a, GNode* b);
+    void animateNetwork();
+    void setNodeStates(vector< vector<int> > states) { nodeStates = states; _animationTime=0; }
+    void clearNodeStates(){ nodeStates.clear(); }
 
 protected:
 	void updateSceneRect();
@@ -125,12 +128,17 @@ private:
 	QTreeWidget* layoutTree;
 	QHash<GNode*, QTreeWidgetItem*>layoutMap;
 	void deepChildCount(QTreeWidgetItem* x, int* count);
+    void timerEvent(QTimerEvent*);
 
 	float _nodeSizeScale;
 	float _labelSizeScale;
 	float _edgeSizeScale;
 	float _averageGEdgeSize;
     bool  _updateLayout;
+    unsigned int _animationTime;
+    int   _timerID;
+
+    vector< vector<int> > nodeStates;
 
 };
 

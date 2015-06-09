@@ -31,7 +31,7 @@ class PlotView : public QGraphicsView
         PlotType getPlotType() { return plotType; }
 
         void debugger();
-        vector< vector<int> > getData() { return data; }
+        vector< vector<int> > getData() { return node_states; }
         int default_nbins(double rangeMin, double rangeMax);
         vector<double> default_minmax();
 
@@ -64,7 +64,7 @@ class PlotView : public QGraphicsView
 
     private:
 
-        vector< vector<int> > data;
+        vector< vector<int> > node_states;
 
         PlotType plotType;
         double rangeMin;

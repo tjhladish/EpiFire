@@ -49,7 +49,8 @@ GraphWidget::GraphWidget()
 
     _title = NULL;
 	_averageGEdgeSize=100;
-
+    _animationTime=0;
+    _timerID=0;
 }
 
 GraphWidget::~GraphWidget() { 
@@ -680,3 +681,35 @@ void GraphWidget::keyPressEvent(QKeyEvent *event)
 	scene()->update();
 }
 
+//void delay( int millisecondsToWait ) {
+//    QTime dieTime = QTime::currentTime().addMSecs( millisecondsToWait );
+//    while( QTime::currentTime() < dieTime ) {
+//        QCoreApplication::processEvents( QEventLoop::AllEvents, 100 );
+//    }
+//}
+
+void GraphWidget::timerEvent(QTimerEvent*) {
+    //qDebug() << "Timer ID:" << event->timerId();
+    QRgb colors[4] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0), qRgb(254,254,254) };
+    QColor col = Qt::gray;
+
+    //for (unsigned int t = 0; t < node_states.size(); ++t) {
+    if (nodeStates.size() > _animationTime) {
+        for (unsigned int id = 0; id < nodeStates[_animationTime].size(); ++id) {
+            int state = nodeStates[_animationTime][id] == -1 ? 2 :
+                        nodeStates[_animationTime][id] ==  0 ? 0 : 1;
+            col = colors[state];
+            GNode* node = locateGNode(QString::number(id));
+            if (node) node->setBrush(col);
+        }
+        invalidateScene();
+
+        //delay(500);
+        if (++_animationTime >= nodeStates.size()) _animationTime = 0;
+    }
+}
+
+void GraphWidget::animateNetwork() {
+    if (_timerID) killTimer(_timerID);
+    _timerID = startTimer(500);
+}

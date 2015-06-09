@@ -875,12 +875,14 @@ void MainWindow::simulatorWrapper() {
     if ( rightBox->sizes()[0] > 0) statePlot->replot(); // b/c stateplot uses epicurve axis
     if ( rightBox->sizes()[2] > 0) histPlot->replot();
     if ( resultsAnalysisDialog->isVisible() ) resultsAnalysisDialog->updateResultsAnalysis();
+    networkPlot->setNodeStates(statePlot->getData());
+    if ( networkPlot->isVisible() ) networkPlot->animateNetwork();
 
 }
 
 
 void MainWindow::addStateData() {
-    vector<int> node_states(100);
+    vector<int> node_states(500);
     vector<Node*> nodelist = network->get_nodes();
     for (int i = 0; i < network->size() && (unsigned) i < node_states.size(); i++) {
         node_states[i] = (int) nodelist[i]->get_state();
@@ -967,7 +969,6 @@ void MainWindow::updateNetworkPlot() {
     plotNetwork();
 }
 
-
 void MainWindow::plotNetwork() { 
     if (!network || network->size() == 0) {
         appendOutputLine("Please generate network first");
@@ -987,6 +988,7 @@ void MainWindow::plotNetwork() {
         int id2 = edges[i]->get_end()->get_id();
         string name1 = QString::number(id1).toStdString();
         string name2 = QString::number(id2).toStdString();
+
         GNode* n1 = networkPlot->addGNode(name1,0);
         GNode* n2 = networkPlot->addGNode(name2,0);
         networkPlot->addGEdge(n1,n2,"edgeTag",0);
@@ -995,7 +997,6 @@ void MainWindow::plotNetwork() {
     networkPlot->newLayout();
     networkPlot->show();
 }
-
 
 void MainWindow::removeMinorComponents() {
     netAnalysisDialog->generate_comp_thread();
@@ -1121,6 +1122,7 @@ void MainWindow::netDoneUpdate(bool success) {
         clear_network();
         statusBar()->showMessage(generateNetMsg);
     }
+    networkPlot->clearNodeStates();
 }
 
 

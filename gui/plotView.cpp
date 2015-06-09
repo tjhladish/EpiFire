@@ -104,11 +104,11 @@ int find_max_idx(vector< vector <int> > data) {
 
 void PlotView::debugger() { // makes it easier to see what's going on with coordinates & plot area
     // debugging data
-        data.clear();
+        node_states.clear();
         vector<int> dummy;
-        data.push_back(dummy);
+        node_states.push_back(dummy);
         for (int i = 0; i < 10; i++) {
-            data[0].push_back(i);
+            node_states[0].push_back(i);
         }
 
     int plotW = width();
@@ -132,7 +132,7 @@ int PlotView::default_nbins(double min_val, double max_val) {
              << "Arguments given: " << min_val << ", " << max_val << endl;
         return 0;
     }
-    int n = data[0].size();
+    int n = node_states[0].size();
     // for n data points, number of bins should be:
     // n if n < 10
     // 10 if 10 < n < 100
@@ -152,8 +152,8 @@ int PlotView::default_nbins(double min_val, double max_val) {
 
 vector<double> PlotView::default_minmax() {
    vector<double> minmax(2);
-   minmax[0] = (double) min_element(data[0]);
-   minmax[1] = (double) max_element(data[0]);
+   minmax[0] = (double) min_element(node_states[0]);
+   minmax[1] = (double) max_element(node_states[0]);
    return minmax;
 }
 
@@ -161,8 +161,8 @@ vector<double> PlotView::default_minmax() {
 void PlotView::drawHistogram() {
     clearPlot();
 
-    if (data.size() == 0 || data[0].size() == 0) return;
-    vector<int>& epi_data = data[0];
+    if (node_states.size() == 0 || node_states[0].size() == 0) return;
+    vector<int>& epi_data = node_states[0];
 
     int min_val = 0;
     int max_val = 0;
@@ -244,15 +244,15 @@ void PlotView::drawHistogram() {
     
  
 void PlotView::drawEpiCurvePlot() {
-    if (data.size() == 0 ) {
+    if (node_states.size() == 0 ) {
         clearPlot();
         return;
     }
         
     setRenderHint(QPainter::Antialiasing); // smooth data points
 
-    float max_val = (float) find_max_val(data);
-    int   max_idx = find_max_idx(data);
+    float max_val = (float) find_max_val(node_states);
+    int   max_idx = find_max_idx(node_states);
     
     epiCurveAxisUpdated((double) max_idx);
 
@@ -274,14 +274,14 @@ void PlotView::drawEpiCurvePlot() {
     
     int alpha;
     int alpha_threshold[2] = {2, 25};
-    if ((signed) data.size() < alpha_threshold[0]) {
+    if ((signed) node_states.size() < alpha_threshold[0]) {
         alpha = 255;
     }
-    else if ((signed) data.size() > alpha_threshold[1]) {
+    else if ((signed) node_states.size() > alpha_threshold[1]) {
         alpha = 10;
     }
     else {
-        alpha = 255 / data.size();
+        alpha = 255 / node_states.size();
     }
 
     QColor default_color(0,0,0,alpha);
@@ -295,13 +295,13 @@ void PlotView::drawEpiCurvePlot() {
     }
 
     QColor recent_color = Qt::red;
-    for( int i = newDataCursor; i < (signed) data.size(); i++ ) {
-        if (i == (signed) data.size() - 1) {
+    for( int i = newDataCursor; i < (signed) node_states.size(); i++ ) {
+        if (i == (signed) node_states.size() - 1) {
             brush.setColor(recent_color);
             zval = 1;
         }
-        for( unsigned int j=0; j<data[i].size(); j++ ) {
-            Point*  dot = new Point( j, data[i][j] , r);
+        for( unsigned int j=0; j<node_states[i].size(); j++ ) {
+            Point*  dot = new Point( j, node_states[i][j] , r);
             dot->setParentItem(myscene->dataArea);
             dot->setBrush(brush);
             dot->updatePosition();
@@ -309,7 +309,7 @@ void PlotView::drawEpiCurvePlot() {
         }
     }
     
-    newDataCursor = data.size();
+    newDataCursor = node_states.size();
     myscene->update();
 
 }
@@ -319,13 +319,14 @@ void PlotView::drawNodeStatePlot() {
     clearPlot();
     QRgb colors[4] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0), qRgb(254,254,254) };
 
-    if (data.size() == 0 ) {
+    if (node_states.size() == 0 ) {
         clearPlot();
         return;
     }
     
-    int node_ct = (signed) data[0].size();
-    int duration = (signed) data.size() - 1;
+    int node_ct = (signed) node_states[0].size();
+    node_ct = node_ct > 100 ? 100 : node_ct;
+    int duration = (signed) node_states.size() - 1;
     int xmax = rangeMax > duration? rangeMax : duration;
 
     Axis* xAxis = myscene->xAxis;
@@ -349,17 +350,17 @@ void PlotView::drawNodeStatePlot() {
     QRgb value;
     QImage image(xmax,  node_ct,QImage::Format_ARGB32);
     image.fill(Qt::white);
-    for( int x=0; x < (signed) data.size(); x++) {
-        for( int y=0; y < (signed) data[x].size(); y++ ) {
-             int val = data[x][y];
+    for( int x=0; x < (signed) node_states.size(); x++) {
+        for( int y=0; y < node_ct; y++ ) {
+             int val = node_states[x][y];
              
              if (val == 0) {}
              else if (val == -1) { val = 2; }
              else { val = 1;}
 
-             if (val > 2) cerr << "Node " << x << " has nonsense state " << val << endl;
+             if (val > 2) cerr << "Node " << y << " has nonsense state " << val << endl;
              value = colors[ val % 4 ];
-             image.setPixel(x, y, value);
+             image.setPixel(x, node_ct - (y + 1), value);
         }
     }
 
@@ -384,13 +385,13 @@ void PlotView::resizeEvent ( QResizeEvent * ) {
 
 void PlotView::addData( vector<int> X ) { 
     if (plotType == STATEPLOT or plotType == CURVEPLOT) {
-        data.push_back(X);
+        node_states.push_back(X);
     } else {
-        if (data.empty()) {
+        if (node_states.empty()) {
             vector<int> nothing;
-            data.push_back(nothing);
+            node_states.push_back(nothing);
         }
-        data[0].insert(data[0].end(), X.begin(), X.end());
+        node_states[0].insert(node_states[0].end(), X.begin(), X.end());
     }
 }
 
@@ -400,7 +401,7 @@ void PlotView::clearPlot() {
 
 
 void PlotView::clearData() {
-    data.clear();
+    node_states.clear();
     recentDataCursor = 0;
     newDataCursor = 0;
 }
@@ -415,25 +416,25 @@ void PlotView::saveData() {
 
     if ( plotType == CURVEPLOT ) {
         // One time series per line
-        for( unsigned int r=0; r < data.size(); r++) {
-            for( unsigned int c=0; c < data[r].size() - 1; c++ ) {
-                out << data[r][c] << ",";
+        for( unsigned int r=0; r < node_states.size(); r++) {
+            for( unsigned int c=0; c < node_states[r].size() - 1; c++ ) {
+                out << node_states[r][c] << ",";
             }
-            out << data[r][data[r].size()-1] << endl;
+            out << node_states[r][node_states[r].size()-1] << endl;
         }
     } else if (plotType == STATEPLOT ) { 
         // Swap rows and columns -- data structure must be rectangular!
-        for( unsigned int r=0; r < data[0].size(); r++ ) {
-            for( unsigned int c=0; c < data.size() - 1; c++) {
-                out << data[c][r] << ",";
+        for( unsigned int r=0; r < node_states[0].size(); r++ ) {
+            for( unsigned int c=0; c < node_states.size() - 1; c++) {
+                out << node_states[c][r] << ",";
             }
-            out << data[data.size()-1][r] << endl;
+            out << node_states[node_states.size()-1][r] << endl;
         }
     } else if (plotType == HISTPLOT || plotType == DEGPLOT || plotType == RESULTS_HISTPLOT) {
         // One number per line
-         for( unsigned int r=0; r < data.size(); r++) {
-            for( unsigned int c=0; c < data[r].size(); c++ ) {
-                out << data[r][c] << endl;
+         for( unsigned int r=0; r < node_states.size(); r++) {
+            for( unsigned int c=0; c < node_states[r].size(); c++ ) {
+                out << node_states[r][c] << endl;
             }
         }
     }

@@ -152,7 +152,7 @@ class MainWindow : public QMainWindow
         void resetCursor();
         void enableCentralWidget();
         void disableCentralWidget();
- 
+
     protected:
 
     private:
