@@ -993,9 +993,10 @@ void MainWindow::plotNetwork() {
         GNode* n2 = networkPlot->addGNode(name2,0);
         networkPlot->addGEdge(n1,n2,"edgeTag",0);
     }
-    networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
+    //networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();
     networkPlot->show();
+    networkPlot->animateNetwork();
 }
 
 void MainWindow::removeMinorComponents() {
