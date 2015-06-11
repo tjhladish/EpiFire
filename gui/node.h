@@ -40,6 +40,7 @@ public:
     QList<GEdge *> edgesIn();
     QList<GEdge *> edgesOut();
     QList<GEdge *> findConnectedGEdges(GNode* other);
+    int totalDegree() { return edgeList.size(); }
 	
 	inline bool isHighlighted() { return _hilighted; }
 	void setHighlighted(bool x) { _hilighted = x; }
@@ -89,16 +90,16 @@ public:
 public slots:
 
 signals:
-	 void nodeMoved(GNode*);
-	 void nodePressed(GNode*);
-	 void nodeDoubleClicked(GNode*);
+	 void nodeMoved ( GNode* );
+	 void nodePressed ( GNode* );
+	 void nodeDoubleClicked ( GNode* );
 
 protected:
-    QVariant itemChange(GraphicsItemChange change, const QVariant &value);
-    void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+    QVariant itemChange ( GraphicsItemChange change, const QVariant &value );
+    void paint ( QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget );
     void mouseMoveEvent ( QGraphicsSceneMouseEvent * event );
-	void mousePressEvent(QGraphicsSceneMouseEvent *event);
-	void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *event);
+	void mousePressEvent ( QGraphicsSceneMouseEvent *event );
+	void mouseDoubleClickEvent ( QGraphicsSceneMouseEvent *event );
 
 	GraphWidget* _graph;
 

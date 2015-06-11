@@ -8,6 +8,9 @@
 #include <QTreeWidgetItem>
 #include <QTime>
 
+#include "Quadtree.h"
+#include "ForceLayout.h"
+
 #include "node.h"
 #include "edge.h"
 #include <string>
@@ -93,6 +96,7 @@ public slots:
 	void dump();
     void layoutOGDF();
     void randomLayout();
+    void forceLayout();
     void updateLayout();
     void newLayout();
 	void adjustLayout();

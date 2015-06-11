@@ -320,7 +320,8 @@ void GraphWidget::newLayout() {
 	cerr << "newLayout() " << endl;
 	clearLayout();
 //	layoutOGDF();
-    randomLayout();
+    //randomLayout();
+    forceLayout();
 	resetZoom();
 }
 
@@ -330,6 +331,31 @@ float repulsion (float d, float k)  { return k*k/d; }
 float cool (float temp, float initial_temp, int rep_max) { 
     temp -= initial_temp / rep_max;
     return temp < 0 ? 0 : temp;
+}
+
+void GraphWidget::forceLayout() { 
+    ForceLayout layout;
+
+    vector<Particle*> particles;
+
+    for(int i=0; i < 1000; i++ ) {
+        Particle* a = new Particle(rand()%100, rand()%100); 
+        particles.push_back(a);
+    }
+
+    foreach(GNode* n1, nodelist ) {
+        float x = (((float) rand())/RAND_MAX*W - W/2)/(n1->edges().size() + 1);
+        float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
+        n1->setPos(x,y);
+        Particle* a = new Particle(x,y);
+        particles.push_back(a);
+    }
+
+    layout.doLayout(particles);
+
+    for(int i=0; i<nodelist.size(); i++ ) {
+        nodelist[i]->setPos( particles[i].x , particles[i].y );
+    }
 }
 
 void GraphWidget::randomLayout() { 
