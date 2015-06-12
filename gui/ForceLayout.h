@@ -74,19 +74,11 @@ class ForceLayout {
             _accumulateCharge(c);
             n->cn += c->cn;
             cx += c->cn * c->cx;
-            cx += c->cn * c->cx;
+            cy += c->cn * c->cy;
         }
 
     public:
-        ForceLayout(): dragConstant(.1), 
-                                   chargeConstant(-40), 
-                                   chargeMinDistance(2),
-                                   chargeMaxDistance(500), 
-                                   chargeTheta(.9), 
-                                   springConstant(.1),
-                                   springDamping(.3), 
-                                   springLength(20) {}
-
+        ForceLayout();
 
         void randomLayout() {
             /*
@@ -98,84 +90,5 @@ class ForceLayout {
             */
         }
 
-        void doLayout(std::vector<Particle*>& particles) {
-            randomLayout();
-            // kl used for spring forces
-            std::vector<double> kl;
-            for (auto p: particles) {
-                for (auto link: p->linksOut) {
-                    Particle* n = link->dest;
-                    kl.push_back( 1.0/sqrt(std::max(p->totalDegree(), n->totalDegree())) );
-                }
-            }
-
-            for (int t = 0; t<100; ++t) {
-                /*
-                 * Assumptions:
-                 * - The mass (m) of every particles is 1.
-                 * - The time step (dt) is 1.
-                 */
-
-                /* Position Verlet integration. */
-                for ( auto p: particles) {
-                    double px = p->px;
-                    double py = p->py;
-                    p->px = p->x;
-                    p->py = p->y;
-                    p->x += p->vx = ((p->x - px) + p->fx);
-                    p->y += p->vy = ((p->y - py) + p->fy);
-                }
-
-                /* Apply constraints, then accumulate new forces. */
-                Quadtree* q = new Quadtree(particles);
-                //for (c = this.constraints; c; c = c.next) {c.apply(this.particles, q);
-                //    sim.constraint(pv.Constraint.bound().x(6, w - 6).y(6, h - 6));
-                //}
-                // clear old forces
-                for (auto p: particles) {
-                    p->fx = 0;
-                    p->fy = 0;
-                }
-
-//double v_sum = 0;
-                // drag
-                if (dragConstant) {
-                    for (auto p: particles) {
-                        p->fx -= dragConstant * p->vx;
-                        p->fy -= dragConstant * p->vy;
-//v_sum += sqrt(p->vx*p->vx + p->vy*p->vy);
-                    }
-                }
-//std::cerr << v_sum << std::endl;
-                // charge
-                _accumulateCharge(q->root);
-                for (auto p: particles) {
-                    _chargeforces(q->root, p, q->xMin, q->yMin, q->xMax, q->yMax);
-                }
-
-                // spring
-                for (auto p: particles) {
-                    std::vector<Link*> links_out = p->linksOut;
-                    for (unsigned int i = 0; i < links_out.size(); ++i) {
-                        Particle* a = links_out[i]->source;
-                        Particle* b = links_out[i]->dest;
-                        double dx = a->x - b->x;
-                        double dy = a->y - b->y;
-                        double dn = sqrt(dx * dx + dy * dy);
-                        double dd = dn ? (1.0 / dn) : 1.0;
-                        double ks = springConstant * kl[i]; // normalized tension
-                        double kd = springDamping * kl[i]; // normalized damping
-                        double kk = (ks * (dn - springLength) + kd * (dx * (a->vx - b->vx) + dy * (a->vy - b->vy)) * dd) * dd;
-                        double fx = -kk * (dn ? dx : (0.01 * (0.5 - rand()/RAND_MAX)));
-                        double fy = -kk * (dn ? dy : (0.01 * (0.5 - rand()/RAND_MAX)));
-                        a->fx += fx;
-                        a->fy += fy;
-                        b->fx -= fx;
-                        b->fy -= fy;
-                    }
-                }
-
-                delete q;   //delete quad tree
-            }
-        }
+        void doLayout(std::vector<Particle*>& particles, int iterations);
 };

@@ -27,6 +27,7 @@ struct Particle;
 struct Link {
     Particle* source;
     Particle* dest;
+    Link (Particle* s, Particle* d):source(s), dest(d) {}
 };
 
 struct Particle { 
@@ -42,7 +43,8 @@ struct Particle {
     std::vector<Link*> linksIn;
     std::vector<Link*> linksOut;
 
-    Particle (double _x, double _y ) : x(_x), y(_y), vx(0), vy(0), fx(0), fy(0) {}
+    Particle (double _x, double _y ) : x(_x), y(_y), vx(0), vy(0), fx(0), fy(0), px(_x), py(_y) {}
+    ~Particle() { for (auto e: linksIn) delete e; for (auto e: linksOut) delete e; }
     int totalDegree() { return linksIn.size() + linksOut.size(); }
 };
 

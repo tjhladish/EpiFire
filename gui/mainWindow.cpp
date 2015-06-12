@@ -979,19 +979,24 @@ void MainWindow::plotNetwork() {
     }
 
     networkPlot->clear();
+    vector<Node*> nodes = network->get_nodes();
+    for (Node* node: nodes) {
+        GNode* gn = networkPlot->addGNode(node->get_id(),0);
+       // cerr << "e" << node->get_id() << " " << node->deg() << endl;
+    }
+
     vector<Edge*> edges = network->get_edges();
-    map<Edge*, bool> seen;
+    set<Edge*> seen;
+    // TODO - we're leaving out disconnected (degree 0) nodes
     for(unsigned int i=0; i < edges.size(); i++ ) {
         if (seen.count(edges[i]->get_complement())) continue;
-        seen[edges[i]] = true;
+        seen.insert(edges[i]);
         int id1 = edges[i]->get_start()->get_id();
         int id2 = edges[i]->get_end()->get_id();
-        string name1 = QString::number(id1).toStdString();
-        string name2 = QString::number(id2).toStdString();
 
-        GNode* n1 = networkPlot->addGNode(name1,0);
-        GNode* n2 = networkPlot->addGNode(name2,0);
-        networkPlot->addGEdge(n1,n2,"edgeTag",0);
+        GNode* n1 = networkPlot->locateGNode(id1);
+        GNode* n2 = networkPlot->locateGNode(id2);
+        networkPlot->addGEdge(n1,n2,tr("%1-%2").arg(id1,id2).toStdString(),0);
     }
     //networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();

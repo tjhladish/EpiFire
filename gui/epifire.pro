@@ -1,4 +1,4 @@
-CONFIG += qt thread release
+CONFIG += qt thread release c++11
 
 TEMPLATE += app
 QT += gui widgets
@@ -15,6 +15,8 @@ HEADERS     = mainWindow.h \
              graphwidget.h \
              debug.h \
              analysisDialog.h \
+             ForceLayout.h \
+             Quadtree.h \
              backgroundthread.h
 
  SOURCES     = mainWindow.cpp \
@@ -30,7 +32,8 @@ HEADERS     = mainWindow.h \
                graphwidget.cpp \
                debug.cpp \
                analysisDialog.cpp \
-               backgroundthread.cpp
+               backgroundthread.cpp \
+               ForceLayout.cpp
 
 
 

@@ -64,18 +64,17 @@ void GraphWidget::clear() {
 	layoutTree->clear();
 }
 
-GNode* GraphWidget::addGNode(string id, void* data) {
-   qDebug() << "addGNode() " << id.c_str();
-	if ( nodelist.count(id.c_str()) == 0 ) {
+GNode* GraphWidget::addGNode(int id, void* data) {
+   qDebug() << "addGNode() " << id;
+    if ( id >= nodelist.size() ) {
 			GNode* n = new GNode(0,scene());
-			n->setId(id.c_str());
-			n->setNote(id.c_str());
+            n->setId(id);
 			n->setDataReference(data);
 			n->setGraphWidget(this);
-			nodelist[id.c_str()]=n;
+            nodelist.push_back(n);
 			return n;
 	} else {
-			return nodelist[id.c_str()];
+            return nodelist[id];
 	}
 }
 
@@ -107,32 +106,7 @@ GEdge* GraphWidget::addGEdge(GNode* n1, GNode* n2, string note, void* data) {
 		return(e);
 }
 
-void GraphWidget::removeGNode(GNode* n) {
-	if (!n) return;
-
-	qDebug() << "Removing: " << n->getId() << endl;
-	n->setVisible(false);
-	scene()->removeItem(n);
-	foreach (GEdge* e, n->edges() ) {
-		e->setVisible(false);
-		scene()->removeItem(e);
-		n->removeGEdge(e);
-		if (e->sourceGNode() == n) e->destGNode()->removeGEdge(e);
-		if (e->destGNode()   == n) e->sourceGNode()->removeGEdge(e);
-		delete(e);
-	}
-
-	if (layoutMap.contains(n)) {
-		layoutMap.clear();
-		layoutTree->clear();
-	}
-
-	if (nodelist.contains(n->getId()) ) {
-		nodelist.remove(n->getId());
-	}
-
-	delete(n);
-}
+void GraphWidget::removeGNode(GNode*) {}
 
 void GraphWidget::removeSelectedGNodes() {
     foreach (QGraphicsItem *item, scene()->selectedItems()) {
@@ -320,8 +294,8 @@ void GraphWidget::newLayout() {
 	cerr << "newLayout() " << endl;
 	clearLayout();
 //	layoutOGDF();
-    //randomLayout();
-    forceLayout();
+    randomLayout();
+    forceLayout(1);
 	resetZoom();
 }
 
@@ -333,37 +307,53 @@ float cool (float temp, float initial_temp, int rep_max) {
     return temp < 0 ? 0 : temp;
 }
 
-void GraphWidget::forceLayout() { 
+void GraphWidget::forceLayout(int iterations=1) {
+    //qDebug() << "force layout qdebug";
+    //cerr << "force layout cerr\n";
     ForceLayout layout;
 
     vector<Particle*> particles;
 
-    for(int i=0; i < 1000; i++ ) {
-        Particle* a = new Particle(rand()%100, rand()%100); 
+    for( GNode* n: nodelist ) {
+   //     cerr << "g" << n->getId() << " " << n->edges().size() << endl;
+        Particle* a = new Particle(n->pos().x(), n->pos().y());
         particles.push_back(a);
     }
 
-    foreach(GNode* n1, nodelist ) {
-        float x = (((float) rand())/RAND_MAX*W - W/2)/(n1->edges().size() + 1);
-        float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
-        n1->setPos(x,y);
-        Particle* a = new Particle(x,y);
-        particles.push_back(a);
+    for (unsigned int aId = 0; aId < nodelist.size(); ++aId) {
+        GNode* n = nodelist[aId];
+        Particle* p = particles[aId];
+        for (GEdge* e: n->edgesIn()) {
+            int bId = e->sourceGNode()->getId();
+            p->linksIn.push_back(new Link(particles[bId], p));
+       }
+
+       for (GEdge* e: n->edgesOut()) {
+            int bId = e->destGNode()->getId();
+            p->linksOut.push_back(new Link(p, particles[bId]));
+       }
+
     }
 
-    layout.doLayout(particles);
+    //for (unsigned int i = 0; i< particles.size(); ++i) {
+    //    cerr << "p" << i << " " << (particles[i]->linksIn.size() + particles[i]->linksOut.size()) << endl;
+    //}
 
-    for(int i=0; i<nodelist.size(); i++ ) {
-        nodelist[i]->setPos( particles[i].x , particles[i].y );
+    layout.doLayout(particles, iterations);
+
+    for(unsigned int i=0; i<nodelist.size(); i++ ) {
+        nodelist[i]->setPos( particles[i]->x , particles[i]->y );
+      //  qDebug() << particles[i]->x << " " << particles[i]->y;
     }
+    //resetZoom();
+    invalidateScene();
+    for (unsigned int i = 0; i < particles.size(); ++i) delete particles[i];
 }
 
 void GraphWidget::randomLayout() { 
 
     int W=300; int H=300;
     int sceneW = W*1.2; int sceneH = H*1.2;
-    int A = W*H;
-    float k = sqrt((float) A/nodelist.size());
     scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
 
     fitInView(sceneRect(),Qt::KeepAspectRatio);
@@ -372,7 +362,7 @@ void GraphWidget::randomLayout() {
         float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
         n1->setPos(x,y);
     }
-
+/*
     float t_init = 100;
     float t = t_init;
     int rep_max = 50;
@@ -432,31 +422,11 @@ void GraphWidget::randomLayout() {
 
             t = cool(t, t_init, rep_max);
         }
-    }
+    }*/
     //fitInView(sceneRect(),Qt::KeepAspectRatio);
 }
 
-void GraphWidget::updateLayout() {
-	cerr << "updateLayout() " << endl;
-	if (nodelist.size() == 0 ) return;
-	setLayoutAlgorithm(Balloon);
-
-    QPointF zero(0,0);
-    foreach(GNode* x, nodelist) if(x && x->pos() != zero) x->setFixedPosition(true); 
-    foreach(GNode* x, nodelist) if(x && !layoutMap.contains(x)) recursiveDepth(x,0); 
-
-	if (layoutMap.size() > 0) {
-		for(int i=0; i<layoutTree->topLevelItemCount() ; i++ ) {
-			QTreeWidgetItem* x = layoutTree->topLevelItem(i);
-			if (x) recursiveDraw(x);
-		}
-	} else { 
-		layoutOGDF();
-	}
-
-    foreach(GNode* x, nodelist){ if(x) x->setFixedPosition(false); }
-	//updateSceneRect();
-}
+void GraphWidget::updateLayout() {}
 
 void GraphWidget::adjustLayout() {
 	cerr << "adjustLayout() " << endl;
@@ -486,79 +456,6 @@ void GraphWidget::clearLayout() {
     layoutMap.clear();
 	foreach(GNode* n, nodelist) { n->setDepth(-1); n->setPos(0,0); }
 }
-
-void GraphWidget::addToTree(GNode* a, GNode* b) {
-	//qDebug() << "addToTree: " << a->getNote() << " " << b->getNote();
-
-    if(!a) { //missing parent
-       foreach(GNode* n, nodelist) {
-           if(layoutMap.contains(n) ){ 
-               QList<GEdge*> edges = n->findConnectedGEdges(b); 
-               foreach(GEdge* e, edges) { 
-                   if (layoutMap.contains(e->sourceGNode())) { a = e->sourceGNode(); break; }
-                   if (layoutMap.contains(e->destGNode()))   { a = e->destGNode(); break; }
-               }
-           }
-       }
-    }
-
-    if (!a || !b ) return;
-	if (layoutMap.contains(a) == false) return;
-	if (layoutMap.contains(b) == true) return;
-	QTreeWidgetItem* parent = layoutMap[a];
-	if (!parent) return;
-
-    QTreeWidgetItem* item  = new QTreeWidgetItem(parent);
-    item->setText(0,b->getId());
-    layoutMap[b]=item;
-}
-
-void GraphWidget::recursiveDepth(GNode* n0,int depth) {
-	//cerr << "recursiveDepth() " << endl;
-
-	QTreeWidgetItem* parent=0;
-	if (layoutMap.contains(n0)) { 
-        parent=layoutMap[n0];
-    } else {
-        foreach(GEdge* e, n0->edges() ) {
-            GNode* other = e->sourceGNode();
-            if (other == n0 ) other= e->destGNode();
-            if (other == n0 ) continue;
-	        if (layoutMap.contains(other)) { parent=layoutMap[other]; n0=other; break; }
-        }
-    } 
-
-	if (!parent) {
-		QTreeWidgetItem* item  = new QTreeWidgetItem(layoutTree);
-		item->setText(0,n0->getId());
-		if (layoutMap.size()) n0->setPos( (float) scene()->width(), 0 );
-		layoutMap[n0]=item;
-	    parent = item;
-	}
-	if (!parent) return;
-
-	for(int i=0; i<depth+1; i++) cerr << " ";
-	qDebug() << depth << " " << n0->getId() << " " << n0->getDepth() << " " << n0->boundingRect().width();
-	QList<GNode*>newnodes;
-    foreach(GEdge* e, n0->edgesOut() ) {
-        GNode* other= e->destGNode();
-        if (!other || other == n0 || layoutMap.contains(other))  continue;
-        addToTree(n0,other); 
-        newnodes.push_back(other); 
-    }
-
-    foreach(GEdge* e, n0->edgesIn() ) {
-        GNode* other = e->sourceGNode();
-        if (!other || other == n0 || layoutMap.contains(other))  continue;
-        addToTree(n0,other); 
-        newnodes.push_back(other); 
-    }
-
-	foreach(GNode* n, newnodes) { recursiveDepth(n,depth+1); }
-
-	
-}
-
 
 
 void GraphWidget::computeAvgGEdgeLength() {
@@ -592,74 +489,8 @@ void GraphWidget::deepChildCount(QTreeWidgetItem* x, int* count) {
 	qDebug() << "deepChildCount: " << x->text(0) << " " << *count;
 }
 
-void GraphWidget::recursiveDraw(QTreeWidgetItem* parent) {
-	if (!parent) return;
-	//int deepcount=0; deepChildCount(item,&deepcount);
-	int childcount=parent->childCount();
-	QString name = parent->text(0);
-	GNode* parentGNode =  locateGNode(name);
-	if (parentGNode == NULL ) return;
 
-	float px = parentGNode->pos().x();
-	float py = parentGNode->pos().y();
-
-	parentGNode->setNewPos(px,py);
-
-    int half = childcount/2;
-	if (childcount== 1) half=0;
-
-	float angle0=atan2(py,px);
-
-	for(int i=0; i<childcount;i++) {
-		QTreeWidgetItem* child = parent->child(i);
-		//QVariant v =  child->data(0,Qt::UserRole);
-		//GNode* n =  (GNode*) v.value<QGraphicsItem*>();
-		GNode* n = locateGNode(child->text(0));
-		if (n) {
-           float dist=_averageGEdgeSize;
-		   if (dist < 10 ) dist=10;
-		   if (childcount > 2) dist *= log2(childcount);
-
-		   if (getLayoutAlgorithm() == FMMM ) {
-				   float cy= py+(i-half)*dist; 
-				   float cx= px+dist;
-				   n->setNewPos(cx,cy);
-		   } else if (getLayoutAlgorithm() == Circular ) {
-				   float angle = (float) (i+1)/childcount*2*Pi;
-				   float cx= px+cos(angle0+angle)*dist; 
-				   float cy= py+sin(angle0+angle)*dist;
-				   n->setNewPos(cx,cy);
-		   } else if (getLayoutAlgorithm() == Balloon) {
-				   float angle = angle0+(float) (i-half)/childcount*0.9*Pi;
-				   float cx= px+cos(angle)*dist; 
-				   float cy= py+sin(angle)*dist;
-				   n->setNewPos(cx,cy);
-		   }
-		}
-	}
-
-	for(int i=0; i<childcount;i++) { recursiveDraw(parent->child(i)); }
-}
-
-
-void GraphWidget::layoutOGDF() { 
-    cerr << "layoutOGDF() " << endl;
-	if (nodelist.size()==0) return;
-
-	QList<GNode*>metabolites =getGNodes(GNode::Unassigned); 
-
-	foreach(GNode* n, metabolites) { 
-		if(layoutMap.count(n)) continue;
-		if(n->edgesIn().size()>0 ) continue;
-		recursiveDepth(n,0);
-	}
-	foreach(GNode* n, metabolites) { if(layoutMap.count(n)==0) recursiveDepth(n,0); }
-
-	for(int i=0; i<layoutTree->topLevelItemCount() ; i++ ) {
-		QTreeWidgetItem* x = layoutTree->topLevelItem(i);
-		recursiveDraw(x);
-	}
-}
+void GraphWidget::layoutOGDF() {}
 
 void GraphWidget::dump() {
 	foreach(GNode* n, nodelist) { 
@@ -674,8 +505,8 @@ void GraphWidget::dump() {
     }
 }
 
-GNode* GraphWidget::locateGNode(QString id) {
-	if ( nodelist.count(id) ) return nodelist[id];
+GNode* GraphWidget::locateGNode(int id) {
+    if ( id < nodelist.size() ) return nodelist[id];
 	return NULL;
 }
 
@@ -694,10 +525,13 @@ void GraphWidget::keyPressEvent(QKeyEvent *event)
 				case Qt::Key_Plus:
 						zoomIn();
 						break;
-				case Qt::Key_Enter:
-						adjustLayout();
-						break;
-				case Qt::Key_N:
+                case Qt::Key_Enter:
+                        forceLayout();
+                        break;
+                case Qt::Key_Return:
+                        forceLayout();
+                        break;
+                case Qt::Key_N:
 						newLayout();
 						break;
 				default:
@@ -725,7 +559,7 @@ void GraphWidget::timerEvent(QTimerEvent*) {
             int state = nodeStates[_animationTime][id] == -1 ? 2 :
                         nodeStates[_animationTime][id] ==  0 ? 0 : 1;
             col = colors[state];
-            GNode* node = locateGNode(QString::number(id));
+            GNode* node = locateGNode(id);
             if (node) node->setBrush(col);
         }
         invalidateScene();

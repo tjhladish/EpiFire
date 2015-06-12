@@ -204,6 +204,7 @@ void GNode::mousePressEvent(QGraphicsSceneMouseEvent *) {
 void GNode::mouseMoveEvent ( QGraphicsSceneMouseEvent * event ) {
     QGraphicsItem::mouseMoveEvent(event);
     foreach (GEdge *edge, edgeList) edge->adjust();
+    getGraphWidget()->forceLayout(50);
     scene()->update();
 }
 

@@ -51,9 +51,9 @@ public:
 	void clear();
     void itemMoved();
     GEdge* addGEdge(GNode* a, GNode* b, string id, void* nodeStates);
-    GNode* addGNode(string id, void* nodeStates);
-	GNode* locateGNode(QString id);
-	void removeGNode(GNode* n);
+    GNode* addGNode(int id, void* nodeStates);
+    GNode* locateGNode(int id);
+    void removeGNode(GNode*);
 	GEdge* findGEdge(GNode* n1, GNode* n2);
 
     void  setGNodeSizeScale( float scale) { _nodeSizeScale=scale; }
@@ -96,14 +96,13 @@ public slots:
 	void dump();
     void layoutOGDF();
     void randomLayout();
-    void forceLayout();
+    void forceLayout(int iterations);
     void updateLayout();
     void newLayout();
 	void adjustLayout();
     void adjustLayout(GNode*);
     void clearLayout();
 	void removeSelectedGNodes();
-    void addToTree(GNode* a, GNode* b);
     void animateNetwork();
     void setNodeStates(vector< vector<int> > states) { nodeStates = states; _animationTime=0; }
     void clearNodeStates(){ nodeStates.clear(); }
@@ -116,11 +115,9 @@ protected:
 
     void scaleView(qreal scaleFactor);
 	void randomGNodePositions();
-	void recursiveDepth(GNode* n0,int depth);
-	void recursiveDraw(QTreeWidgetItem* item);
 	QPointer<QGraphicsTextItem> _title;
 
-    QHash<QString,GNode*> nodelist;
+    QVector<GNode*> nodelist;
 
 
 private:

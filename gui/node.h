@@ -50,8 +50,8 @@ public:
 	inline const QString getNote()		{ return _note; }
 	void setNote(QString v)			  { _note = v; }
 
-	inline const QString getId()		{ return _id; }
-	void setId(QString v)			  { _id = v; }
+    inline int getId()		{ return _id; }
+    void setId(int v)			  { _id = v; }
 
 	inline void* getDataReference()			{ return _data; }
 	void setDataReference(void* v) 			  { _data = v; }
@@ -109,7 +109,7 @@ private:
 private:
     QList<GEdge *> edgeList;
 	QString _note;
-	QString _id;
+    int _id;
 	MolClass _class;
 	void*  _data;
 
