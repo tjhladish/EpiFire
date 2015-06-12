@@ -51,29 +51,15 @@ public:
 	void clear();
     void itemMoved();
     GEdge* addGEdge(GNode* a, GNode* b, string id, void* nodeStates);
-    GNode* addGNode(int id, void* nodeStates);
+    GNode* addGNode(int id);
     GNode* locateGNode(int id);
     void removeGNode(GNode*);
 	GEdge* findGEdge(GNode* n1, GNode* n2);
 
-    void  setGNodeSizeScale( float scale) { _nodeSizeScale=scale; }
-    float getGNodeSizeScale() { return _nodeSizeScale; }
-
-	void  setLabelSizeScale( float scale) { _labelSizeScale=scale; }
-    float getLabelSizeScale() { return _labelSizeScale; }
-
-	void  setGEdgeSizeScale( float scale) { _edgeSizeScale=scale; }
-    float getGEdgeSizeScale() { return _edgeSizeScale; }
-
-	enum  sizeNormalization { FixedSize=1, AbsoluteSize=2, RelativeSize=3, PairwiseSize=4 };
-	sizeNormalization getGNodeSizeNormalization() { return _nodeSizeNormalization; }
-
 	enum  LayoutAlgorithm { FMMM=1, Circular=2, Balloon=3 };
 	LayoutAlgorithm getLayoutAlgorithm() { return _layoutAlgorithm; }
 
-    void  setTitle(const QString& title);
-
-	QList<GNode*> getGNodes(int type);
+    QVector<GNode*> getGNodes() {return nodelist; }
     int getNumNodes() { return nodelist.size(); }
 
 public slots:
@@ -81,27 +67,13 @@ public slots:
     void zoomIn() { scale(1.2, 1.2); }
     void zoomOut() { scale(1 / 1.2, 1 / 1.2); }
 	void zoomArea(QRectF sceneArea) { fitInView(sceneArea,Qt::KeepAspectRatio); }
-	void increaseLabelSize() { setLabelSizeScale(getLabelSizeScale()*1.2); scene()->update(); }
-	void decreaseLabelSize() { setLabelSizeScale(getLabelSizeScale()*0.8); scene()->update(); }
-	void increaseGNodeSize() {  setGNodeSizeScale(getGNodeSizeScale()*1.2);   scene()->update(); }
-	void decreaseGNodeSize() {  setGNodeSizeScale(getGNodeSizeScale()*0.8);   scene()->update(); }
-	void increaseGEdgeSize() {  setGEdgeSizeScale(getGEdgeSizeScale()*1.2);   scene()->update(); }
-	void decreaseGEdgeSize() {  setGEdgeSizeScale(getGEdgeSizeScale()*0.8);   scene()->update(); }
-
-	void computeAvgGEdgeLength();
-	float getAvgGEdgeLength() { return _averageGEdgeSize; }
 
 	void  setLayoutAlgorithm(LayoutAlgorithm x) { _layoutAlgorithm = x; }
-	void  setGNodeSizeNormalization(sizeNormalization x) { _nodeSizeNormalization = x; }
 
 	void dump();
-    void layoutOGDF();
     void randomLayout();
     void forceLayout(int iterations);
-    void updateLayout();
     void newLayout();
-	void adjustLayout();
-    void adjustLayout(GNode*);
     void clearLayout();
 	void removeSelectedGNodes();
     void animateNetwork();
@@ -111,32 +83,20 @@ public slots:
 
 protected:
 	void updateSceneRect();
-    void drawBackground(QPainter *painter, const QRectF &rect);
 	void keyPressEvent(QKeyEvent *event);
-	//void resizeEvent( QResizeEvent * ) { resetZoom(); }
 
     void scaleView(qreal scaleFactor);
-	void randomGNodePositions();
-	QPointer<QGraphicsTextItem> _title;
-
     QVector<GNode*> nodelist;
     void resizeEvent(QResizeEvent*);
 
 private:
 	//graph layout
-    
-	sizeNormalization _nodeSizeNormalization;
 	LayoutAlgorithm	  _layoutAlgorithm;
 
-	QTreeWidget* layoutTree;
-	QHash<GNode*, QTreeWidgetItem*>layoutMap;
-	void deepChildCount(QTreeWidgetItem* x, int* count);
+    //QTreeWidget* layoutTree;
+    //QHash<GNode*, QTreeWidgetItem*>layoutMap;
     void timerEvent(QTimerEvent*);
 
-	float _nodeSizeScale;
-	float _labelSizeScale;
-	float _edgeSizeScale;
-	float _averageGEdgeSize;
     bool  _updateLayout;
     unsigned int _animationTime;
     int   _timerID;

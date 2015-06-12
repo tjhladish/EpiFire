@@ -970,6 +970,7 @@ void MainWindow::updateNetworkPlot() {
 }
 
 void MainWindow::plotNetwork() { 
+    cerr << "plotting network\n";
     if (!network || network->size() == 0) {
         appendOutputLine("Please generate network first");
         return;
@@ -977,20 +978,21 @@ void MainWindow::plotNetwork() {
         appendOutputLine("Network is too large to draw (500 node limit; < 100 nodes is recommended)");
         return;
     }
-
+    cerr << "calling plot destructor\n";
     networkPlot->clear();
+    cerr << "dtor done\n";
     vector<Node*> nodes = network->get_nodes();
     map<int,int> id_to_idx;
     for (unsigned int idx = 0; idx < nodes.size(); ++idx) {
         id_to_idx[nodes[idx]->get_id()] = idx;
-        networkPlot->addGNode(idx,0);
+        cerr << "attempting to add node " << idx << endl;
+        networkPlot->addGNode(idx);
        //GNode* gn = networkPlot->addGNode(node->get_id(),0);
        // cerr << "e" << node->get_id() << " " << node->deg() << endl;
     }
 
     vector<Edge*> edges = network->get_edges();
     set<Edge*> seen;
-    // TODO - we're leaving out disconnected (degree 0) nodes
     for(unsigned int i=0; i < edges.size(); i++ ) {
         if (seen.count(edges[i]->get_complement())) continue;
         seen.insert(edges[i]);

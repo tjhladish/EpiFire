@@ -2,22 +2,17 @@
 #include <iostream>
 #include <QDebug>
 
-GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
-{
+GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent) {
     if (scene) scene->addItem(this);
     setFlag(ItemIsMovable);
     setFlag(ItemIsSelectable);
     setFlag(ItemIsFocusable);
     setAcceptHoverEvents(true);
     setVisible(true);
-	setHighlighted(false);
 
     setZValue(1);
     setFixedPosition(false);
-
-    setMolClass(GNode::Unassigned);
     setPos(0,0);
-	setDepth(-1);
 
     _boxHeight=10;
     _boxWidth=10;
@@ -27,10 +22,7 @@ GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
 	_graph = NULL;
 }
 
-GNode::~GNode() {
-		//cerr << "Removing " << this << endl;
-		//qDebug() << getNote();
-}
+GNode::~GNode() {}
 
 QList<GEdge*> GNode::edgesIn() { 
 		QList<GEdge*>elist;
@@ -61,113 +53,6 @@ bool GNode::setNewPos(float x, float y) {
 	return true;
 }
 
-void GNode::calculateForces()
-{
-
-    if (_fixedPosition) return;
-	if ( !isVisible() ) return;
-
-    if (!scene() || scene()->mouseGrabberItem() == this) {
-        newPos = pos();
-        return;
-    }
-    
-    // Sum up all forces pushing this item away
-    qreal repelx = 0;
-    qreal repely = 0;
-	qreal attractx = 0;
-	qreal attracty = 0;
-    int connections = 0;
-	//cerr << "Me=" << getId() << endl;
-    foreach (QGraphicsItem *item, scene()->items()) {
-        GNode *node = qgraphicsitem_cast<GNode *>(item);
-        if (!node) continue;
-		if ( node == this ) continue;
-        if (! node->isVisible()) continue;
-
-        QLineF line(mapFromItem(node, 0, 0), QPointF(0, 0));
-        qreal dx = line.dx();
-        qreal dy = line.dy();
-        double l = sqrt(dx * dx + dy * dy);
-        //float overlapX = (this->boundingRect().width() + node->boundingRect().width())/2.0 - l;
-        //float overlapY = (this->boundingRect().height() + node->boundingRect().height())/2.0 - l;
-        //float overlap = std::max( overlapX, overlapY);
-		float weight=1.0;
-		repelx += dx/(l*l)*weight;
-		repely += dy/(l*l)*weight;
-		connections++;
-    }
-
-     // Now subtract all forces pulling items together
-    double weight = 0.01;
-    foreach (GEdge *edge, edgeList) {
-        QPointF pos;
-		if ( ! edge->destGNode()->isVisible() ) continue;
-		if ( ! edge->sourceGNode()->isVisible() ) continue;
-
-		GNode* node = NULL;
-        if (edge->sourceGNode() == this ) {
-            pos = mapFromItem(edge->destGNode(), 0, 0);
-			node = edge->destGNode();
-		} else if ( edge->destGNode() == this ) {
-            pos = mapFromItem(edge->sourceGNode(), 0, 0);
-			node = edge->sourceGNode();
-		} else {
-			continue;
-		}
-		if (! node) continue;
-	
-		QLineF line(pos, QPointF(0, 0));
-		qreal dx = line.dx();
-        qreal dy = line.dy();
-        double l = sqrt(dx * dx + dy * dy);
-
-		float overlapX = (this->boundingRect().width() + node->boundingRect().width())/2.0 - l;
-		float overlapY = (this->boundingRect().height() + node->boundingRect().height())/2.0 - l;
-		float overlap = std::max( overlapX, overlapY);
-		if ( overlap > 1 ) continue;
-
-		foreach (GEdge* e, node->edges() ) if ( e->isVisible() ) weight *= 1.1;
-		//cerr << "LINE=" << l << endl;
-		//cerr << "pos=" << pos.x() << " pos=" << pos.y() << " " << weight << endl;
-		attractx += pos.x() * weight;
-		attracty += pos.y() * weight;
-    }
-
-	//qDebug() << getId() << " Rp=" << repelx << " " << repely << "  At=" << attractx << " " << attracty;
-
-	qreal xpos = pos().x()+ attractx + repelx;
-	qreal ypos = pos().y()+ attracty + repely;
-	if ( xpos < 0 || xpos > scene()->width() )  xpos = pos().x();
-	if ( ypos < 0 || ypos > scene()->height() ) ypos = pos().y();
-
-    newPos =QPointF(xpos,ypos);
-}
-
-bool GNode::advance()
-{
-    if (newPos == pos()) return false;
-    setPos(newPos); return true;
-}
-
-void GNode::adjustNeighbors() {
-	qDebug() << "GNode::adjustNeighbors()" << getNote();
-    setFixedPosition(true);
-    foreach(GEdge* e, edgeList ) {
-        GNode* node = e->sourceGNode();
-        if ( node == this) node = e->destGNode();
-        node->calculateForces();
-        node->advance();
-    }
-    setFixedPosition(false);
-	this->calculateForces();
-	this->advance();
-}
-
-double GNode::computeGNodeSize(float) { 
-    return 10;
-}
-
 
 QRectF GNode::boundingRect() const {
     return QRectF(-_boxWidth/2, -_boxHeight/2, _boxWidth, _boxHeight);
@@ -179,15 +64,10 @@ void GNode::paint(QPainter *painter, const QStyleOptionGraphicsItem*, QWidget *)
 	_boxWidth=nodesize;
 	_boxHeight=nodesize;
     painter->setBrush(QBrush(_brush));
-    //QPen pen;
-    //pen.setWidthF(0.1);
-    //pen.setColor(Qt::black);
     painter->setPen(Qt::NoPen);
     painter->drawEllipse(-nodesize/2,-nodesize/2,nodesize,nodesize);
 	setBoundingBox(_boxWidth+1,_boxHeight+1);
-
 }
-
 
 
 void GNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *) {

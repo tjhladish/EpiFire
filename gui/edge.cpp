@@ -34,10 +34,6 @@ void GEdge::adjust() {
     if(dest)  destPoint = mapFromItem(dest,   0, 0);
 }
 
-double GEdge::angle() { 
-	return computeAngle(sourcePoint,destPoint);
-}
-
 double GEdge::length() { 
 	return QLineF(sourcePoint,destPoint).length();
 }
@@ -55,35 +51,6 @@ QPainterPath GEdge::shape() const {
 		return _shape;
 }
 
-double GEdge::computeAngle(const QPointF& a, const QPointF& b) { 
-    return (double) atan2( (b.y()-a.y()), (b.x()-a.x()));
-}
-
-float GEdge::computeArrowSize(float flux) { 
-
-	GraphWidget* g=NULL; if ( source ) g = source->getGraphWidget();
-	float size = g->getAvgGEdgeLength()*0.25;
-	float scale=1; if(g) scale *= g->getGEdgeSizeScale();
-	float arrowSize =  size*scale;
-    if ( flux > 0 ) { arrowSize += 5*log2(flux); }
-	if ( arrowSize < 2)    arrowSize=2;
-
-    return arrowSize;
-}
-
-void GEdge::drawArrow(QPainter *painter) {
-
-	if (!source || !source->isVisible()) return;
-	if (!dest   || !dest->isVisible()) return;
-
-    sourcePoint = mapFromItem(source, 0, 0);
-    destPoint = mapFromItem(dest,   0, 0);
-    //qDebug() << "drawArrow: " << sourcePoint << " " << destPoint;
-    QPainterPath path; 
-    path.moveTo(sourcePoint); path.lineTo(destPoint);
-	_shape=path;
-	painter->drawPath(path);
-}
 
 void GEdge::mousePressEvent(QGraphicsSceneMouseEvent *event) {
     QGraphicsItem::mousePressEvent(event);
@@ -100,29 +67,10 @@ void GEdge::mouseReleaseEvent(QGraphicsSceneMouseEvent *event) {
 
 void GEdge::hoverEnterEvent (QGraphicsSceneHoverEvent*) {
     setToolTip(_note);
-
-	if ( source ) {
-		source->setHighlighted(true);
-		source->update();
-	}
-
- 	if (dest ) {
-		dest->setHighlighted(true);
-		dest->update();
-	}
 	update();
 }
 
 void GEdge::hoverLeaveEvent ( QGraphicsSceneHoverEvent*) {
-	if ( source ) {
-		source->setHighlighted(false);
-		source->update();
-	}
-
- 	if (dest ) {
-		dest->setHighlighted(false);
-		dest->update();
-	}
 	update();
 }
 

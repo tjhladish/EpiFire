@@ -30,10 +30,6 @@ public:
 	enum { Type = UserType + 10 };
 	int type() const { return Type; };
 
-	enum   MolClass { Unassigned=0, Enzyme=1, Metabolite=2, Cofactor=3};
-	inline MolClass molClass()		{ return _class; }
-	void   setMolClass(MolClass v)		  { _class = v; }
-
     void addGEdge(GEdge *edge);
 	void removeGEdge(GEdge* edge);
     inline QList<GEdge *> edges() { return edgeList; }
@@ -42,20 +38,8 @@ public:
     QList<GEdge *> findConnectedGEdges(GNode* other);
     int totalDegree() { return edgeList.size(); }
 	
-	inline bool isHighlighted() { return _hilighted; }
-	void setHighlighted(bool x) { _hilighted = x; }
-
-	double computeGNodeSize(float concentration);
-
-	inline const QString getNote()		{ return _note; }
-	void setNote(QString v)			  { _note = v; }
-
     inline int getId()		{ return _id; }
     void setId(int v)			  { _id = v; }
-
-	inline void* getDataReference()			{ return _data; }
-	void setDataReference(void* v) 			  { _data = v; }
-    //void setData( int key, const QVariant & value){ QGraphicsItem:setData(key,value); }
 
 	void setFixedPosition(bool flag)  { _fixedPosition=flag; }
 	inline bool  isFixedPosition()	{ return _fixedPosition; }
@@ -65,25 +49,16 @@ public:
 	float getGNodeSize() { return _nodeSize; }
     QPointF centerPoint()     {return pos(); }
 
-    void calculateForces();
-    bool advance();
-    void adjustNeighbors();
-
-	void setDepth(int d) { _depth=d; }
-	int  getDepth() { return _depth; }
-
     void setBrush(QBrush x) { _brush=x; }
 
 	void setBoundingBox(int w, int h ) { _boxWidth=w; _boxHeight=h; }
-	QRectF boundingRect() const;
-    //QPainterPath shape() const;
+    QRectF boundingRect() const;
 
 	void setGraphWidget(GraphWidget *g);
 	GraphWidget* getGraphWidget();
 
 	QRect getTextRect(const QString text, float fontsize);
 	float getTextWidth();
-	static bool compDepth(GNode* n1, GNode*n2) { return n1->getDepth() < n2->getDepth(); }
 
 	bool setNewPos(float x, float y);
 
@@ -110,16 +85,12 @@ private:
     QList<GEdge *> edgeList;
 	QString _note;
     int _id;
-	MolClass _class;
-	void*  _data;
+    //void*  _data;
 
     QPointF newPos;
     QBrush  _brush;
 
-	bool _hilighted;
-
 	bool _fixedPosition;
-	int _depth;
 
     //node size
     float _nodeSize;
