@@ -13,6 +13,10 @@ class ForceLayout {
         double springConstant;
         double springDamping;
         double springLength;
+        double xmin;
+        double xmax;
+        double ymin;
+        double ymax;
 
         double _speed(Particle* n) { return n->vx * n->vx + n->vy * n->vy; }
 
@@ -91,4 +95,5 @@ class ForceLayout {
         }
 
         void doLayout(std::vector<Particle*>& particles, int iterations);
+        void set_dimensions(double x, double X, double y, double Y) {xmin=x; xmax=X; ymin=y; ymax=Y;}
 };

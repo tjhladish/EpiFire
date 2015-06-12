@@ -100,9 +100,10 @@ GEdge* GraphWidget::addGEdge(GNode* n1, GNode* n2, string note, void* data) {
 		e->setDestGNode(n2);
 		e->setNote(note.c_str());
 		e->setData(data);
-		n1->addGEdge(e);
+        e->setGraphWidget(this);
+        n1->addGEdge(e);
 		n2->addGEdge(e);
-		scene()->addItem(e);
+        scene()->addItem(e);
 		return(e);
 }
 
@@ -223,11 +224,60 @@ void GraphWidget::updateSceneRect() {
     qDebug() << "updateSceneRect:  WxH=" << W << " " << H << " " << center << endl;
 }
 
-	
+
+void GraphWidget::recenterItems() {
+    cerr << "recenterItems()" << endl;
+    float minX=0;
+    float minY=0;
+    float maxX=0;
+    float maxY=0;
+    int itemCount=0;
+    float centerX = 0;
+    float centerY = 0;
+
+    foreach (QGraphicsItem *item, scene()->items()) {
+            if ( item->isVisible() ) {
+                    if (qgraphicsitem_cast<GNode *>(item)) {
+                            if (item->pos().x() < minX) minX = item->pos().x();
+                            if (item->pos().x() > maxX) maxX = item->pos().x();
+                            if (item->pos().y() < minY) minY = item->pos().y();
+                            if (item->pos().y() > maxY) maxY = item->pos().y();
+                            centerX += item->pos().x();
+                            centerY += item->pos().y();
+                            itemCount++;
+                    }
+            }
+    }
+
+    if ( itemCount == 0 ) return;
+
+    centerX /= itemCount;
+    centerY /= itemCount;
+
+    float W = scene()->width();
+    float H = scene()->height();
+
+    if (W<100) W=100;
+    if (H<100) H=100;
+
+    foreach (QGraphicsItem *item, scene()->items()) {
+        if ( item->isVisible() ) {
+            if (qgraphicsitem_cast<GNode *>(item)) {
+                float x = item->pos().x();
+                float y = item->pos().y();
+                float newx = x-centerX;
+                float newy = y-centerY;
+                item->setPos(newx, newy);
+            }
+        }
+    }
+    invalidateScene();
+}
+
 
 void GraphWidget::resetZoom() { 
     cerr << "resetZoom()" << endl;
-	computeAvgGEdgeLength();
+    //computeAvgGEdgeLength();
 
     float minX=0;
     float minY=0;
@@ -251,22 +301,22 @@ void GraphWidget::resetZoom() {
 			}
     }
 
-	minX -= 10; maxX += 10; minY -= 10; maxY += 0;
+    minX -= 10; maxX += 10; minY -= 10; maxY += 10;
 	if ( itemCount == 0 ) return;
 
 	centerX /= itemCount;
 	centerY /= itemCount;
 
-	float scale=1;
-	float W = maxX-minX;
-	float H = maxY-minY;
+    float scale=1.0;
+    float W = maxX-minX;
+    float H = maxY-minY;
     cerr << "GraphWidget::resetZoom() xDim=" << W << " " << H << " " << scale << endl;
 
     if ( _averageGEdgeSize > 0 ) { scale = 100/_averageGEdgeSize; } 
  	W*=scale; 
 	H*=scale;
-	if (W<300) W=300;
-	if (H<300) H=300;
+    if (W<100) W=100;
+    if (H<100) H=100;
     
     foreach (QGraphicsItem *item, scene()->items()) {
         if ( item->isVisible() ) {
@@ -281,12 +331,13 @@ void GraphWidget::resetZoom() {
         }
     }
 
-	float aH = H*0.1;
-	float aW = W*0.1;
-    scene()->setSceneRect(-W/2-aW/2,-H/2-aH/2,W+aW,H+aH);
-    fitInView(sceneRect(),Qt::KeepAspectRatio);
+    //float aH = H*0.1;
+    //float aW = W*0.1;
+    //scene()->setSceneRect(-W/2-aW/2,-H/2-aH/2,W+aW,H+aH);
+    //scene()->setSceneRect(-W/2,-H/2,W,H); // upperleft(x,y), width, height
+    //fitInView(sceneRect(),Qt::KeepAspectRatio);
 	scene()->update();
-	computeAvgGEdgeLength();
+    //computeAvgGEdgeLength();
     cerr << "GraphWidget::resetZoom() sceneSize WxH=" << W << " " << H << " " << scale << endl;
 }
 
@@ -320,7 +371,7 @@ void GraphWidget::forceLayout(int iterations=1) {
         particles.push_back(a);
     }
 
-    for (unsigned int aId = 0; aId < nodelist.size(); ++aId) {
+    for (int aId = 0; aId < nodelist.size(); ++aId) {
         GNode* n = nodelist[aId];
         Particle* p = particles[aId];
         for (GEdge* e: n->edgesIn()) {
@@ -338,10 +389,12 @@ void GraphWidget::forceLayout(int iterations=1) {
     //for (unsigned int i = 0; i< particles.size(); ++i) {
     //    cerr << "p" << i << " " << (particles[i]->linksIn.size() + particles[i]->linksOut.size()) << endl;
     //}
-
+    QRectF r = scene()->sceneRect();
+    double s = 0.95; // shrink plot region used
+    layout.set_dimensions(s*r.left(), s*r.right(), s*r.top(), s*r.bottom());
     layout.doLayout(particles, iterations);
 
-    for(unsigned int i=0; i<nodelist.size(); i++ ) {
+    for(int i=0; i<nodelist.size(); i++ ) {
         nodelist[i]->setPos( particles[i]->x , particles[i]->y );
       //  qDebug() << particles[i]->x << " " << particles[i]->y;
     }
@@ -351,10 +404,12 @@ void GraphWidget::forceLayout(int iterations=1) {
 }
 
 void GraphWidget::randomLayout() { 
+    QRectF r = scene()->sceneRect();
+    int W = 0.95*r.width();
+    int H = 0.95*r.height();
 
-    int W=300; int H=300;
-    int sceneW = W*1.2; int sceneH = H*1.2;
-    scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
+    //int sceneW = W2; int sceneH = H*1.2;
+//    scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
 
     fitInView(sceneRect(),Qt::KeepAspectRatio);
     foreach(GNode* n1, nodelist ) {
@@ -510,35 +565,37 @@ GNode* GraphWidget::locateGNode(int id) {
 	return NULL;
 }
 
-void GraphWidget::keyPressEvent(QKeyEvent *event)
-{
-		switch (event->key()) {
-				case Qt::Key_Delete:
-						removeSelectedGNodes();
-						break;
-				case Qt::Key_0:
-						resetZoom();	
-						break;
-				case Qt::Key_Minus:
-						zoomOut();
-						break;
-				case Qt::Key_Plus:
-						zoomIn();
-						break;
-                case Qt::Key_Enter:
-                        forceLayout();
-                        break;
-                case Qt::Key_Return:
-                        forceLayout();
-                        break;
-                case Qt::Key_N:
-						newLayout();
-						break;
-				default:
-						QGraphicsView::keyPressEvent(event);
-		}
+void GraphWidget::keyPressEvent(QKeyEvent *event){
+    switch (event->key()) {
+        case Qt::Key_Delete:
+            removeSelectedGNodes();
+            break;
+        case Qt::Key_0:
+            resetZoom();
+            break;
+        case Qt::Key_1:
+            fitInView(scene()->sceneRect());
+            break;
+        case Qt::Key_Minus:
+            zoomOut();
+            break;
+        case Qt::Key_Plus:
+            zoomIn();
+            break;
+        case Qt::Key_Enter:
+            forceLayout();
+            break;
+        case Qt::Key_Return:
+            forceLayout();
+            break;
+        case Qt::Key_N:
+            newLayout();
+            break;
+        default:
+            QGraphicsView::keyPressEvent(event);
+    }
 
-	scene()->update();
+scene()->update();
 }
 
 //void delay( int millisecondsToWait ) {
@@ -572,4 +629,17 @@ void GraphWidget::timerEvent(QTimerEvent*) {
 void GraphWidget::animateNetwork() {
     if (_timerID) killTimer(_timerID);
     _timerID = startTimer(500);
+}
+
+void GraphWidget::resizeEvent(QResizeEvent *){
+    int sceneW = 0.9*width();//scene()->views().first()->width();
+    int sceneH = 0.9*height();//scene()->views().first()->height();
+    scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
+    fitInView(scene()->sceneRect());
+    resetZoom();
+    //recenterItems();
+//    QRectF r = scene()->sceneRect();
+//    scene()->views().first()->fitInView(r);
+    //resetZoom();
+    //fitInView(r,Qt::KeepAspectRatio);
 }

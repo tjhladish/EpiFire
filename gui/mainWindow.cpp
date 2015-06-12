@@ -1,5 +1,5 @@
 #include "mainWindow.h"
-
+#include <map>
 
 /*#############################################################################
 #
@@ -980,8 +980,11 @@ void MainWindow::plotNetwork() {
 
     networkPlot->clear();
     vector<Node*> nodes = network->get_nodes();
-    for (Node* node: nodes) {
-        GNode* gn = networkPlot->addGNode(node->get_id(),0);
+    map<int,int> id_to_idx;
+    for (unsigned int idx = 0; idx < nodes.size(); ++idx) {
+        id_to_idx[nodes[idx]->get_id()] = idx;
+        networkPlot->addGNode(idx,0);
+       //GNode* gn = networkPlot->addGNode(node->get_id(),0);
        // cerr << "e" << node->get_id() << " " << node->deg() << endl;
     }
 
@@ -991,12 +994,12 @@ void MainWindow::plotNetwork() {
     for(unsigned int i=0; i < edges.size(); i++ ) {
         if (seen.count(edges[i]->get_complement())) continue;
         seen.insert(edges[i]);
-        int id1 = edges[i]->get_start()->get_id();
-        int id2 = edges[i]->get_end()->get_id();
+        int idx1 = id_to_idx[edges[i]->get_start()->get_id()];
+        int idx2 = id_to_idx[edges[i]->get_end()->get_id()];
 
-        GNode* n1 = networkPlot->locateGNode(id1);
-        GNode* n2 = networkPlot->locateGNode(id2);
-        networkPlot->addGEdge(n1,n2,tr("%1-%2").arg(id1,id2).toStdString(),0);
+        GNode* n1 = networkPlot->locateGNode(idx1);
+        GNode* n2 = networkPlot->locateGNode(idx2);
+        networkPlot->addGEdge(n1,n2,tr("%1-%2").arg(idx1).arg(idx2).toStdString(),0);
     }
     //networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();
@@ -1025,10 +1028,8 @@ void MainWindow::removeMinorComponents() {
     unsigned int i;
     cerr << "num componenets: " << netComponents.size() << endl;
     for (i = 0; i < netComponents.size(); i++) {
-cerr << "i, size: " << i << ", " << netComponents[i].size() << endl;
         if ((signed) netComponents[i].size() > network->size()/2) {
             giant = netComponents[i];
-cerr << "giant (i): " << i << endl;
             break;
         }
     }
@@ -1037,7 +1038,7 @@ cerr << "giant (i): " << i << endl;
     } else {
         for (unsigned int j = 0; j < netComponents.size(); j++) {
             if (j == i) continue;
-cerr << "deleting " << j << ", size " << netComponents[j].size() << endl;
+            cerr << "deleting " << j << ", size " << netComponents[j].size() << endl;
             foreach (Node* n, netComponents[j]) {
                 network->delete_node(n);
             }
@@ -1047,6 +1048,7 @@ cerr << "deleting " << j << ", size " << netComponents[j].size() << endl;
 
         numnodesLine->setText(QString::number(network->size()));
         updateRZero();
+        plotNetwork();
     }
 }
 

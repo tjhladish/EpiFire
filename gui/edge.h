@@ -10,10 +10,11 @@
 #include <math.h>
 #include <string>
 #include "node.h"
-
+#include "graphwidget.h"
 
 const double Pi=3.14;
 
+class GraphWidget;
 class GNode;
 class Reaction;
 using namespace std;
@@ -55,7 +56,10 @@ public:
 	double 	angle();
 	double	length();
 	void reverseDirection();
-   
+
+    void setGraphWidget(GraphWidget* g) {_graph = g;}
+    GraphWidget* getGraphWidget() { return _graph; }
+
 protected:
     QRectF boundingRect() const;
 	QPainterPath shape () const;
@@ -77,7 +81,7 @@ private:
     qreal _arrowSize;
 	bool _reversable;
 	void* _data;
-
+    GraphWidget* _graph;
 	QPainterPath _shape;
 	
     double computeAngle(const QPointF& a, const QPointF& b);

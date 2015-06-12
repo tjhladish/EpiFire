@@ -9,15 +9,14 @@ ForceLayout::ForceLayout(): dragConstant(.1),      // 0.1
                            chargeTheta(.9),
                            springConstant(.1),
                            springDamping(.3),
-                           springLength(20) {}
+                           springLength(20),
+                           xmin(-150),
+                           xmax(150),
+                           ymin(-150),
+                           ymax(150){}
 
 
 void ForceLayout::doLayout(std::vector<Particle*>& particles, int iterations=1) {
-    double xmin = -150;
-    double ymin = -150;
-    double xmax = 150;
-    double ymax = 150;
-    //randomLayout();
     // kl used for spring forces
     std::vector<double> kl;
     for (auto p: particles) {
@@ -28,7 +27,7 @@ void ForceLayout::doLayout(std::vector<Particle*>& particles, int iterations=1) 
     }
 
     for (int t = 0; t<iterations; ++t) {
-        /*
+     /*
      * Assumptions:
      * - The mass (m) of every particles is 1.
      * - The time step (dt) is 1.
@@ -36,14 +35,12 @@ void ForceLayout::doLayout(std::vector<Particle*>& particles, int iterations=1) 
 
         /* Apply constraints, then accumulate new forces. */
         Quadtree* q = new Quadtree(particles);
-        //for (c = this.constraints; c; c = c.next) {c.apply(this.particles, q);
-        //    sim.constraint(pv.Constraint.bound().x(6, w - 6).y(6, h - 6));
-        //}
 
-        // clear old forces
         for (auto p: particles) {
+            // make particles stay in scene
             p->x = p->x < xmin ? xmin : (p->x > xmax ? xmax : p->x);
             p->y = p->y < ymin ? ymin : (p->y > ymax ? ymax : p->y);
+            // clear old forces
             p->fx = 0;
             p->fy = 0;
         }

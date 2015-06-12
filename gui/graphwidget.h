@@ -74,6 +74,7 @@ public:
     void  setTitle(const QString& title);
 
 	QList<GNode*> getGNodes(int type);
+    int getNumNodes() { return nodelist.size(); }
 
 public slots:
 	void resetZoom();
@@ -106,6 +107,7 @@ public slots:
     void animateNetwork();
     void setNodeStates(vector< vector<int> > states) { nodeStates = states; _animationTime=0; }
     void clearNodeStates(){ nodeStates.clear(); }
+    void recenterItems();
 
 protected:
 	void updateSceneRect();
@@ -118,7 +120,7 @@ protected:
 	QPointer<QGraphicsTextItem> _title;
 
     QVector<GNode*> nodelist;
-
+    void resizeEvent(QResizeEvent*);
 
 private:
 	//graph layout

@@ -141,6 +141,11 @@ void GEdge::paint(QPainter *painter, const QStyleOptionGraphicsItem *, QWidget *
 	if (!source || !source->isVisible()) return;
 	if (!dest   || !dest->isVisible()) return;
 
+    QPen pen;
+    int numNodes = getGraphWidget()->getNumNodes();
+    pen.setWidthF(numNodes > 10 ? 1.0/log10(numNodes) : 1);
+    pen.setColor(QColor(0,0,0,80));
+    painter->setPen(pen);
     sourcePoint = mapFromItem(source, 0, 0);
     destPoint = mapFromItem(dest,   0, 0);
     QPainterPath path; 
