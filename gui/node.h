@@ -17,14 +17,16 @@ class GEdge;
 class QGraphicsSceneMouseEvent;
 class GraphWidget;
 
-class GNode : public QObject, public QGraphicsItem
-{
+class GNode : public QObject, public QGraphicsItem {
 	Q_OBJECT
 #if QT_VERSION >= 0x040600
     Q_INTERFACES( QGraphicsItem )
 #endif
+    friend class Quadtree;
+    friend class QuadtreeNode;
+    friend class ForceLayout;
 
-public:
+  public:
 	GNode(QGraphicsItem* parent, QGraphicsScene *scene);
 	~GNode();
 	enum { Type = UserType + 10 };
@@ -33,8 +35,8 @@ public:
     void addGEdge(GEdge *edge);
 	void removeGEdge(GEdge* edge);
     inline QList<GEdge *> edges() { return edgeList; }
-    QList<GEdge *> edgesIn();
-    QList<GEdge *> edgesOut();
+    QVector<GEdge *> edgesIn();
+    QVector<GEdge *> edgesOut();
     QList<GEdge *> findConnectedGEdges(GNode* other);
     int totalDegree() { return edgeList.size(); }
 	
@@ -60,7 +62,14 @@ public:
 	QRect getTextRect(const QString text, float fontsize);
 	float getTextWidth();
 
-	bool setNewPos(float x, float y);
+    //qreal x() const { return pos().x(); }
+    //qreal y() const { return pos().y(); }
+
+    double x() { return pos().x(); }
+    double y() { return pos().y(); }
+
+    void initializePreviousPosition() { px = x(); py = y(); }
+    bool setNewPos(float x, float y);
 
 public slots:
 
@@ -77,11 +86,15 @@ protected:
 	void mouseDoubleClickEvent ( QGraphicsSceneMouseEvent *event );
 
 	GraphWidget* _graph;
+    double px; // previous x and y
+    double py;
+    double vx; // velocity in x and y
+    double vy;
+    double fx; // forces in x and y
+    double fy;
 
 private:
 	void paint(QPainter*);
-	   
-private:
     QList<GEdge *> edgeList;
 	QString _note;
     int _id;

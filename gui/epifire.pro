@@ -33,7 +33,8 @@ HEADERS     = mainWindow.h \
                debug.cpp \
                analysisDialog.cpp \
                backgroundthread.cpp \
-               ForceLayout.cpp
+               ForceLayout.cpp \
+    quadtree.cpp
 
 
 

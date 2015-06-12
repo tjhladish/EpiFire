@@ -31,11 +31,11 @@ public:
     GEdge();
     ~GEdge();
 
-    GNode *sourceGNode() const;
-    void setSourceGNode(GNode *node);
+    GNode* source() const { return _source; }
+    void setSource(GNode* node) { _source = node; }
 
-    GNode *destGNode() const;
-    void setDestGNode(GNode *node);
+    GNode* dest() const { return _dest; }
+    void setDest(GNode* node) { _dest = node; }
 
     void adjust();
 
@@ -73,7 +73,7 @@ protected:
  
     
 private:
-    GNode *source, *dest;
+    GNode *_source, *_dest;
     QPointF sourcePoint;
     QPointF destPoint;
 	QString _note;

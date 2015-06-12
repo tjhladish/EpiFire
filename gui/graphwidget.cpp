@@ -65,13 +65,13 @@ GEdge* GraphWidget::findGEdge(GNode* n1, GNode* n2) {
     if (!n1 || !n2 ) return NULL;
 
     foreach( GEdge* e, n1->edges() ) {
-        if (e->sourceGNode() == n1 && e->destGNode() == n2 ) return e;
-        if (e->sourceGNode() == n2 && e->destGNode() == n1 ) return e;
+        if (e->source() == n1 && e->dest() == n2 ) return e;
+        if (e->source() == n2 && e->dest() == n1 ) return e;
     }
 
     foreach( GEdge* e, n2->edges() ) {
-        if (e->sourceGNode() == n1 && e->destGNode() == n2 ) return e;
-        if (e->sourceGNode() == n2 && e->destGNode() == n1 ) return e;
+        if (e->source() == n1 && e->dest() == n2 ) return e;
+        if (e->source() == n2 && e->dest() == n1 ) return e;
     }
     return NULL;
 }
@@ -79,8 +79,8 @@ GEdge* GraphWidget::findGEdge(GNode* n1, GNode* n2) {
 GEdge* GraphWidget::addGEdge(GNode* n1, GNode* n2, string note, void* data) {
     if ( ! n1 || ! n2 ) return NULL;
     GEdge* e = new GEdge();
-    e->setSourceGNode(n1);
-    e->setDestGNode(n2);
+    e->setSource(n1);
+    e->setDest(n2);
     e->setNote(note.c_str());
     e->setData(data);
     e->setGraphWidget(this);
@@ -137,7 +137,7 @@ void GraphWidget::newLayout() {
     cerr << "newLayout() " << endl;
     clearLayout();
     randomLayout();
-    forceLayout(1);
+    forceLayout(100);
     resetZoom();
 }
 
@@ -146,46 +146,48 @@ void GraphWidget::forceLayout(int iterations=1) {
     //cerr << "force layout cerr\n";
     ForceLayout layout;
 
-    vector<Particle*> particles;
+    //vector<GNode*> particles;
 
-    for( GNode* n: nodelist ) {
+    //for( GNode* n: nodelist ) {
         //     cerr << "g" << n->getId() << " " << n->edges().size() << endl;
-        Particle* a = new Particle(n->pos().x(), n->pos().y());
-        particles.push_back(a);
-    }
+    //    GNode* a = new GNode(n->pos().x(), n->pos().y());
+    //    particles.push_back(a);
+    //}
 
-    for (int aId = 0; aId < nodelist.size(); ++aId) {
-        GNode* n = nodelist[aId];
-        Particle* p = particles[aId];
-        for (GEdge* e: n->edgesIn()) {
-            int bId = e->sourceGNode()->getId();
-            p->linksIn.push_back(new Link(particles[bId], p));
-        }
+    //for (int aId = 0; aId < nodelist.size(); ++aId) {
+     //   GNode* n = nodelist[aId];
+     //   GNode* p = particles[aId];
+     //   for (GEdge* e: n->edgesIn()) {
+     //       int bId = e->source()->getId();
+      //      p->linksIn.push_back(new Link(particles[bId], p));
+      //  }
 
-        for (GEdge* e: n->edgesOut()) {
-            int bId = e->destGNode()->getId();
-            p->linksOut.push_back(new Link(p, particles[bId]));
-        }
+    //    for (GEdge* e: n->edgesOut()) {
+    //        int bId = e->dest()->getId();
+    //        p->linksOut.push_back(new Link(p, particles[bId]));
+    //    }
 
-    }
+    //}
 
     QRectF r = scene()->sceneRect();
     double s = 0.95; // shrink plot region used
     layout.set_dimensions(s*r.left(), s*r.right(), s*r.top(), s*r.bottom());
-    layout.doLayout(particles, iterations);
+    // "previous" locations must be the same as current, otherwise movement is implied
+    for (GNode* n: nodelist) { n->initializePreviousPosition(); }
+    layout.doLayout(nodelist, iterations);
 
-    for(int i=0; i<nodelist.size(); i++ ) {
-        nodelist[i]->setPos( particles[i]->x , particles[i]->y );
+    //for(int i=0; i<nodelist.size(); i++ ) {
+    //    nodelist[i]->setPos( particles[i]->x , particles[i]->y );
         //  qDebug() << particles[i]->x << " " << particles[i]->y;
-    }
+    //}
     invalidateScene();
-    for (unsigned int i = 0; i < particles.size(); ++i) delete particles[i];
+    //for (unsigned int i = 0; i < particles.size(); ++i) delete particles[i];
 }
 
 void GraphWidget::randomLayout() { 
     QRectF r = scene()->sceneRect();
-    int W = 0.95*r.width();
-    int H = 0.95*r.height();
+    int W = 0.5*r.width();
+    int H = 0.5*r.height();
 
     fitInView(sceneRect(),Qt::KeepAspectRatio);
     foreach(GNode* n1, nodelist ) {
@@ -208,9 +210,9 @@ void GraphWidget::dump() {
         if (n->isVisible()) {
             qDebug() << "\t GNode:" << n->getId();
             qDebug() << "\t GEdge: ";
-            foreach(GEdge* e, n->edges()) { qDebug() << "\t\t:" << e->destGNode()->getId() << " " << e->sourceGNode()->getId(); }
-            foreach(GEdge* e, n->edgesOut()) { qDebug() << "\t\tout:" << e->destGNode()->getId(); }
-            foreach(GEdge* e, n->edgesIn())  { qDebug() << "\t\tin:" <<  e->sourceGNode()->getId(); }
+            foreach(GEdge* e, n->edges()) { qDebug() << "\t\t:" << e->dest()->getId() << " " << e->source()->getId(); }
+            foreach(GEdge* e, n->edgesOut()) { qDebug() << "\t\tout:" << e->dest()->getId(); }
+            foreach(GEdge* e, n->edgesIn())  { qDebug() << "\t\tin:" <<  e->source()->getId(); }
         }
     }
 }

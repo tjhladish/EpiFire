@@ -20,19 +20,25 @@ GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
     
     _brush = QBrush(Qt::black);
 	_graph = NULL;
+    px = 0;
+    py = 0;
+    vx = 0;
+    vy = 0;
+    fx = 0;
+    fy = 0;
 }
 
 GNode::~GNode() {}
 
-QList<GEdge*> GNode::edgesIn() { 
-		QList<GEdge*>elist;
-		foreach(GEdge* e, edgeList) if (e->destGNode() == this ) elist << e;
+QVector<GEdge*> GNode::edgesIn() {
+        QVector<GEdge*>elist;
+        foreach(GEdge* e, edgeList) if (e->dest() == this ) elist << e;
 		return elist;
 }
 
-QList<GEdge*> GNode::edgesOut() { 
-		QList<GEdge*>elist;
-		foreach(GEdge* e, edgeList) if (e->sourceGNode() == this ) elist << e;
+QVector<GEdge *> GNode::edgesOut() {
+        QVector<GEdge*>elist;
+        foreach(GEdge* e, edgeList) if (e->source() == this ) elist << e;
 		return elist;
 }
 
@@ -42,7 +48,7 @@ void GNode::addGEdge(GEdge *edge) {
 
 QList<GEdge*> GNode::findConnectedGEdges(GNode* other) {
 	QList<GEdge*>elist;
-	foreach(GEdge* e, edgeList) if (e->sourceGNode() == other || e->destGNode() == other ) elist << e;
+    foreach(GEdge* e, edgeList) if (e->source() == other || e->dest() == other ) elist << e;
     return elist;
 }
 
