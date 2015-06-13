@@ -1,6 +1,7 @@
 #include "node.h"
 #include <iostream>
 #include <QDebug>
+#include "Quadtree.h"
 
 GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent) {
     if (scene) scene->addItem(this);
@@ -29,6 +30,16 @@ GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
 }
 
 GNode::~GNode() {}
+
+void GNode::adoptState(Particle* p) {
+    setPos(p->x(), p->y());
+    px = p->px;
+    py = p->py;
+    vx = p->vx;
+    vy = p->vy;
+    fx = p->fx;
+    fy = p->fy;
+}
 
 QVector<GEdge*> GNode::edgesIn() {
         QVector<GEdge*>elist;
@@ -97,10 +108,10 @@ void GNode::mouseMoveEvent ( QGraphicsSceneMouseEvent * event ) {
 void GNode::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event ) {
     QGraphicsItem::mouseReleaseEvent(event);
     //foreach (GEdge *edge, edgeList) edge->adjust();
-    for (int i = 0; i<20; ++i) {
-        getGraphWidget()->forceLayout(1);
-        scene()->update();
-    }
+    // This isn't working right--it runs the layout, but not animated
+    //for (int i = 0; i<20; ++i) {
+    //    getGraphWidget()->forceLayout(1);
+    //}
 }
 
 QVariant GNode::itemChange(GraphicsItemChange change, const QVariant &value)

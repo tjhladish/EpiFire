@@ -177,7 +177,8 @@ void GraphWidget::forceLayout(int iterations=1) {
     layout.doLayout(particles, iterations);
 
     for(int i=0; i<nodelist.size(); i++ ) {
-        nodelist[i]->setPos( particles[i]->x(), particles[i]->y() );
+        nodelist[i]->adoptState( particles[i]);
+        //nodelist[i]->setPos( particles[i]->x(), particles[i]->y() );
         //qDebug() << particles[i]->x() << " " << particles[i]->y();
     }
     invalidateScene();
