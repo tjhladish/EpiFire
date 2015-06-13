@@ -202,6 +202,7 @@ class MainWindow : public QMainWindow
         QLineEdit* netfileLine;
         QLineEdit* numnodesLine;
 
+        int maxNodesToPlot;
 
         // Simulator settings
         QWidget* simulatorSettingsGroupBox;

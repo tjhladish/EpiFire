@@ -31,7 +31,7 @@ GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
 
 GNode::~GNode() {}
 
-void GNode::adoptState(Particle* p) {
+/*void GNode::adoptState(Particle* p) {
     setPos(p->x(), p->y());
     px = p->px;
     py = p->py;
@@ -39,7 +39,7 @@ void GNode::adoptState(Particle* p) {
     vy = p->vy;
     fx = p->fx;
     fy = p->fy;
-}
+}*/
 
 QVector<GEdge*> GNode::edgesIn() {
         QVector<GEdge*>elist;

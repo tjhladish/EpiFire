@@ -53,7 +53,8 @@ MainWindow::MainWindow() {
     network = new Network("mynetwork",Network::Undirected);
     simulator = NULL;
     networkPlot = new GraphWidget();
-    
+    maxNodesToPlot = 10000;
+
     netAnalysisDialog = new AnalysisDialog(this, AnalysisDialog::NETWORK, "Analysis of current network");
     rep_ct = 0;
     J = 0; J_max = 1;
@@ -882,7 +883,7 @@ void MainWindow::simulatorWrapper() {
 
 
 void MainWindow::addStateData() {
-    vector<int> node_states(500);
+    vector<int> node_states(maxNodesToPlot);
     vector<Node*> nodelist = network->get_nodes();
     for (int i = 0; i < network->size() && (unsigned) i < node_states.size(); i++) {
         node_states[i] = (int) nodelist[i]->get_state();
@@ -974,18 +975,16 @@ void MainWindow::plotNetwork() {
     if (!network || network->size() == 0) {
         appendOutputLine("Please generate network first");
         return;
-    } else if ( network->size() > 500 ) {
-        appendOutputLine("Network is too large to draw (500 node limit; < 100 nodes is recommended)");
+    } else if ( network->size() > maxNodesToPlot ) {
+        appendOutputLine(tr("Network is too large to draw (%1 node limit; < 100 nodes is recommended)").arg(maxNodesToPlot));
         return;
     }
-    cerr << "calling plot destructor\n";
     networkPlot->clear();
-    cerr << "dtor done\n";
     vector<Node*> nodes = network->get_nodes();
     map<int,int> id_to_idx;
     for (unsigned int idx = 0; idx < nodes.size(); ++idx) {
         id_to_idx[nodes[idx]->get_id()] = idx;
-        cerr << "attempting to add node " << idx << endl;
+        //cerr << "attempting to add node " << idx << endl;
         networkPlot->addGNode(idx);
        //GNode* gn = networkPlot->addGNode(node->get_id(),0);
        // cerr << "e" << node->get_id() << " " << node->deg() << endl;

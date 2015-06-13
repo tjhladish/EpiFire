@@ -49,7 +49,7 @@ void GraphWidget::clear() {
 }
 
 GNode* GraphWidget::addGNode(int id){//, void* data) {
-    qDebug() << "addGNode() " << id;
+//    qDebug() << "addGNode() " << id;
     if ( id >= nodelist.size() ) {
         GNode* n = new GNode(0,scene());
         n->setId(id);
@@ -142,59 +142,27 @@ void GraphWidget::newLayout() {
 }
 
 void GraphWidget::forceLayout(int iterations=1) {
-    //qDebug() << "force layout qdebug";
-    //cerr << "force layout cerr\n";
     ForceLayout layout;
-
-    QVector<Particle*> particles;
-
-    for( GNode* n: nodelist ) {
-        //     cerr << "g" << n->getId() << " " << n->edges().size() << endl;
-        Particle* a = new Particle(n->pos().x(), n->pos().y());
-        particles.push_back(a);
-    }
-
-    for (int aId = 0; aId < nodelist.size(); ++aId) {
-        GNode* n = nodelist[aId];
-        Particle* p = particles[aId];
-        for (GEdge* e: n->edgesIn()) {
-            int bId = e->source()->getId();
-            p->edgesIn()->push_back(new Link(particles[bId], p));
-        }
-
-        for (GEdge* e: n->edgesOut()) {
-            int bId = e->dest()->getId();
-            p->edgesOut()->push_back(new Link(p, particles[bId]));
-        }
-
-    }
 
     QRectF r = scene()->sceneRect();
     double s = 0.95; // shrink plot region used
     layout.set_dimensions(s*r.left(), s*r.right(), s*r.top(), s*r.bottom());
-    // "previous" locations must be the same as current, otherwise movement is implied
-    //for (GNode* n: nodelist) { n->initializePreviousPosition(); }
-    layout.doLayout(particles, iterations);
+    layout.doLayout(nodelist, iterations);
 
-    for(int i=0; i<nodelist.size(); i++ ) {
-        nodelist[i]->adoptState( particles[i]);
-        //nodelist[i]->setPos( particles[i]->x(), particles[i]->y() );
-        //qDebug() << particles[i]->x() << " " << particles[i]->y();
-    }
     invalidateScene();
-    for (int i = 0; i < particles.size(); ++i) delete particles[i];
 }
 
 void GraphWidget::randomLayout() { 
     QRectF r = scene()->sceneRect();
-    int W = 0.5*r.width();
-    int H = 0.5*r.height();
+    int W = 0.75*r.width();
+    int H = 0.75*r.height();
 
     fitInView(sceneRect(),Qt::KeepAspectRatio);
     foreach(GNode* n1, nodelist ) {
         float x = (((float) rand())/RAND_MAX*W - W/2)/(n1->edges().size() + 1);
         float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
         n1->setPos(x,y);
+        n1->initializePreviousPosition();
     }
 }
 

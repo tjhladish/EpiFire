@@ -3,13 +3,15 @@
 using namespace std;
 
 ForceLayout::ForceLayout(): dragConstant(0.1),     // 0.1
-                           chargeConstant(-40),    // -40
+                           chargeConstant(-10),    // -40
                            chargeMinDistance(2),   //   2
-                           chargeMaxDistance(100), // 500
+                           chargeMaxDistance(50),  // 500
                            chargeTheta(.9),        // 0.9
-                           springConstant(.1),     // 0.1
-                           springDamping(.3),      // 0.3
+                           springConstant(.025),     // 0.1
+                           springDamping(.075),      // 0.3
                            springLength(20),
+                           springMaxForce(10),
+                           speedMax(20),
                            xmin(-150),
                            xmax(150),
                            ymin(-150),
@@ -17,48 +19,51 @@ ForceLayout::ForceLayout(): dragConstant(0.1),     // 0.1
 
 
 void ForceLayout::doLayout(QVector<Particle *> &particles, int iterations=1) {
-    cerr << "doLayout()\n";
+    // cerr << "doLayout()\n";
     // kl used for spring forces
     std::vector<double> kl;
     for (auto p: particles) {
-        for (auto link: *(p->edgesOut())) {
+        for (auto link: p->edgesOut()) {
             Particle* n = link->dest();
-            kl.push_back( 1.0/sqrt(std::max(p->totalDegree(), n->totalDegree())) );
+            kl.push_back( 1.0/pow(std::max(p->totalDegree(), n->totalDegree()), 0.25) );
         }
     }
 
     for (int t = 0; t<iterations; ++t) {
-     /*
-     * Assumptions:
-     * - The mass (m) of every particles is 1.
-     * - The time step (dt) is 1.
-     */
+        /*
+        * Assumptions:
+        * - The mass (m) of every particles is 1.
+        * - The time step (dt) is 1.
+        */
 
         /* Apply constraints, then accumulate new forces. */
         Quadtree* q = new Quadtree(particles);
 
         for (auto p: particles) {
             // make particles stay in scene
-            const double x = p->x() < xmin ? xmin : (p->x() > xmax ? xmax : p->x());
-            //cerr << "x, xi, min, max: " << x << " " << p->x() << " " << xmin << " " << xmax << endl;
-            const double y = p->y() < ymin ? ymin : (p->y() > ymax ? ymax : p->y());
-            p->setPos(x,y);
+            const double cx = p->x();
+            const double cy = p->y();
+            double nx = cx;
+            double ny = cy;
+            if (cx < xmin) p->px = nx = xmin;
+            else if (cx > xmax) p->px = nx = xmax;
+            if (cy < ymin) p->py = ny = ymin;
+            else if (cy > ymax) p->py = ny = ymax;
+            if (nx != cx or ny != cy) p->setPos(nx,ny);
 
             // clear old forces
             p->fx = 0;
             p->fy = 0;
         }
 
-        //double v_sum = 0;
         // drag
         if (dragConstant) {
             for (auto p: particles) {
                 p->fx -= dragConstant * p->vx;
                 p->fy -= dragConstant * p->vy;
-                //v_sum += sqrt(p->vx*p->vx + p->vy*p->vy);
             }
         }
-        //std::cerr << v_sum << std::endl;
+
         // charge
         _accumulateCharge(q->root);
         for (auto p: particles) {
@@ -66,10 +71,8 @@ void ForceLayout::doLayout(QVector<Particle *> &particles, int iterations=1) {
         }
 
         // spring
-bool first_node = true;
         for (auto p: particles) {
-            QVector<Link*> links_out = *(p->edgesOut());
-if (first_node) cerr << "deg: " << links_out.size() << endl;
+            QVector<Link*> links_out = p->edgesOut();
             for (int i = 0; i < links_out.size(); ++i) {
                 Particle* a = links_out[i]->source();
                 Particle* b = links_out[i]->dest();
@@ -82,25 +85,17 @@ if (first_node) cerr << "deg: " << links_out.size() << endl;
                 double kk = (ks * (dn - springLength) + kd * (dx * (a->vx - b->vx) + dy * (a->vy - b->vy)) * dd) * dd;
                 double fx = -kk * (dn ? dx : (0.01 * (0.5 - rand()/RAND_MAX)));
                 double fy = -kk * (dn ? dy : (0.01 * (0.5 - rand()/RAND_MAX)));
-if (first_node and i == 0) cerr << dx << " " << dy << " " << dn << " " << dd << " | " << ks << " " << kd << " " << kk << " | " << fx << " " << fy << endl;
+                fx = fabs(fx) > springMaxForce ? springMaxForce*fx/fabs(fx) : fx;
+                fy = fabs(fy) > springMaxForce ? springMaxForce*fy/fabs(fy) : fy;
                 a->fx += fx;
                 a->fy += fy;
                 b->fx -= fx;
                 b->fy -= fy;
             }
-first_node = false;
         }
 
         /* Position Verlet integration. */
         for ( auto p: particles) {
-/*          double px = p->px;
-            double py = p->py;
-            p->px = p->x;
-            p->py = p->y;
-           // cerr << "t, v, px, f: " << t << " " << p->vx << " " << px << " " << p->fx << endl;
-            p->x += p->vx = ((p->x - px) + p->fx);
-            p->y += p->vy = ((p->y - py) + p->fy);*/
-
             const double px = p->px;
             const double py = p->py;
             const double cx = p->x();
@@ -109,8 +104,10 @@ first_node = false;
             p->py = cy;
             p->vx = cx - px + p->fx;
             p->vy = cy - py + p->fy;
-            const double x = cx + p->vx;
-            const double y = cy + p->vy;
+            const double s = _speed(p);
+            const double governor = s > speedMax ? s/speedMax : 1.0;
+            const double x = cx + p->vx/governor;
+            const double y = cy + p->vy/governor;
             p->setPos(x,y);
         }
 
@@ -118,7 +115,7 @@ first_node = false;
     }
 }
 
-double ForceLayout::_speed(Particle *n) { return n->vx * n->vx + n->vy * n->vy; }
+double ForceLayout::_speed(Particle *n) { return sqrt(n->vx * n->vx + n->vy * n->vy); }
 
 void ForceLayout::_chargeforces(QuadtreeNode* n, Particle *p, double x1, double y1, double x2, double y2) {
     double dx = n->cx - p->x();

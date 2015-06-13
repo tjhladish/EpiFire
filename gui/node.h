@@ -16,7 +16,7 @@ class TinyPlot;
 class GEdge;
 class QGraphicsSceneMouseEvent;
 class GraphWidget;
-class Particle;
+//class Particle;
 
 class GNode : public QObject, public QGraphicsItem {
 	Q_OBJECT
@@ -71,7 +71,7 @@ class GNode : public QObject, public QGraphicsItem {
 
     void initializePreviousPosition() { px = x(); py = y(); }
     bool setNewPos(float x, float y);
-    void adoptState(Particle* p);
+    //void adoptState(Particle* p);
 
 public slots:
 

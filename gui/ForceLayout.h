@@ -7,13 +7,13 @@
 #include "node.h"
 #include <QVector>
 
-//class GNode;
-//class GEdge;
+class GNode;
+class GEdge;
 class QuadtreeNode;
-class Particle;
+//class Particle;
 //class Link;
-//typedef GNode Particle;
-//typedef GEdge Link;
+typedef GNode Particle;
+typedef GEdge Link;
 
 class ForceLayout {
     private:
@@ -25,6 +25,8 @@ class ForceLayout {
         double springConstant;
         double springDamping;
         double springLength;
+        double springMaxForce;
+        double speedMax;
         double xmin;
         double xmax;
         double ymin;

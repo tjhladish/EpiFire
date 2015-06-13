@@ -26,10 +26,15 @@
  * @param {pv.Particle} particles the linked list of particles.
  */
 
-//typedef GNode Particle;
-class Particle;
+class GNode;
+typedef GNode Particle;
 
-class Link {
+class GEdge;
+typedef GEdge Link;
+//class Particle;
+
+
+/*class Link {
   private:
     Particle* _source;
     Particle* _dest;
@@ -63,9 +68,7 @@ class Particle {
     Particle (double xi, double yi ) : _x(xi), _y(yi), vx(0), vy(0), fx(0), fy(0), px(xi), py(yi) {}
     ~Particle() { for (auto e: _edgesIn) delete e; for (auto e: _edgesOut) delete e; }
     int totalDegree() { return _edgesIn.size() + _edgesOut.size(); }
-};
-
-//class GNode;
+};*/
 
 class QuadtreeNode {
   public:
