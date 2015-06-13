@@ -1004,7 +1004,11 @@ void MainWindow::plotNetwork() {
     }
     //networkPlot->setLayoutAlgorithm(GraphWidget::Circular);
     networkPlot->newLayout();
-    networkPlot->show();
+    if (networkPlot->isHidden()) {
+        networkPlot->resetZoom();
+        networkPlot->show();
+    }
+    networkPlot->relaxNetwork();
     networkPlot->animateNetwork();
 }
 
@@ -1049,7 +1053,7 @@ void MainWindow::removeMinorComponents() {
 
         numnodesLine->setText(QString::number(network->size()));
         updateRZero();
-        plotNetwork();
+        updateNetworkPlot();
     }
 }
 
@@ -1132,6 +1136,7 @@ void MainWindow::netDoneUpdate(bool success) {
         statusBar()->showMessage(generateNetMsg);
     }
     networkPlot->clearNodeStates();
+    updateNetworkPlot();
 }
 
 

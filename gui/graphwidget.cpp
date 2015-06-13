@@ -11,13 +11,19 @@ void MyScene::mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouseEvent ) {
     up =  mouseEvent->scenePos();
     int width =  up.x()-down.x();
     int height = up.y()-down.y();
-    qDebug() << down << " " << up;
+    //qDebug() << down << " " << up;
     //cerr <<  "selectedArea : " << width << " " << height << endl;
     QRectF area(down.x(),down.y(),width,height);
 
     QGraphicsScene::mouseReleaseEvent(mouseEvent);
-    if ( mouseEvent->modifiers() == Qt::ControlModifier ) {
+    if ( mouseEvent->modifiers() == Qt::AltModifier ) {
         emit(zoomArea(area));
+        return;
+    }
+    if ( mouseEvent->modifiers() == Qt::ControlModifier ) {
+        QPainterPath pp;
+        pp.addRect(area);
+        setSelectionArea(pp);
     }
     return;
 };
@@ -36,7 +42,10 @@ GraphWidget::GraphWidget() {
 
     connect(scene(),SIGNAL(zoomArea(QRectF)), this,SLOT(zoomArea(QRectF)));
     _animationTime=0;
-    _timerID=0;
+    _epiTimerID=0;
+    _layoutTimerID=0;
+    _animationCounter=0;
+    _zoomFactor=1.2;
 }
 
 GraphWidget::~GraphWidget() { 
@@ -138,7 +147,14 @@ void GraphWidget::newLayout() {
     clearLayout();
     randomLayout();
     forceLayout(1);
-    resetZoom();
+    if(_epiTimerID) {
+        killTimer(_epiTimerID);
+        _epiTimerID = 0;
+    }
+    if(_layoutTimerID) {
+        killTimer(_layoutTimerID);
+        _layoutTimerID = 0;
+    }
 }
 
 void GraphWidget::forceLayout(int iterations=1) {
@@ -157,7 +173,6 @@ void GraphWidget::randomLayout() {
     int W = 0.75*r.width();
     int H = 0.75*r.height();
 
-    fitInView(sceneRect(),Qt::KeepAspectRatio);
     foreach(GNode* n1, nodelist ) {
         float x = (((float) rand())/RAND_MAX*W - W/2)/(n1->edges().size() + 1);
         float y = (((float) rand())/RAND_MAX*H - H/2)/(n1->edges().size() + 1);
@@ -224,32 +239,50 @@ void GraphWidget::keyPressEvent(QKeyEvent *event){
     scene()->update();
 }
 
-void GraphWidget::timerEvent(QTimerEvent*) {
-    QRgb colors[4] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0), qRgb(254,254,254) };
-    QColor col = Qt::gray;
+void GraphWidget::timerEvent(QTimerEvent* event) {
+    if (event->timerId() == _epiTimerID) {
+        QRgb colors[4] = { qRgb(0, 0, 200), qRgb(254, 0, 0), qRgb(254, 254, 0), qRgb(254,254,254) };
+        QColor col = Qt::gray;
 
-    if (nodeStates.size() > _animationTime) {
-        for (unsigned int id = 0; id < nodeStates[_animationTime].size(); ++id) {
-            int state = nodeStates[_animationTime][id] == -1 ? 2 :
-                        nodeStates[_animationTime][id] ==  0 ? 0 : 1;
-            col = colors[state];
-            GNode* node = locateGNode(id);
-            if (node) node->setBrush(col);
+        if (nodeStates.size() > _animationTime) {
+            for (unsigned int id = 0; id < nodeStates[_animationTime].size(); ++id) {
+                int state = nodeStates[_animationTime][id] == -1 ? 2 :
+                            nodeStates[_animationTime][id] ==  0 ? 0 : 1;
+                col = colors[state];
+                GNode* node = locateGNode(id);
+                if (node) node->setBrush(col);
+            }
+            invalidateScene();
+
+            if (++_animationTime >= nodeStates.size()) _animationTime = 0;
         }
-        invalidateScene();
-
-        if (++_animationTime >= nodeStates.size()) _animationTime = 0;
+    } else {
+        forceLayout(1);
+        if (++_animationCounter > 500) {
+            killTimer(_layoutTimerID);
+            _layoutTimerID = 0;
+            _animationCounter = 0;
+        }
     }
 }
 
+
 void GraphWidget::animateNetwork() {
-    if (_timerID) killTimer(_timerID);
-    _timerID = startTimer(500);
+    if (_epiTimerID) killTimer(_epiTimerID);
+    _epiTimerID = startTimer(500);
 }
 
+
+void GraphWidget::relaxNetwork() {
+    if (_layoutTimerID) return; // already running
+    _layoutTimerID = startTimer(1);
+}
+
+
 void GraphWidget::resizeEvent(QResizeEvent *){
+    QPointF center = mapToScene(viewport()->rect().center());
     int sceneW = 0.9*width();
     int sceneH = 0.9*height();
     scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
-    resetZoom();
+    centerOn(center);
 }

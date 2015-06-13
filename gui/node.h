@@ -114,7 +114,6 @@ private:
 	//boundaries of box 
 	int _boxWidth;
 	int _boxHeight;
-
 };
 
 #endif

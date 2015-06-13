@@ -64,9 +64,17 @@ public:
 
 public slots:
 	void resetZoom();
-    void zoomIn() { scale(1.2, 1.2); }
-    void zoomOut() { scale(1 / 1.2, 1 / 1.2); }
-	void zoomArea(QRectF sceneArea) { fitInView(sceneArea,Qt::KeepAspectRatio); }
+    void zoomIn() {
+        QPointF center = mapToScene(viewport()->rect().center());
+        scale(_zoomFactor, _zoomFactor);
+        centerOn(center);
+    }
+    void zoomOut() {
+        QPointF center = mapToScene(viewport()->rect().center());
+        scale(1 / _zoomFactor, 1 / _zoomFactor);
+        centerOn(center);
+    }
+    void zoomArea(QRectF sceneArea) { fitInView(sceneArea,Qt::KeepAspectRatio); }
 
 	void  setLayoutAlgorithm(LayoutAlgorithm x) { _layoutAlgorithm = x; }
 
@@ -77,6 +85,7 @@ public slots:
     void clearLayout();
 	void removeSelectedGNodes();
     void animateNetwork();
+    void relaxNetwork();
     void setNodeStates(vector< vector<int> > states) { nodeStates = states; _animationTime=0; }
     void clearNodeStates(){ nodeStates.clear(); }
     void recenterItems();
@@ -93,16 +102,16 @@ private:
 	//graph layout
 	LayoutAlgorithm	  _layoutAlgorithm;
 
-    //QTreeWidget* layoutTree;
-    //QHash<GNode*, QTreeWidgetItem*>layoutMap;
     void timerEvent(QTimerEvent*);
 
     bool  _updateLayout;
     unsigned int _animationTime;
-    int   _timerID;
+    int   _epiTimerID;
+    int   _layoutTimerID;
+    int   _animationCounter;
 
     vector< vector<int> > nodeStates;
-
+    double _zoomFactor;
 };
 
 #endif

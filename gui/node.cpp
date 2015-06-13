@@ -31,15 +31,6 @@ GNode::GNode(QGraphicsItem* parent, QGraphicsScene *scene):QGraphicsItem(parent)
 
 GNode::~GNode() {}
 
-/*void GNode::adoptState(Particle* p) {
-    setPos(p->x(), p->y());
-    px = p->px;
-    py = p->py;
-    vx = p->vx;
-    vy = p->vy;
-    fx = p->fx;
-    fy = p->fy;
-}*/
 
 QVector<GEdge*> GNode::edgesIn() {
         QVector<GEdge*>elist;
@@ -81,6 +72,7 @@ void GNode::paint(QPainter *painter, const QStyleOptionGraphicsItem*, QWidget *)
 	_boxWidth=nodesize;
 	_boxHeight=nodesize;
     painter->setBrush(QBrush(_brush));
+    if (isSelected()) { painter->setBrush(QBrush(Qt::green)); }
     painter->setPen(Qt::NoPen);
     painter->drawEllipse(-nodesize/2,-nodesize/2,nodesize,nodesize);
 	setBoundingBox(_boxWidth+1,_boxHeight+1);
@@ -92,8 +84,10 @@ void GNode::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *) {
 }
 
 void GNode::mousePressEvent(QGraphicsSceneMouseEvent *) {
-	scene()->clearSelection();
-    emit(nodePressed(this));
+    if (not isSelected()) {
+        scene()->clearSelection();
+        emit(nodePressed(this));
+    }
 }
 
 
@@ -107,11 +101,7 @@ void GNode::mouseMoveEvent ( QGraphicsSceneMouseEvent * event ) {
 
 void GNode::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event ) {
     QGraphicsItem::mouseReleaseEvent(event);
-    //foreach (GEdge *edge, edgeList) edge->adjust();
-    // This isn't working right--it runs the layout, but not animated
-    //for (int i = 0; i<20; ++i) {
-    //    getGraphWidget()->forceLayout(1);
-    //}
+    getGraphWidget()->relaxNetwork();
 }
 
 QVariant GNode::itemChange(GraphicsItemChange change, const QVariant &value)
@@ -128,4 +118,3 @@ void GNode::removeGEdge(GEdge* edge) {
 void GNode::setGraphWidget(GraphWidget *g) { _graph = g; }
 
 GraphWidget* GNode::getGraphWidget() { return _graph; }
-
