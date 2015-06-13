@@ -7,8 +7,13 @@
 #include "node.h"
 #include <QVector>
 
-class GNode;
+//class GNode;
+//class GEdge;
 class QuadtreeNode;
+class Particle;
+//class Link;
+//typedef GNode Particle;
+//typedef GEdge Link;
 
 class ForceLayout {
     private:
@@ -25,15 +30,15 @@ class ForceLayout {
         double ymin;
         double ymax;
 
-        double _speed(GNode* n);
-        void _chargeforces(QuadtreeNode* n, GNode* p, double x1, double y1, double x2, double y2);
+        double _speed(Particle* n);
+        void _chargeforces(QuadtreeNode* n, Particle* p, double x1, double y1, double x2, double y2);
         void _accumulateCharge(QuadtreeNode* n);
         void _accumulateChild(QuadtreeNode* c, QuadtreeNode* n, double& cx, double& cy);
 
     public:
         ForceLayout();
 
-        void doLayout(QVector<GNode *> &particles, int iterations);
+        void doLayout(QVector<Particle*> &particles, int iterations);
         void set_dimensions(double x, double X, double y, double Y) {xmin=x; xmax=X; ymin=y; ymax=Y;}
 };
 

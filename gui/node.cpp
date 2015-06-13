@@ -90,7 +90,17 @@ void GNode::mouseMoveEvent ( QGraphicsSceneMouseEvent * event ) {
     QGraphicsItem::mouseMoveEvent(event);
     foreach (GEdge *edge, edgeList) edge->adjust();
     getGraphWidget()->forceLayout(1);
-    scene()->update();
+    //scene()->update();
+}
+
+
+void GNode::mouseReleaseEvent ( QGraphicsSceneMouseEvent * event ) {
+    QGraphicsItem::mouseReleaseEvent(event);
+    //foreach (GEdge *edge, edgeList) edge->adjust();
+    for (int i = 0; i<20; ++i) {
+        getGraphWidget()->forceLayout(1);
+        scene()->update();
+    }
 }
 
 QVariant GNode::itemChange(GraphicsItemChange change, const QVariant &value)

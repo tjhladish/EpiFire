@@ -137,7 +137,7 @@ void GraphWidget::newLayout() {
     cerr << "newLayout() " << endl;
     clearLayout();
     randomLayout();
-    forceLayout(100);
+    forceLayout(1);
     resetZoom();
 }
 
@@ -146,42 +146,42 @@ void GraphWidget::forceLayout(int iterations=1) {
     //cerr << "force layout cerr\n";
     ForceLayout layout;
 
-    //vector<GNode*> particles;
+    QVector<Particle*> particles;
 
-    //for( GNode* n: nodelist ) {
+    for( GNode* n: nodelist ) {
         //     cerr << "g" << n->getId() << " " << n->edges().size() << endl;
-    //    GNode* a = new GNode(n->pos().x(), n->pos().y());
-    //    particles.push_back(a);
-    //}
+        Particle* a = new Particle(n->pos().x(), n->pos().y());
+        particles.push_back(a);
+    }
 
-    //for (int aId = 0; aId < nodelist.size(); ++aId) {
-     //   GNode* n = nodelist[aId];
-     //   GNode* p = particles[aId];
-     //   for (GEdge* e: n->edgesIn()) {
-     //       int bId = e->source()->getId();
-      //      p->linksIn.push_back(new Link(particles[bId], p));
-      //  }
+    for (int aId = 0; aId < nodelist.size(); ++aId) {
+        GNode* n = nodelist[aId];
+        Particle* p = particles[aId];
+        for (GEdge* e: n->edgesIn()) {
+            int bId = e->source()->getId();
+            p->edgesIn()->push_back(new Link(particles[bId], p));
+        }
 
-    //    for (GEdge* e: n->edgesOut()) {
-    //        int bId = e->dest()->getId();
-    //        p->linksOut.push_back(new Link(p, particles[bId]));
-    //    }
+        for (GEdge* e: n->edgesOut()) {
+            int bId = e->dest()->getId();
+            p->edgesOut()->push_back(new Link(p, particles[bId]));
+        }
 
-    //}
+    }
 
     QRectF r = scene()->sceneRect();
     double s = 0.95; // shrink plot region used
     layout.set_dimensions(s*r.left(), s*r.right(), s*r.top(), s*r.bottom());
     // "previous" locations must be the same as current, otherwise movement is implied
-    for (GNode* n: nodelist) { n->initializePreviousPosition(); }
-    layout.doLayout(nodelist, iterations);
+    //for (GNode* n: nodelist) { n->initializePreviousPosition(); }
+    layout.doLayout(particles, iterations);
 
-    //for(int i=0; i<nodelist.size(); i++ ) {
-    //    nodelist[i]->setPos( particles[i]->x , particles[i]->y );
-        //  qDebug() << particles[i]->x << " " << particles[i]->y;
-    //}
+    for(int i=0; i<nodelist.size(); i++ ) {
+        nodelist[i]->setPos( particles[i]->x(), particles[i]->y() );
+        //qDebug() << particles[i]->x() << " " << particles[i]->y();
+    }
     invalidateScene();
-    //for (unsigned int i = 0; i < particles.size(); ++i) delete particles[i];
+    for (int i = 0; i < particles.size(); ++i) delete particles[i];
 }
 
 void GraphWidget::randomLayout() { 

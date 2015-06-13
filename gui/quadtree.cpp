@@ -1,6 +1,6 @@
 #include "Quadtree.h"
 
-Quadtree::Quadtree(QVector<GNode *> &particles) {
+Quadtree::Quadtree(QVector<Particle *> &particles) {
     /* Compute bounds. */
     double x1 = std::numeric_limits<double>::max();
     double y1 = x1;
@@ -40,7 +40,7 @@ Quadtree::Quadtree(QVector<GNode *> &particles) {
  * descendant of node <i>n</i>. The bounds are defined by [<i>x1</i>,
  * <i>x2</i>] and [<i>y1</i>, <i>y2</i>].
  */
-void Quadtree::insertChild( QuadtreeNode* n, GNode* p, double x1, double y1, double x2, double y2 ) {
+void Quadtree::insertChild( QuadtreeNode* n, Particle* p, double x1, double y1, double x2, double y2 ) {
     /* Compute the split point, and the quadrant in which to insert p. */
     double sx = (x1 + x2) * .5;
     double sy = (y1 + y2) * .5;
@@ -67,7 +67,7 @@ void Quadtree::insertChild( QuadtreeNode* n, GNode* p, double x1, double y1, dou
  * <i>n</i> or one of its descendants. The bounds are defined by [<i>x1</i>,
  * <i>x2</i>] and [<i>y1</i>, <i>y2</i>].
  */
-void Quadtree::insert( QuadtreeNode* n, GNode* p, double x1, double y1, double x2, double y2 ) {
+void Quadtree::insert( QuadtreeNode* n, Particle* p, double x1, double y1, double x2, double y2 ) {
     //std::cerr << "insert: " << n << " " << p->x <<"," << p->y << std::endl;
     if (n->leaf) {
         if (n->p) {
@@ -80,7 +80,7 @@ void Quadtree::insert( QuadtreeNode* n, GNode* p, double x1, double y1, double x
             if ((fabs(n->p->x() - p->x()) + fabs(n->p->y() - p->y())) < .01) {
                 insertChild(n, p, x1, y1, x2, y2);
             } else {
-                GNode* v = n->p;
+                Particle* v = n->p;
                 n->p = nullptr;
                 insertChild(n, v, x1, y1, x2, y2);
                 insertChild(n, p, x1, y1, x2, y2);

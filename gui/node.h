@@ -82,7 +82,8 @@ protected:
     QVariant itemChange ( GraphicsItemChange change, const QVariant &value );
     void paint ( QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget );
     void mouseMoveEvent ( QGraphicsSceneMouseEvent * event );
-	void mousePressEvent ( QGraphicsSceneMouseEvent *event );
+    void mouseReleaseEvent ( QGraphicsSceneMouseEvent * event );
+    void mousePressEvent ( QGraphicsSceneMouseEvent *event );
 	void mouseDoubleClickEvent ( QGraphicsSceneMouseEvent *event );
 
 	GraphWidget* _graph;

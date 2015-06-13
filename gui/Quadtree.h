@@ -26,15 +26,27 @@
  * @param {pv.Particle} particles the linked list of particles.
  */
 
-/*struct Link {
-    Particle* source;
-    Particle* dest;
-    Link (Particle* s, Particle* d):source(s), dest(d) {}
+//typedef GNode Particle;
+class Particle;
+
+class Link {
+  private:
+    Particle* _source;
+    Particle* _dest;
+  public:
+    Particle* source() { return _source; }
+    Particle* dest() { return _dest; }
+    Link (Particle* s, Particle* d):_source(s), _dest(d) {}
 };
 
-struct Particle { 
-    double x; 
-    double y;
+class Particle {
+  private:
+    double _x;
+    double _y;
+    QVector<Link*> _edgesIn;
+    QVector<Link*> _edgesOut;
+
+  public:
     double vx;
     double vy;
     double fx;
@@ -42,16 +54,18 @@ struct Particle {
 
     double px;  //previous x and y positions
     double py;
-    std::vector<Link*> linksIn;
-    std::vector<Link*> linksOut;
+    double x() const { return _x; }
+    double y() const { return _y; }
+    void setPos(double x, double y) { _x = x; _y = y; }
+    QVector<Link*>* edgesIn() { return &_edgesIn; }
+    QVector<Link*>* edgesOut() { return &_edgesOut; }
 
-    Particle (double _x, double _y ) : x(_x), y(_y), vx(0), vy(0), fx(0), fy(0), px(_x), py(_y) {}
-    ~Particle() { for (auto e: linksIn) delete e; for (auto e: linksOut) delete e; }
-    int totalDegree() { return linksIn.size() + linksOut.size(); }
-};*/
-//double GNode::x();
-//double GNode::y();
-class GNode;
+    Particle (double xi, double yi ) : _x(xi), _y(yi), vx(0), vy(0), fx(0), fy(0), px(xi), py(yi) {}
+    ~Particle() { for (auto e: _edgesIn) delete e; for (auto e: _edgesOut) delete e; }
+    int totalDegree() { return _edgesIn.size() + _edgesOut.size(); }
+};
+
+//class GNode;
 
 class QuadtreeNode {
   public:
@@ -60,7 +74,7 @@ class QuadtreeNode {
     QuadtreeNode* c2 = nullptr;
     QuadtreeNode* c3 = nullptr;
     QuadtreeNode* c4 = nullptr;
-    GNode*        p  = nullptr;
+    Particle*     p  = nullptr;
 
     double cx = 0;
     double cy = 0;
@@ -90,11 +104,11 @@ class Quadtree {
     double yMax;
     QuadtreeNode* root;
 
-    Quadtree(QVector<GNode*>& particles);
+    Quadtree(QVector<Particle*>& particles);
     ~Quadtree() { if(root) delete(root); }
 
-    void insertChild( QuadtreeNode* n, GNode* p, double x1, double y1, double x2, double y2 );
-    void insert( QuadtreeNode* n, GNode* p, double x1, double y1, double x2, double y2 );
+    void insertChild( QuadtreeNode* n, Particle* p, double x1, double y1, double x2, double y2 );
+    void insert( QuadtreeNode* n, Particle* p, double x1, double y1, double x2, double y2 );
 };
 
 #endif
