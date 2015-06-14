@@ -168,7 +168,7 @@ void PlotView::drawHistogram() {
     int max_val = 0;
     int nbins   = 0;
 
-    if (plotType == RESULTS_HISTPLOT) {
+    if (plotType == RESULTS_HISTPLOT or plotType == DEGPLOT) {
         vector<double> minmax = default_minmax();
         min_val = rangeMin == -1 ? minmax[0] : rangeMin;
         max_val = rangeMax == -1 ? minmax[1] : rangeMax;

@@ -44,6 +44,7 @@ void AnalysisDialog::_addResultsAnalysisRow(QGridLayout* layout, QString text, Q
 void AnalysisDialog::createNetworkAnalysis() {
     QVBoxLayout* netAnalysisLayout = new QVBoxLayout();
     QGridLayout* netTopLayout = new QGridLayout();
+    QGridLayout* netBottomLayout = new QGridLayout();
 
     nodeCountEdit        = new QLineEdit(this);
     edgeCountEdit        = new QLineEdit(this);
@@ -87,9 +88,32 @@ void AnalysisDialog::createNetworkAnalysis() {
     QGroupBox* netAnalysisTop = new QGroupBox();
     netAnalysisTop->setLayout(netTopLayout);
 
+    QLabel* nbins = new QLabel("Number of bins", this);
+    QLabel* minRange = new QLabel("Range minimum", this);
+    QLabel* maxRange = new QLabel("Range maximum", this);
+
+    netBottomLayout->addWidget(nbins,    1, 0);
+    netBottomLayout->addWidget(minRange, 1, 1);
+    netBottomLayout->addWidget(maxRange, 1, 2);
+
+    QLineEdit* nbinsLineEdit = new QLineEdit(this);
+    QLineEdit* minRangeLineEdit = new QLineEdit(this);
+    QLineEdit* maxRangeLineEdit = new QLineEdit(this);
+
+    netBottomLayout->addWidget(nbinsLineEdit,    2, 0);
+    netBottomLayout->addWidget(minRangeLineEdit, 2, 1);
+    netBottomLayout->addWidget(maxRangeLineEdit, 2, 2);
+
+    QGroupBox* netAnalysisBottom = new QGroupBox();
+    netAnalysisBottom->setLayout(netBottomLayout);
+
     degDistPlot = new PlotView(this, "Degree distribution", "Degree", "Frequency");
     degDistPlot->setPlotType(PlotView::DEGPLOT);
     
+    connect(nbinsLineEdit, SIGNAL(textChanged(QString)), degDistPlot, SLOT(setNBins(QString)));
+    connect(minRangeLineEdit, SIGNAL(textChanged(QString)), degDistPlot, SLOT(setRangeMin(QString)));
+    connect(maxRangeLineEdit, SIGNAL(textChanged(QString)), degDistPlot, SLOT(setRangeMax(QString)));
+
     // add a close window button
     QPushButton* closeButton = new QPushButton("Close analysis", this);
     connect(closeButton,  SIGNAL(clicked()), this, SLOT(close()));
@@ -101,6 +125,7 @@ void AnalysisDialog::createNetworkAnalysis() {
 
     netAnalysisLayout->addWidget(netAnalysisTop);
     netAnalysisLayout->addWidget(degDistPlot);
+    netAnalysisLayout->addWidget((netAnalysisBottom));
     netAnalysisLayout->addWidget(buttonBox);
     
     this->setLayout(netAnalysisLayout);
