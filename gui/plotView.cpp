@@ -23,7 +23,7 @@ PlotView::PlotView(QWidget*, QString title, QString xlabel, QString ylabel) {
 
     setHorizontalScrollBarPolicy ( Qt::ScrollBarAlwaysOff );
     setVerticalScrollBarPolicy ( Qt::ScrollBarAlwaysOff );
-    savePlotAction = new QAction("Export plot as png", this);
+    savePlotAction = new QAction("Export plot as PNG", this);
     connect( savePlotAction, SIGNAL(triggered()), this, SLOT(savePlot()) );
     saveDataAction = new QAction("", this);
     connect( saveDataAction, SIGNAL(triggered()), this, SLOT(saveData()) );
@@ -408,7 +408,7 @@ void PlotView::clearData() {
 
 void PlotView::saveData() {
     QString startdir = ".";
-    QString filename = QFileDialog::getSaveFileName(this, "Select file to save to", startdir, "CSV Files(*.csv)");
+    QString filename = QFileDialog::getSaveFileName(this, "Select file to save to:", startdir, "CSV Files(*.csv)");
 
     QFile file(filename);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) return;
@@ -447,9 +447,8 @@ void PlotView::saveData() {
 void PlotView::savePlot() {
     QString startdir = ".";
     QString filename = QFileDialog::getSaveFileName(
-        this, "Select file to save to", startdir, "PNG Image Files(*.png)");
+        this, "Select file to save to:", startdir, "PNG Image Files(*.png)");
 
-//    QPixmap image(scene()->width(),scene()->height());
     QPixmap image(width(),height());
     image.fill(Qt::white);
 
@@ -457,9 +456,5 @@ void PlotView::savePlot() {
     painter.setRenderHint(QPainter::Antialiasing, true);
     render(&painter);
 
-    /*clipboard*/
-    //QApplication::clipboard()->setPixmap(image);
-
     image.save(filename,"PNG");
-
 }

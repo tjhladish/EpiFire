@@ -1,6 +1,44 @@
 #include "graphwidget.h" 
 #include <iostream>
 #include <QDebug>
+#include <QFileDialog>
+
+GraphWidget::GraphWidget() {
+    setScene(new MyScene(this));
+    scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
+    scene()->setSceneRect(-width()/2,-height()/2,width(),height()); //scene = physical dimentions
+
+    setCacheMode(CacheBackground);
+    setRenderHint(QPainter::Antialiasing);
+    setTransformationAnchor(AnchorUnderMouse);
+    setResizeAnchor(AnchorViewCenter);
+    setDragMode(QGraphicsView::RubberBandDrag);
+    setLayoutAlgorithm(FMMM);
+
+    connect(scene(),SIGNAL(zoomArea(QRectF)), this,SLOT(zoomArea(QRectF)));
+    _animationTime=0;
+    _epiTimerID=0;
+    _layoutTimerID=0;
+    _animationCounter=0;
+    _zoomFactor=1.2;
+
+    savePlotAction = new QAction("Export plot as PNG", this);
+    connect( savePlotAction, SIGNAL(triggered()), this, SLOT(savePlot()) );
+    saveDataAction = new QAction("Export edgelist (degree > 0 nodes) and node coordinates (all nodes) as CSV files", this);
+    connect( saveDataAction, SIGNAL(triggered()), this, SLOT(saveData()) );
+}
+
+GraphWidget::~GraphWidget() { 
+    clear();
+}
+
+
+void GraphWidget::contextMenuEvent(QContextMenuEvent* event) {
+    QMenu menu(this);
+    menu.addAction(savePlotAction);
+    menu.addAction(saveDataAction);
+    menu.exec(event->globalPos());
+}
 
 void MyScene::mousePressEvent ( QGraphicsSceneMouseEvent * mouseEvent ) {
     down =  mouseEvent->buttonDownScenePos(Qt::LeftButton);
@@ -28,31 +66,7 @@ void MyScene::mouseReleaseEvent ( QGraphicsSceneMouseEvent * mouseEvent ) {
     return;
 };
 
-GraphWidget::GraphWidget() {
-    setScene(new MyScene(this));
-    scene()->setItemIndexMethod(QGraphicsScene::NoIndex);
-    scene()->setSceneRect(-width()/2,-height()/2,width(),height()); //scene = physical dimentions
-
-    setCacheMode(CacheBackground);
-    setRenderHint(QPainter::Antialiasing);
-    setTransformationAnchor(AnchorUnderMouse);
-    setResizeAnchor(AnchorViewCenter);
-    setDragMode(QGraphicsView::RubberBandDrag);
-    setLayoutAlgorithm(FMMM);
-
-    connect(scene(),SIGNAL(zoomArea(QRectF)), this,SLOT(zoomArea(QRectF)));
-    _animationTime=0;
-    _epiTimerID=0;
-    _layoutTimerID=0;
-    _animationCounter=0;
-    _zoomFactor=1.2;
-}
-
-GraphWidget::~GraphWidget() { 
-    clear();
-}
-
-void GraphWidget::clear() { 
+void GraphWidget::clear() {
     nodelist.clear();
     scene()->clear();
 }
@@ -285,4 +299,51 @@ void GraphWidget::resizeEvent(QResizeEvent *){
     int sceneH = 0.9*height();
     scene()->setSceneRect(-sceneW/2,-sceneH/2,sceneW,sceneH);
     centerOn(center);
+}
+
+void GraphWidget::saveData() {
+    QString startdir = ".";
+    QString netFilename = QFileDialog::getSaveFileName(this, "Select file to save to:", startdir, "CSV Files(*.csv)");
+    QString layoutFilename(netFilename);
+    layoutFilename.replace(QString(".csv"), QString("_layout.csv"));
+
+    QFile fileNet(netFilename);
+    QFile fileLayout(layoutFilename);
+    if (!fileNet.open(QIODevice::WriteOnly | QIODevice::Text)
+     or !fileLayout.open(QIODevice::WriteOnly | QIODevice::Text)) return;
+    QTextStream outN(&fileNet);
+    QTextStream outL(&fileLayout);
+
+    for (GNode* node: nodelist) {
+        // output location of node to one file
+        outL << node->getId() << "," << node->x() << "," << node->y() << endl;
+        // output edgelist to the other file
+        // one node if node has no edges
+        //if (node->edgesOut().size() == 0) {
+        //    outN << node->getId() << endl;
+        //    continue;
+        //}
+        for (GEdge* edge: node->edgesOut()) {
+            GNode* other = edge->dest();
+            outN << node->getId() << "," << other->getId() << endl;
+        }
+    }
+    fileNet.close();
+    fileLayout.close();
+}
+
+
+void GraphWidget::savePlot() {
+    QString startdir = ".";
+    QString filename = QFileDialog::getSaveFileName(
+        this, "Select file to save to", startdir, "PNG Image Files(*.png)");
+
+    QPixmap image(width(),height());
+    image.fill(Qt::white);
+
+    QPainter painter(&image);
+    painter.setRenderHint(QPainter::Antialiasing, true);
+    render(&painter);
+
+    image.save(filename,"PNG");
 }

@@ -89,6 +89,8 @@ public slots:
     void setNodeStates(vector< vector<int> > states) { nodeStates = states; _animationTime=0; }
     void clearNodeStates(){ nodeStates.clear(); }
     void recenterItems();
+    void saveData();
+    void savePlot();
 
 protected:
 	void updateSceneRect();
@@ -97,6 +99,7 @@ protected:
     void scaleView(qreal scaleFactor);
     QVector<GNode*> nodelist;
     void resizeEvent(QResizeEvent*);
+    void contextMenuEvent(QContextMenuEvent* event);
 
 private:
 	//graph layout
@@ -112,6 +115,9 @@ private:
 
     vector< vector<int> > nodeStates;
     double _zoomFactor;
+
+    QAction* savePlotAction;
+    QAction* saveDataAction;
 };
 
 #endif
