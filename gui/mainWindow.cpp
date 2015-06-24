@@ -148,22 +148,31 @@ void MainWindow::createMenu() {
 
     fileMenu = new QMenu(tr("&File"), this);
 
-    exitAction = fileMenu->addAction(tr("E&xit"));
     openAction = fileMenu->addAction(tr("&Open edgelist file"));
+    QAction* saveNetwork = fileMenu->addAction(tr("&Save network as edgelist"));
+    //QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
+    //QAction* savePlotAction = fileMenu->addAction("Save epidemic curve plot");
 
-    QAction* saveNetwork = fileMenu->addAction("Save network as edgelist");
-    QAction* saveDataAction  = fileMenu->addAction("Save epidemic curve data");
-    QAction* savePlotAction = fileMenu->addAction("Save epidemic curve plot");
+    QAction* simulateAction = fileMenu->addAction(tr("&Run simulator"));
+    QList<QKeySequence> simKeys;
+    simKeys.append(Qt::Key_Return);
+    simKeys.append(Qt::Key_Enter);
+    simulateAction->setShortcuts(simKeys);
 
-    connect(exitAction,     SIGNAL(triggered()), this, SLOT(close()));
-    connect(openAction,     SIGNAL(triggered()), this, SLOT(readEdgeList()));
-    connect(saveNetwork,    SIGNAL(triggered()), this, SLOT(saveEdgeList()));
-    connect(saveDataAction, SIGNAL(triggered()), epiCurvePlot, SLOT(saveData()));
-    connect(savePlotAction, SIGNAL(triggered()), epiCurvePlot, SLOT(savePlot()));
+    QAction* resetToDefaultsAction = fileMenu->addAction(tr("Reset to &default values"));
+    exitAction = fileMenu->addAction(tr("E&xit"));
+
+    connect(openAction,            SIGNAL(triggered()), this, SLOT(readEdgeList()));
+    connect(saveNetwork,           SIGNAL(triggered()), this, SLOT(saveEdgeList()));
+    connect(simulateAction,        SIGNAL(triggered()), this, SLOT(simulatorWrapper()));
+    connect(resetToDefaultsAction, SIGNAL(triggered()), this, SLOT(defaultSettings()));
+    connect(exitAction,            SIGNAL(triggered()), this, SLOT(close()));
+    //connect(saveDataAction, SIGNAL(triggered()), epiCurvePlot, SLOT(saveData()));
+    //connect(savePlotAction, SIGNAL(triggered()), epiCurvePlot, SLOT(savePlot()));
  
     //Create 'Plot' menu
     QMenu* plotMenu = new QMenu(tr("&Plot"), this);
-    QAction* showNetworkPlot = plotMenu->addAction("Show network plot");
+    QAction* drawNetworkPlot = plotMenu->addAction("Draw network");
     plotMenu->addSeparator();
     
     showStatePlot = plotMenu->addAction("Show node state plot");
@@ -178,7 +187,7 @@ void MainWindow::createMenu() {
     showHistPlot->setCheckable(true);
     showHistPlot->setChecked(true);
 
-    connect(showNetworkPlot, SIGNAL(triggered()), this, SLOT(plotNetwork()));
+    connect(drawNetworkPlot, SIGNAL(triggered()), this, SLOT(plotNetwork()));
     connect(showStatePlot, SIGNAL(triggered()), this, SLOT( showHideStatePlot() ));
     connect(showEpiPlot, SIGNAL(triggered()), this, SLOT( showHideEpiCurvePlot() ));
     connect(showHistPlot, SIGNAL(triggered()), this, SLOT( showHideHistPlot() ));
@@ -201,13 +210,6 @@ void MainWindow::createMenu() {
 
     //Create 'Results' menu
     QMenu* resultsMenu = new QMenu(tr("&Results"), this);
-    QAction* simulateAction = fileMenu->addAction("Run simulator");
-    connect(simulateAction, SIGNAL(triggered()), this, SLOT(simulatorWrapper()));
-    QList<QKeySequence> simKeys;
-    simKeys.append(Qt::Key_Return);
-    simKeys.append(Qt::Key_Enter);
-    simulateAction->setShortcuts(simKeys);
-
     QAction* showResultsAnalysis = resultsMenu->addAction("Simulation results analysis");
     connect( showResultsAnalysis, SIGNAL(triggered()), resultsAnalysisDialog, SLOT(analyzeResults()));
 
@@ -380,9 +382,13 @@ void MainWindow::createControlButtonsBox() {
     layout->addWidget(clearNetButton, 0, 0);
     clearNetButton->setEnabled(false);
     
-    defaultSettingsButton = new QPushButton("Default Settings");
-    connect(defaultSettingsButton, SIGNAL(clicked()), this, SLOT(defaultSettings()));
-    layout->addWidget(defaultSettingsButton, 0, 1);
+    //defaultSettingsButton = new QPushButton("Default Settings");
+    //connect(defaultSettingsButton, SIGNAL(clicked()), this, SLOT(defaultSettings()));
+    //layout->addWidget(defaultSettingsButton, 0, 1);
+
+    analyzeNetButton = new QPushButton("Analyze network");
+    connect(analyzeNetButton, SIGNAL(clicked()), netAnalysisDialog, SLOT(analyzeNetwork()) );
+    layout->addWidget(analyzeNetButton, 0, 1);
 
     loadNetButton     = new QPushButton("Import Edge List");
     connect(loadNetButton,     SIGNAL(clicked()), this, SLOT(readEdgeList()));
@@ -402,10 +408,9 @@ void MainWindow::createControlButtonsBox() {
     //connect(helpButton, SIGNAL(clicked()), this, SLOT(open_help()));
     //layout->addWidget(helpButton, 1, 1);
 
-    analyzeNetButton = new QPushButton("Analyze network");
-    connect(analyzeNetButton, SIGNAL(clicked()), netAnalysisDialog, SLOT(analyzeNetwork()) );
-    layout->addWidget(analyzeNetButton, 1, 1);
-
+    drawNetButton = new QPushButton("Draw network");
+    connect(drawNetButton, SIGNAL(clicked()), this, SLOT(plotNetwork()) );
+    layout->addWidget(drawNetButton, 1, 1);
 
     runSimulationButton = new QPushButton("Run &Simulation");
     connect(runSimulationButton, SIGNAL(clicked()), this, SLOT(simulatorWrapper()));
@@ -977,6 +982,7 @@ void MainWindow::plotNetwork() {
         return;
     } else if ( network->size() > maxNodesToPlot ) {
         appendOutputLine(tr("Network is too large to draw (%1 node limit; < 100 nodes is recommended)").arg(maxNodesToPlot));
+        networkPlot->clear();
         return;
     }
     networkPlot->clear();

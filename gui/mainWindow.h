@@ -220,12 +220,13 @@ class MainWindow : public QMainWindow
         QGroupBox* controlButtonsGroupBox;
         void createControlButtonsBox();
         QPushButton* clearNetButton;
-        QPushButton* defaultSettingsButton;
+        //QPushButton* defaultSettingsButton;
+        QPushButton* analyzeNetButton;
         QPushButton* loadNetButton;
         QPushButton* generateNetButton;
         QPushButton* clearDataButton;
         //QPushButton* helpButton;
-        QPushButton* analyzeNetButton;
+        QPushButton* drawNetButton;
         QPushButton* runSimulationButton;
         QCheckBox* retainDataCheckBox;
 
