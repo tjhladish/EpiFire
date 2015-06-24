@@ -4,6 +4,7 @@
 #include <QGraphicsView>
 #include <QPointer>
 #include <QKeyEvent>
+#include <QWheelEvent>
 #include <QTreeWidget>
 #include <QTreeWidgetItem>
 #include <QTime>
@@ -95,6 +96,7 @@ public slots:
 protected:
 	void updateSceneRect();
 	void keyPressEvent(QKeyEvent *event);
+    void wheelEvent(QWheelEvent *event);
 
     void scaleView(qreal scaleFactor);
     QVector<GNode*> nodelist;

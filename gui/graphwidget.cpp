@@ -222,9 +222,6 @@ GNode* GraphWidget::locateGNode(int id) {
 
 void GraphWidget::keyPressEvent(QKeyEvent *event){
     switch (event->key()) {
-        case Qt::Key_Delete:
-            removeSelectedGNodes();
-            break;
         case Qt::Key_0:
             resetZoom();
             break;
@@ -252,6 +249,15 @@ void GraphWidget::keyPressEvent(QKeyEvent *event){
 
     scene()->update();
 }
+
+void GraphWidget::wheelEvent(QWheelEvent *event){
+    if (event->delta() > 0) {
+        zoomIn();
+    } else {
+        zoomOut();
+    }
+}
+
 
 void GraphWidget::timerEvent(QTimerEvent* event) {
     if (event->timerId() == _epiTimerID) {
