@@ -1398,7 +1398,7 @@ void Node::_add_outbound_edge (Edge* edge) {
 
 //this doesn't delete the edge object, it merely disconnects it from the node that it was going to.
 void Node::_del_inbound_edge (Edge* inbound) {
-    if (! inbound->end->id == this->id ) {
+    if (! (inbound->end->id == this->id) ) {
         cerr << "The 'inbound' edge does not connect to the node provided." << endl;
         exit(100);
     }
@@ -1409,7 +1409,7 @@ void Node::_del_inbound_edge (Edge* inbound) {
 
 //this doesn't delete the edge object, it merely disconnects it from the node that it was coming from.
 void Node::_del_outbound_edge (Edge* outbound) {
-    if (! outbound->start->id == this->id ) {
+    if (! (outbound->start->id == this->id) ) {
         cerr << "The 'outbound' edge does not start from the node provided." << endl;
         exit(101);
     }
