@@ -30,6 +30,7 @@
 #include "../src/Simulator.h"
 #include "../src/Percolation_Sim.h"
 #include "../src/ChainBinomial_Sim.h"
+#include "codeeditor.h"
 
 #include <math.h>
 #include <time.h>
@@ -243,6 +244,8 @@ class MainWindow : public QMainWindow
         PlotView* statePlot;
         PlotView* histPlot;
         void addStateData();
+
+        CodeEditor* codeEditor;
 
         // Helper functions
         double calculate_T_crit();

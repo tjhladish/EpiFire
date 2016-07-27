@@ -64,6 +64,10 @@ MainWindow::MainWindow() {
     logEditor = new QTextEdit();
     logEditor->setReadOnly(true);
     logEditor->setPlainText(tr("No output yet"));
+
+
+     codeEditor = new CodeEditor();
+     codeEditor->setWindowTitle(QObject::tr("Code Editor Example"));
    
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *leftLayout = new QVBoxLayout;
@@ -161,6 +165,9 @@ void MainWindow::createMenu() {
 
     QAction* resetToDefaultsAction = fileMenu->addAction(tr("Reset to &default values"));
     exitAction = fileMenu->addAction(tr("E&xit"));
+
+    QAction* showEditorAction = fileMenu->addAction(tr("Show Code Editor"));
+    connect(showEditorAction,  SIGNAL(triggered()), codeEditor, SLOT(show()));
 
     connect(openAction,            SIGNAL(triggered()), this, SLOT(readEdgeList()));
     connect(saveNetwork,           SIGNAL(triggered()), this, SLOT(saveEdgeList()));
