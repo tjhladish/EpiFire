@@ -40,7 +40,7 @@
 //Set default parameter values
 
 const QString default_num_runs="1";
-const QString default_network_size="10000";
+const QString default_network_size="1000";
 const QString default_P0="1";
 const QString default_T ="0.1";
 const QString default_infectious_pd ="5";
@@ -48,7 +48,7 @@ const QString default_infectious_pd ="5";
 const QString default_poi_param1 = "5.0";
 const QString default_exp_param1 = "0.3";
 const QString default_pow_param1 = "1.5";
-const QString default_pow_param2 = "10.0";
+const QString default_pow_param2 = "20.0";
 const QString default_con_param1 = "5";
 const QString default_smw_param1 = "6";
 const QString default_smw_param2 = "0.01";
