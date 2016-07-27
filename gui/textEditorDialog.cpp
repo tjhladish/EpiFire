@@ -1,7 +1,7 @@
 #include "textEditorDialog.h"
 
 TextEditorDialog::TextEditorDialog(MainWindow* w, QString title) {
-
+    mw = w;
     this->setWindowTitle(title);
 
     codeEditor = new CodeEditor();

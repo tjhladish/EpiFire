@@ -18,6 +18,7 @@ class TextEditorDialog: public QDialog {
     public slots:
 
     private:
+        MainWindow*  mw;
         CodeEditor* codeEditor;
         QPushButton* saveButton;
         QPushButton* loadButton;
