@@ -49,6 +49,7 @@
 ****************************************************************************/
 
 #include <QtWidgets>
+#include <QPushButton>
 
 #include "codeeditor.h"
 

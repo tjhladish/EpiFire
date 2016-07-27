@@ -52,6 +52,7 @@
 #define CODEEDITOR_H
 
 #include <QPlainTextEdit>
+#include <QButtonGroup>
 #include <QObject>
 
 QT_BEGIN_NAMESPACE

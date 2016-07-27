@@ -18,7 +18,8 @@ HEADERS     = mainWindow.h \
              ForceLayout.h \
              Quadtree.h \
              backgroundthread.h \
-             codeeditor.h
+             codeeditor.h \
+             textEditorDialog.h
 
  SOURCES     = mainWindow.cpp \
                ../src/*.cpp \
@@ -36,7 +37,8 @@ HEADERS     = mainWindow.h \
                backgroundthread.cpp \
                ForceLayout.cpp \
                quadtree.cpp \
-             codeeditor.cpp
+               codeeditor.cpp \
+               textEditorDialog.cpp
 
 
 
