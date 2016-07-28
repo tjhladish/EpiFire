@@ -93,6 +93,7 @@ class MainWindow : public QMainWindow
 
     friend class BackgroundThread;
     friend class AnalysisDialog;
+    friend class TextEditorDialog;
 
         public:
         MainWindow();
@@ -246,7 +247,7 @@ class MainWindow : public QMainWindow
         PlotView* histPlot;
         void addStateData();
 
-        TextEditorDialog* textEditorDialog;
+        TextEditorDialog* degDistDialog;
 
         // Helper functions
         double calculate_T_crit();

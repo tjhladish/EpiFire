@@ -16,12 +16,18 @@ class TextEditorDialog: public QDialog {
         TextEditorDialog(MainWindow* w, QString title);
 
     public slots:
+        void load();
+        void save();
+        void generate();
 
     private:
         MainWindow*  mw;
         CodeEditor* codeEditor;
-        QPushButton* saveButton;
+        QStatusBar* _statusBar;
         QPushButton* loadButton;
+        QPushButton* saveButton;
+        QPushButton* generateButton;
+        QPushButton* closeButton;
 };
 
 #endif
