@@ -26,7 +26,7 @@ class DiffEq_Sim {
 
         ~DiffEq_Sim() {};
 
-        int nbins;
+        size_t nbins;
         double* y;
 
         void printY() { for(int i=0; i < nbins; i++) { cout << y[i] << " ";} cout << endl; }
