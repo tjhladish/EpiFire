@@ -1,4 +1,4 @@
-CC=g++ 
+CC=g++
 CFLAGS=-c -O2 -Wall --pedantic
 #CFLAGS=-c -g -O0
 SOURCES= Network.cpp Utility.cpp 

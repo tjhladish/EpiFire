@@ -74,9 +74,7 @@ class Simulator
         virtual void step_simulation() {};
         virtual void run_simulation() {};
         virtual vector<Node*> rand_infect(int) {vector<Node*>x; return x;};
-                                 // cumulative infected
-        virtual int epidemic_size() = 0;
-                                 // current infected
+        virtual int epidemic_size() = 0;  //pure virtual - must be derived in a child
         virtual int count_infected() {
             return 0;
         };

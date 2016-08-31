@@ -266,7 +266,6 @@ void split(const string& s, char c, vector<string>& v) {
 vector<double> read_vector_file(string filename) {
 //    cerr << "Loading " << filename << endl;
     ifstream myfile(filename.c_str());
-    std::stringstream ss;
 
     vector<double> M;
     if (myfile.is_open()) {
@@ -281,7 +280,6 @@ vector<double> read_vector_file(string filename) {
 vector<vector<double> > read_2D_vector_file(string filename, char sep) {
  //   cerr << "Loading " << filename << endl;
     ifstream myfile(filename.c_str());
-    std::stringstream ss;
 
     vector<vector<double> > M;
     if (myfile.is_open()) {
