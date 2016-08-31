@@ -1,4 +1,4 @@
-CFLAGS=--ansi --pedantic -O2
+CFLAGS=--ansi --pedantic -O2 -std=c++11
 #CFLAGS=--ansi --pedantic -g 
 INCLUDE= -I../src/
 LDFLAGS=  ../src/*.o

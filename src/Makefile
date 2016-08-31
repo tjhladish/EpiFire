@@ -1,5 +1,5 @@
 CC=g++ 
-CFLAGS=-c -O2 -Wall --pedantic
+CFLAGS=-c -O2 -Wall --pedantic -std=c++11
 #CFLAGS=-c -g -O0
 SOURCES= Network.cpp Utility.cpp 
 INCLUDE= -I./
