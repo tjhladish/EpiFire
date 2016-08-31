@@ -71,6 +71,7 @@ class Simulator
 
 
         //these functions must be derived in child class
+        virtual ~Simulator() {};
         virtual void step_simulation() {};
         virtual void run_simulation() {};
         virtual vector<Node*> rand_infect(int) {vector<Node*>x; return x;};
@@ -79,9 +80,6 @@ class Simulator
             return 0;
         };
         virtual void reset() {};
-
-        protected:
-            //~Simulator() { };
 
 };
 
