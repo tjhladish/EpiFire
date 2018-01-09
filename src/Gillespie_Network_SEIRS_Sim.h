@@ -18,7 +18,7 @@ class Event {
         Event(const Event& o) {  time=o.time; type=o.type; node=o.node; }
         Event(double t, char e, Node* n) { time=t; type=e; node=n; }
         Event& operator=(const Event& o) { time=o.time; type=o.type; node=o.node; return *this; }
-};  
+};
 
 class compTime {
     public:
