@@ -98,24 +98,24 @@ vector<double> gen_trunc_exponential(double lambda, int min, int max) {
 
 int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
     double last = 0;
-    double rand = mtrand->rand();
+    double rand = mtrand->rand53();
     for (unsigned int i = 0; i < dist.size(); i++ ) {
 
         double current = last + dist[i];
         if ( rand <= current ) {
             return i;
-        }
-        else {
+        } else {
             last = current;
         }
     }
     if (fabs(last - 1) > EPSILON) {
         cerr << "rand_nonuniform_int() expects a normed distribution.  "
-            << "Your probabilities sum to " << setprecision(15) << last
-            << ".  Fix this using Utilities::normalize_dist()\n";
+             << "Your probabilities sum to " << setprecision(15) << last
+             << ".  Fix this using Utilities::normalize_dist()\n";
         exit(1);
     }
-    return -1;
+
+    return dist.size() - 1;
 }
 
 
@@ -155,12 +155,13 @@ int rand_binomial (int n, double p, MTRand* mtrand) {
         return 0;
     }
 
-    int y = 0; 
+    int y = 0;
     int x = 0;
     double c = log( 1 - p ); // p can't be 0, but we've already checked that
 
     while ( y <= n ) {
-        double u = mtrand->rand();
+        double u = mtrand->rand53();
+        //assert(u > 0.0);
         y += (int) (log(u)/c) + 1;
         if (y > n) {
             return x;
