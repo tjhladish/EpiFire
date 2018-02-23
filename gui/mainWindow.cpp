@@ -53,7 +53,7 @@ MainWindow::MainWindow() {
     network = new Network("mynetwork",Network::Undirected);
     simulator = NULL;
     networkPlot = new GraphWidget();
-    maxNodesToPlot = 10000;
+    maxNodesToPlot = 40000;
 
     netAnalysisDialog = new AnalysisDialog(this, AnalysisDialog::NETWORK, "Analysis of current network");
     rep_ct = 0;

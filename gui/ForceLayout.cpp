@@ -25,7 +25,10 @@ void ForceLayout::doLayout(QVector<Particle *> &particles, int iterations=1) {
     for (auto p: particles) {
         for (auto link: p->edgesOut()) {
             Particle* n = link->dest();
-            kl.push_back( 1.0/pow(std::max(p->totalDegree(), n->totalDegree()), 0.25) );
+            //kl.push_back( 1.0/pow(std::max(p->totalDegree(), n->totalDegree()), 0.25) );
+            const float d1 = p->totalDegree();
+            const float d2 = n->totalDegree();
+            kl.push_back( 1.0/pow(sqrt((d1*d1 + d2*d2)/2.0), 0.5) );
         }
     }
 
@@ -76,17 +79,19 @@ void ForceLayout::doLayout(QVector<Particle *> &particles, int iterations=1) {
             for (int i = 0; i < links_out.size(); ++i) {
                 Particle* a = links_out[i]->source();
                 Particle* b = links_out[i]->dest();
-                double dx = a->x() - b->x();
-                double dy = a->y() - b->y();
-                double dn = sqrt(dx * dx + dy * dy);
-                double dd = dn ? (1.0 / dn) : 1.0;
-                double ks = springConstant * kl[i]; // normalized tension
-                double kd = springDamping * kl[i]; // normalized damping
-                double kk = (ks * (dn - springLength) + kd * (dx * (a->vx - b->vx) + dy * (a->vy - b->vy)) * dd) * dd;
-                double fx = -kk * (dn ? dx : (0.01 * (0.5 - rand()/RAND_MAX)));
-                double fy = -kk * (dn ? dy : (0.01 * (0.5 - rand()/RAND_MAX)));
-                fx = fabs(fx) > springMaxForce ? springMaxForce*fx/fabs(fx) : fx;
-                fy = fabs(fy) > springMaxForce ? springMaxForce*fy/fabs(fy) : fy;
+                const double dx = a->x() - b->x();         // x displacement
+                const double dy = a->y() - b->y();         // y displacement
+                const double dn = sqrt(dx * dx + dy * dy); // spring length
+                const double dd = dn ? (1.0 / dn) : 1.0;   // 1 / spring length
+                const double ks = springConstant * kl[i];  // normalized tension
+                const double kd = springDamping * kl[i];   // normalized damping
+                const double kk = (ks * (dn - springLength) + kd * (dx * (a->vx - b->vx) + dy * (a->vy - b->vy)) * dd) * dd;
+                double fx = -kk * (dn ? dx : (0.001 * (0.5 - rand()/RAND_MAX)));
+                double fy = -kk * (dn ? dy : (0.001 * (0.5 - rand()/RAND_MAX)));
+                const double fn = sqrt(fx*fx + fy*fy);
+                const double governor = fn > springMaxForce ? fn/springMaxForce: 1.0;
+                fx /= governor;
+                fy /= governor;
                 a->fx += fx;
                 a->fy += fy;
                 b->fx -= fx;

@@ -16,7 +16,7 @@ class Event {
         char type;
         Event(const Event& o) {  time = o.time; type=o.type; }
         Event(double t, char e) { time=t; type=e; }
-        Event& operator=(const Event& o) { time = o.time; type=o.type; }
+        Event& operator=(const Event& o) { time = o.time; type=o.type; return *this; }
 };
 
 class compTime {
