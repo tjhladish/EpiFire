@@ -66,6 +66,10 @@ class Percolation_Sim: public Simulator
             return infected.size();
         }
 
+        const vector<Node*> get_infected_nodes() {
+            return infected;
+        }
+
         int epidemic_size() {
             return recovered.size();
         }
