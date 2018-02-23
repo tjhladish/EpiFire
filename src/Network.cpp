@@ -364,6 +364,7 @@ bool Network::_rand_connect() {
 bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     if ( is_stopped() ) return false;
     if ( stubs.size() == 0 ) return true;
+    assert(stubs.size()%2 == 0);
                                  //get all edges in network
     Edge* m;
     Edge* n;
@@ -497,6 +498,8 @@ void Network::get_bad_edges(vector<Edge*> &self_loops, vector<Edge*> &multiedges
             self_loops.push_back( edge );
         }
         else {
+            assert(start != NULL);
+            assert(end != NULL);
             if ( seen_edges[ start->id ][ end->id ] > 0  ) {
                 multiedges.push_back(edge);
             }
@@ -583,11 +586,13 @@ bool Network::_assign_deg_series() {
     vector<int> deg_series(n);
 
     if ( ! gen_deg_series(deg_series) ||  is_stopped() ) return false;
-
+    int running_sum = 0;
     for (int i = 0; i < n; i++ ) {
         this->node_list[i]->add_stubs(deg_series[i]);
+        running_sum += this->node_list[i]->deg();
         PROG( (int) (25.0 * i / n));
     }
+    assert(running_sum % 2 == 0);
     return true;
 }
 
