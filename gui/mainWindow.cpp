@@ -64,7 +64,9 @@ MainWindow::MainWindow() {
     logEditor = new QTextEdit();
     logEditor->setReadOnly(true);
     logEditor->setPlainText(tr("No output yet"));
-   
+
+    degDistDialog = new TextEditorDialog(this, "Degree distribution editor");
+
     QHBoxLayout *mainLayout = new QHBoxLayout;
     QVBoxLayout *leftLayout = new QVBoxLayout;
 
@@ -138,7 +140,7 @@ void MainWindow::createPlotPanel() {
     rightLayout->addWidget(epiCurvePlot);
     rightLayout->addWidget(histPlot);
     
-    rightBox->setLayout(rightLayout);     
+    rightBox->setLayout(rightLayout);
 }
 
 
@@ -196,6 +198,8 @@ void MainWindow::createMenu() {
     //Create 'Network' menu
     QMenu* networkMenu = new QMenu(tr("&Network"), this);
     QAction* generateNetAction = networkMenu->addAction("Generate network");
+    QAction* showDegDistEditorAction = networkMenu->addAction(tr("Show degree distribution editor"));
+
     //QAction* loadNetAction     = networkMenu->addAction("Import edge list");
     QAction* showNetworkAnalysis = networkMenu->addAction("Network analysis");
     QAction* reduceToGiantComponent = networkMenu->addAction("Remove all minor components");
@@ -203,10 +207,11 @@ void MainWindow::createMenu() {
     generateNetAction->setShortcut(tr("Ctrl+G"));
     openAction->setShortcut(tr("Ctrl+O"));
 
-    connect( generateNetAction,      SIGNAL(triggered()), this,              SLOT(generate_network_thread()));
+    connect( generateNetAction,       SIGNAL(triggered()), this,              SLOT(generate_network_thread()));
+    connect( showDegDistEditorAction, SIGNAL(triggered()), degDistDialog,     SLOT(show()));
     //connect( loadNetAction,          SIGNAL(triggered()), this,              SLOT(readEdgeList()));
-    connect( showNetworkAnalysis,    SIGNAL(triggered()), netAnalysisDialog, SLOT(analyzeNetwork()));
-    connect( reduceToGiantComponent, SIGNAL(triggered()), this,              SLOT(removeMinorComponents()));
+    connect( showNetworkAnalysis,     SIGNAL(triggered()), netAnalysisDialog, SLOT(analyzeNetwork()));
+    connect( reduceToGiantComponent,  SIGNAL(triggered()), this,              SLOT(removeMinorComponents()));
 
     //Create 'Results' menu
     QMenu* resultsMenu = new QMenu(tr("&Results"), this);
@@ -276,6 +281,7 @@ void MainWindow::createNetworkSettingsBox() {
     distBox->addItem("Urban");
     distBox->addItem("Constant");
     distBox->addItem("Small world");
+    distBox->addItem("User-defined");
 
     // Initialize layout to parameters for first distribution listed, and listen for changes
     defaultNetworkParameters();
@@ -635,8 +641,7 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         param1Label->setText("Lambda:");
         param1Label->show();
         poiLambdaLine->show();
-    }
-    else if (dist_type == 1) { // Exponential
+    } else if (dist_type == 1) { // Exponential
         poiLambdaLine->hide();
         powAlphaLine->hide();
         conValueLine->hide();
@@ -648,8 +653,7 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         param1Label->setText("Beta:");
         param1Label->show();
         expBetaLine->show();
-     }
-    else if (dist_type == 2) { // Power law
+     } else if (dist_type == 2) { // Power law
         poiLambdaLine->hide();
         expBetaLine->hide();
         conValueLine->hide();
@@ -662,8 +666,7 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         param2Label->setText("Kappa:");
         param2Label->show();
         powKappaLine->show();
-    }
-    else if (dist_type == 3) { // Urban
+    } else if (dist_type == 3) { // Urban
         param1Label->hide();
         poiLambdaLine->hide();
         expBetaLine->hide();
@@ -673,8 +676,7 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         powKappaLine->hide();
         smwKLine->hide();
         smwBetaLine->hide();
-    }
-    else if (dist_type == 4) { // Constant
+    } else if (dist_type == 4) { // Constant
         poiLambdaLine->hide();
         expBetaLine->hide();
         powAlphaLine->hide();
@@ -686,8 +688,7 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         param1Label->setText("Fixed degree:");
         param1Label->show();
         conValueLine->show();
-    }
-    else if (dist_type == 5) { // Small world
+    } else if (dist_type == 5) { // Small world
         poiLambdaLine->hide();
         expBetaLine->hide();
         powAlphaLine->hide();
@@ -700,6 +701,19 @@ void MainWindow::changeNetworkParameters(int dist_type) {
         param2Label->setText("Shuffled fraction:");
         smwKLine->show();
         smwBetaLine->show();
+    } else if (dist_type == 6) { // User-defined
+        poiLambdaLine->hide();
+        expBetaLine->hide();
+        powAlphaLine->hide();
+        powKappaLine->hide();
+        conValueLine->hide();
+        smwKLine->hide();
+        smwBetaLine->hide();
+
+        param1Label->hide();
+        param1Label->setText("");
+        param2Label->hide();
+        param2Label->setText("");
     }
 }
 

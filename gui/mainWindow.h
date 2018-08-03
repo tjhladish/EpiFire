@@ -30,6 +30,7 @@
 #include "../src/Simulator.h"
 #include "../src/Percolation_Sim.h"
 #include "../src/ChainBinomial_Sim.h"
+#include "textEditorDialog.h"
 
 #include <math.h>
 #include <time.h>
@@ -79,6 +80,7 @@ class PlotView;
 class GraphWidget;
 class BackgroundThread;
 class AnalysisDialog;
+class TextEditorDialog;
 
 void makeReadonly(QLineEdit*);
 void makeEditable(QLineEdit*);
@@ -91,6 +93,7 @@ class MainWindow : public QMainWindow
 
     friend class BackgroundThread;
     friend class AnalysisDialog;
+    friend class TextEditorDialog;
 
         public:
         MainWindow();
@@ -243,6 +246,8 @@ class MainWindow : public QMainWindow
         PlotView* statePlot;
         PlotView* histPlot;
         void addStateData();
+
+        TextEditorDialog* degDistDialog;
 
         // Helper functions
         double calculate_T_crit();

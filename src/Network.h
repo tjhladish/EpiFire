@@ -86,7 +86,7 @@ class Network
         /***************************************************************************
          * Network Accessor Functions (Simple)
          **************************************************************************/
-        inline int              get_id() { return id; }
+        inline int              get_id() const { return id; }
         inline string           get_name() { return name; }
                                  // # of nodes in the network
         inline int              size() {
@@ -228,7 +228,7 @@ class Network
 
                                  // output a graphviz file
         void graphviz(string filename);
-        void dumper();           // print the network object contents in the terminal
+        void dumper() const;     // print the network object contents in the terminal
 
         /***************************************************************************
          * Network Properties
@@ -318,38 +318,39 @@ class Node
 
         void set_network( Network* network );
 
-        inline int get_id() { return id; }
+        inline int get_id() const { return id; }
         inline string get_name() {  return name; }
-        inline Network* get_network() { return network; }
-        inline vector<Edge*> get_edges_in() { return edges_in; }
-        inline vector<Edge*> get_edges_out() { return edges_out; }
-        inline vector<double> get_loc() { return loc; }
-        inline stateType get_state()   { return state; }
+        inline Network* get_network() const { return network; }
+        inline vector<Edge*> get_edges_in() const { return edges_in; }
+        inline vector<Edge*> get_edges_out() const { return edges_out; }
+        inline vector<double> get_loc() const { return loc; }
+        inline stateType get_state() const { return state; }
 
         inline void set_loc(const vector<double>& newloc) { this->loc = newloc; }
         inline void set_state(stateType s) { this->state = s; }
 
         double mean_min_path();
 
-        vector<double> min_paths(vector<Node*>& node_set); // infinite distances == -1 
+        vector<double> min_paths(vector<Node*>& node_set) const; // infinite distances == -1 
 
         void add_stubs(int deg);
 
         Edge* get_rand_edge();   // get a random outbound edge
-        vector<Node*> get_neighbors ();
-        bool is_neighbor(Node* node2);
+        vector<Node*> get_neighbors () const;
+        bool is_neighbor(Node* node2) const;
                                  // a->connect_to(b) == b->connect_to(a) for undirected networks
         void connect_to (Node* end);
+        bool disconnect_from (Node* end); // true if they were connected, false if not
         bool change_neighbors(Node* old_neighbor, Node* new_neighbor);
         bool operator==( const Node& n2 );
         friend ostream& operator<< (ostream &out, Node* node);
-        void dumper();
+        void dumper() const;
 
         double min_path(Node* dest);
 
         Edge* add_stub_out();
         string get_name_or_id();
-        int deg();
+        int deg() const;
 
     private:
         Node();
@@ -368,8 +369,8 @@ class Node
         void _add_outbound_edge (Edge* edge);
         void _del_outbound_edge (Edge* outbound);
 
-        vector<double> _min_paths(vector<Node*>& node_set); // infinite distances == -1 
-        vector<double> _min_unweighted_paths(vector<Node*>& node_set); // infinite distances == -1 
+        vector<double> _min_paths(vector<Node*>& node_set) const; // infinite distances == -1 
+        vector<double> _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1 
 };
 
 
@@ -386,11 +387,11 @@ class Edge
         void delete_edge();      //destroys edge (A to B), leaves complement (B to A)
         void disconnect_nodes(); //destroys edge & its complement
 
-        inline int get_id() { return id; };
-        inline double get_cost() { return cost; };
-        inline Node* get_start() { return start; };
-        inline Node* get_end() { return end; };
-        inline Network* get_network() {return network; };
+        inline int get_id() const { return id; };
+        inline double get_cost() const { return cost; };
+        inline Node* get_start() const { return start; };
+        inline Node* get_end() const { return end; };
+        inline Network* get_network() const {return network; };
 
         void set_cost(double c);
 
@@ -401,7 +402,7 @@ class Edge
         bool is_stub();
         bool operator==( const Edge& e2 );
         friend ostream& operator<< (ostream &out, Edge* edge);
-        void dumper();
+        void dumper() const;
 
     private:
         Edge(Node* start , Node* end);
