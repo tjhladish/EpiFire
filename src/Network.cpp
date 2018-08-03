@@ -948,14 +948,14 @@ vector<stateType> Network::get_node_states() {
 }
 
 
-void Network::dumper() {
+void Network::dumper() const {
     cerr << "Dumping network:\n";
     cerr << "name => " << name << "\n";
     cerr << "id => " << id << "\n";
     cerr << "n => " << node_list.size() << endl;
     cerr << "directed => " << directed  << endl;
     cerr << "nodes => \n";
-    vector <Node*>::iterator itr;
+    vector <Node*>::const_iterator itr;
     for ( itr = node_list.begin(); itr != node_list.end(); itr++ ) (*itr)->dumper();
 }
 
@@ -1309,7 +1309,7 @@ string Node::get_name_or_id () {
 }
 
 
-int Node::deg () {
+int Node::deg () const {
     return edges_out.size();
 }
 
@@ -1320,7 +1320,7 @@ Edge* Node::get_rand_edge() {
 }
 
 
-vector<Node*> Node::get_neighbors () {
+vector<Node*> Node::get_neighbors () const {
     vector<Node*> neighbors;
     for (unsigned int i = 0; i < edges_out.size(); i++) {
         neighbors.push_back(edges_out[i]->end);
@@ -1329,7 +1329,7 @@ vector<Node*> Node::get_neighbors () {
 }
 
 
-bool Node::is_neighbor (Node* node2) {
+bool Node::is_neighbor (Node* node2) const {
     vector<Node*> neighbors = get_neighbors();
     for (unsigned int i = 0; i < neighbors.size(); i++) if (neighbors[i] == node2) return true;
     return false;
@@ -1384,6 +1384,25 @@ void Node::connect_to (Node* end) {
 }
 
 
+bool Node::disconnect_from (Node* end) {
+    set<Edge*> edges_to_delete;
+    for(Edge* e: get_edges_out()) {
+        if (e->get_end() == end) {
+            edges_to_delete.insert(e);
+            if (not get_network()->is_directed()) {
+                edges_to_delete.insert(e->get_complement());
+            }
+        }
+    }
+    bool were_connected = (bool) edges_to_delete.size(); // false if 0, true otherwise
+    while (edges_to_delete.size() > 0) {
+        (*edges_to_delete.begin())->delete_edge();
+        edges_to_delete.erase(edges_to_delete.begin());
+    }
+    return were_connected;
+}
+
+
 void Node::_add_inbound_edge (Edge* edge) {
     edges_in.push_back(edge);
     network->set_topology_altered(true);
@@ -1430,7 +1449,7 @@ ostream& operator<< (ostream &out, Node* node) {
 }
 
 
-void Node::dumper() {
+void Node::dumper() const {
 
     cerr << "\tname => " << name << endl;
     cerr << "\tid => "<< id << endl;
@@ -1439,7 +1458,7 @@ void Node::dumper() {
     copy( loc.begin(), loc.end(), ostream_iterator<double>(cerr, " "));
     cerr << endl;
 
-    vector<Edge*>::iterator itr;
+    vector<Edge*>::const_iterator itr;
 
     cerr << "\tedges out => \n";
     for(itr = edges_out.begin(); itr != edges_out.end(); itr++ ) (*itr)->dumper();
@@ -1476,13 +1495,13 @@ double Node::min_path(Node* dest) {
 }
 
 
-vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) {
+vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) const {
     if (nodes.size() == 0) nodes = get_network()->node_list;
-    map <Node*, double> known_cost; 
-    queue<Node*> Q; // nodes to examine next
+    map <const Node*, double> known_cost; 
+    queue<const Node*> Q; // nodes to examine next
     vector<double> distances(nodes.size(), -1);
 
-    map <Node*, int> hits; // checking for existence is faster with a map
+    map <const Node*, int> hits; // checking for existence is faster with a map
     for (unsigned int i = 0; i < nodes.size(); i++) {
        hits[ nodes[i] ] = 1;
     }
@@ -1493,7 +1512,7 @@ vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) {
     int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
     while ( ! Q.empty() ) {
         if (get_network()->process_stopped) {vector<double> empty; return empty;}
-        Node* known_node = Q.front();
+        const Node* known_node = Q.front();
         Q.pop();
 
         //Get the outbound edges for this known node
@@ -1530,7 +1549,7 @@ vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) {
     return distances;
 }
 
-vector<double> Node::min_paths(vector<Node*>& nodes) {
+vector<double> Node::min_paths(vector<Node*>& nodes) const {
     if (network->is_weighted()) {
         return _min_paths(nodes);
     } else {
@@ -1540,12 +1559,12 @@ vector<double> Node::min_paths(vector<Node*>& nodes) {
 
 // Calculates length of the minimum path (if possible) between *this* and everything in *nodes*
 // If *nodes* is empty, default is all nodes
-vector<double> Node::_min_paths(vector<Node*>& nodes) {
+vector<double> Node::_min_paths(vector<Node*>& nodes) const {
     if (nodes.size() == 0) nodes = get_network()->node_list;
-    map <Node*, double> known_cost; //Per Dijkstra's Algorithm, these are the two lists
-    map <Node*, double>::iterator itr;
+    map <const Node*, double> known_cost; //Per Dijkstra's Algorithm, these are the two lists
+    map <const Node*, double>::iterator itr;
                                  //we need to keep track of
-    map <Node*, double> uncertain_cost;
+    map <const Node*, double> uncertain_cost;
 
                                  //the following initializes the 'uncertain' set with undefined values,
                                  //since we have no information about these nodes yet.
@@ -1565,7 +1584,7 @@ vector<double> Node::_min_paths(vector<Node*>& nodes) {
                                  //Loop through the nodes we know about.
         for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
                                  //key of the map is the node
-            Node* known_node = (*itr).first;
+            const Node* known_node = (*itr).first;
                                  //Get the outbound edges for this known node
 
             vector <Edge*> edges = known_node->edges_out;
@@ -1760,7 +1779,7 @@ ostream& operator<< (ostream &out, Edge* edge) {
 }
 
 
-void Edge::dumper () {
+void Edge::dumper () const {
     string space = "\t\t";
     string start_name = start->get_name_or_id();
     string end_name = ( end != NULL ) ? end->get_name_or_id() : "undef";
