@@ -114,11 +114,8 @@ void Network::delete_node(Node* node) {
 
 
 Node* Network::get_node(int node_id) {
-    assert((unsigned) node_id < node_list.size() );
-
-    Node* lucky_node = node_list[node_id];
-    if (lucky_node->id == node_id) {
-        return lucky_node;
+    if ((unsigned) node_id < node_list.size() and node_list[node_id]->id == node_id) {
+        return node_list[node_id];
     }
 
     vector<Node*>::iterator itr;
