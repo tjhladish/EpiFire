@@ -113,6 +113,11 @@ void Network::delete_node(Node* node) {
 }
 
 
+void Network::reset_node_ids() {
+    for (unsigned int i = 0; i < node_list.size(); ++i) node_list[i]->id = i; 
+}
+
+
 Node* Network::get_node(int node_id) {
     if ((unsigned) node_id < node_list.size() and node_list[node_id]->id == node_id) {
         return node_list[node_id];

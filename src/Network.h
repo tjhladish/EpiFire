@@ -212,6 +212,9 @@ class Network
         
         inline void set_topology_altered(bool flag) { _topology_altered = flag; }
 
+        // Re-assign node ids, so that they are guaranteed to be sequential integers.  
+        void reset_node_ids();
+
         /***************************************************************************
          * Network Input/Output (including visualization)
          **************************************************************************/
