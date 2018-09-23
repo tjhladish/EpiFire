@@ -10,9 +10,11 @@ OBJECTS=$(SOURCES:.cpp=.o)
 LIB=libsim.a
 
 all: $(SOURCES) $(LIB)
-	
+
+ARCHIVE ?= $(AR) -rv
+
 $(LIB): $(OBJECTS) 
-	$(AR) -rv $(LIB) $(OBJECTS)
+	$(ARCHIVE) $(LIB) $(OBJECTS)
 
 .cpp.o:
 	$(CC) $(CFLAGS) $(INCLUDE) $< -o $@
