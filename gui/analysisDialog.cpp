@@ -353,6 +353,21 @@ void AnalysisDialog::updateResultsAnalysis() {
 }
 
 
+void AnalysisDialog::updateGUI() {
+    if (componentCountData.isUpdated)   componentCountEdit  ->setText(QString::number( componentCountData.value ));
+    if (maxComponentSizeData.isUpdated) maxComponentSizeEdit->setText(QString::number( maxComponentSizeData.value ));
+    if (transitivityData.isUpdated)     transitivityEdit    ->setText(QString::number( transitivityData.value ));
+    if (diameterData.isUpdated)         diameterEdit        ->setText(QString::number( diameterData.value ));
+    if (meanDistanceData.isUpdated)     meanDistanceEdit    ->setText(QString::number( meanDistanceData.value ));
+
+    componentCountData.isUpdated   = false;
+    maxComponentSizeData.isUpdated = false;
+    transitivityData.isUpdated     = false;
+    diameterData.isUpdated         = false;
+    meanDistanceData.isUpdated     = false;
+}
+
+
 void AnalysisDialog::calculateComponentStats() {
     vector< vector<Node*> >& netComponents = mw->netComponents;
     if ( netComponents.empty() ) netComponents = network->get_components();
@@ -365,15 +380,16 @@ void AnalysisDialog::calculateComponentStats() {
         }
     }
 
-    componentCountEdit   ->setText(QString::number( count ));
-    maxComponentSizeEdit ->setText(QString::number( biggest ));
+    componentCountData   = {true, (double) count};
+    maxComponentSizeData = {true, (double) biggest};
 }
 
 
 void AnalysisDialog::calculateTransitivity() {
     if (!network) return;
     vector<Node*> empty;
-    transitivityEdit->setText(QString::number( network->transitivity(empty) ));
+    const double transitivity = network->transitivity(empty);
+    transitivityData = {true, transitivity};
 }
 
 
@@ -409,8 +425,9 @@ void AnalysisDialog::calculateDistances() {
         mean += node_mean;
     }
     mean /= pathLengths.size();
-    diameterEdit->setText(QString::number( diam ));
-    meanDistanceEdit->setText(QString::number( mean ));
+
+    diameterData     = {true, diam};
+    meanDistanceData = {true, mean};
 }
 
 int AnalysisDialog::find_epi_threshold() {
@@ -454,6 +471,7 @@ int AnalysisDialog::find_epi_threshold() {
 
 void AnalysisDialog::generate_comp_thread() {
     mw->setCursor(Qt::WaitCursor);
+
     mw->backgroundThread->setThreadType(BackgroundThread::COMPONENTS);
     mw->progressDialog->setLabelText("Determining network components");
     mw->backgroundThread->start();

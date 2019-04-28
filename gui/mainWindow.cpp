@@ -110,6 +110,8 @@ MainWindow::MainWindow() {
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(netDoneUpdate(bool)));
     connect(backgroundThread,SIGNAL(completed(bool)),this,SLOT(updateNetworkPlot()));
     connect(backgroundThread,SIGNAL(finished()), this, SLOT(resetCursor()));
+    connect(backgroundThread,SIGNAL(finished()), netAnalysisDialog, SLOT(updateGUI()));
+
     connect(this, SIGNAL(progressUpdated(int)),progressDialog,SLOT(setValue(int)));
     connect(progressDialog,SIGNAL(canceled()),this,SLOT(stopBackgroundThread()));
     connect(progressDialog,SIGNAL(accepted()),this,SLOT(disableCentralWidget()));

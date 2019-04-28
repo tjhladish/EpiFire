@@ -12,6 +12,11 @@
 class MainWindow;
 class BackgroundThread;
 
+struct BT_Data {
+    bool isUpdated;
+    double value;
+};
+
 class AnalysisDialog: public QDialog {
     Q_OBJECT
 
@@ -32,6 +37,7 @@ class AnalysisDialog: public QDialog {
         void calculateTransitivity();
         void generate_dist_thread();
         void calculateDistances();
+        void updateGUI();
 
         // Results analysis slots
         void analyzeResults();
@@ -60,6 +66,12 @@ class AnalysisDialog: public QDialog {
         QLineEdit* transitivityEdit;
         QLineEdit* diameterEdit;
         QLineEdit* meanDistanceEdit;
+
+        BT_Data componentCountData;
+        BT_Data maxComponentSizeData;
+        BT_Data transitivityData;
+        BT_Data diameterData;
+        BT_Data meanDistanceData;
 
         QPushButton* componentButton1;
         QPushButton* componentButton2;
