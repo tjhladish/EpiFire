@@ -1505,7 +1505,7 @@ double Node::min_path(Node* dest) {
 }
 
 
-vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) const {
+map<const Node*,double> Node::_min_unweighted_paths(vector<Node*>& nodes) const {
     if (nodes.size() == 0) nodes = get_network()->node_list;
     map <const Node*, double> known_cost; 
     queue<const Node*> Q; // nodes to examine next
@@ -1521,7 +1521,7 @@ vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) const {
 
     int j = hits.count(this); //How many shortest paths we know for nodes in 'nodes' variable
     while ( ! Q.empty() ) {
-        if (get_network()->process_stopped) {vector<double> empty; return empty;}
+        if (get_network()->process_stopped) {return known_cost;}
         const Node* known_node = Q.front();
         Q.pop();
 
@@ -1540,36 +1540,45 @@ vector<double> Node::_min_unweighted_paths(vector<Node*>& nodes) const {
                     j++;
                 }
                 if (j == (int) nodes.size()) { // we've found all the nodes we want
-                    for ( unsigned int i=0; i<nodes.size(); i++) {
-                        //if (known_cost[nodes[i]] > 255) cerr << "large cost: " << known_cost[nodes[i]] << endl;
-                        distances[i] = known_cost[nodes[i]];
-                    }
-                    return distances;
+                    return known_cost;
                 }
             }
         }
     }
 
+    return known_cost;
+}
+
+
+map<const Node*,double> Node::min_path_map(vector<Node*>& nodes) const {
+    map <const Node*, double> known_cost;
+    if (network->is_weighted()) {
+        known_cost = _min_paths(nodes);
+    } else {
+        known_cost = _min_unweighted_paths(nodes);
+    }
+
+    return known_cost;
+}
+
+
+vector<double> Node::min_paths(vector<Node*>& nodes) const {
+    map <const Node*, double> known_cost = this->min_path_map(nodes);
+
+    vector<double> distances(nodes.size(), -1);
     for ( unsigned int i=0; i<nodes.size(); i++) {
         if (known_cost.count(nodes[i]) == 1) {
-            //if (known_cost[nodes[i]] > 255) cerr << "large cost: " << known_cost[nodes[i]] << endl;
             distances[i] = known_cost[nodes[i]];
         }
     }
+
     return distances;
 }
 
-vector<double> Node::min_paths(vector<Node*>& nodes) const {
-    if (network->is_weighted()) {
-        return _min_paths(nodes);
-    } else {
-        return _min_unweighted_paths(nodes);
-    }
-}
 
 // Calculates length of the minimum path (if possible) between *this* and everything in *nodes*
 // If *nodes* is empty, default is all nodes
-vector<double> Node::_min_paths(vector<Node*>& nodes) const {
+map<const Node*,double> Node::_min_paths(vector<Node*>& nodes) const {
     if (nodes.size() == 0) nodes = get_network()->node_list;
     map <const Node*, double> known_cost; //Per Dijkstra's Algorithm, these are the two lists
     map <const Node*, double>::iterator itr;
@@ -1588,7 +1597,7 @@ vector<double> Node::_min_paths(vector<Node*>& nodes) const {
     int j = 0;
                                  //As long as there are nodes with uncertain min costs
     while ( j++ < (signed) nodes.size() ) {
-        if (get_network()->process_stopped) {vector<double> empty; return empty;}
+        if (get_network()->process_stopped) {return known_cost;}
                                  
         Node* min = NULL;       
                                  //Loop through the nodes we know about.
@@ -1631,14 +1640,7 @@ vector<double> Node::_min_paths(vector<Node*>& nodes) const {
         if ((unsigned) size == known_cost.size()) break;
     }                            //test  this->id = start;
 
-    int n = nodes.size();
-    vector<double> distances(n,-1);
-    for ( int i=0; i<n; i++) {
-        if ( known_cost.count(nodes[i]) ) {
-            distances[i] = known_cost[nodes[i]];
-        }
-    }
-    return distances;
+    return known_cost;
 }
 
 

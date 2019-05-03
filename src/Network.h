@@ -133,7 +133,7 @@ class Network
         vector<Node*> get_component(Node* node);  // get the component this node is in
         vector< vector<Node*> > get_components(); // get all components
         vector<Node*> get_biggest_component();
-        
+
         inline bool topology_altered() { return _topology_altered; }
         // vector< vector<Node*> > get_components(){};
 
@@ -210,10 +210,10 @@ class Network
         bool shuffle_edges(double frac);
 
         void set_node_states(vector<stateType> &states);
-        
+
         inline void set_topology_altered(bool flag) { _topology_altered = flag; }
 
-        // Re-assign node ids, so that they are guaranteed to be sequential integers.  
+        // Re-assign node ids, so that they are guaranteed to be sequential integers.
         void reset_node_ids();
 
         /***************************************************************************
@@ -263,7 +263,7 @@ class Network
         bool is_weighted();      // do any edges have edge costs other than 1?
         double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
-                               
+
                                  // distances == edge costs
         void calculate_distances( vector<Node*>& destinations, vector< vector<double> >& distances );
         void print_distances(vector<Node*>& full_node_set);
@@ -294,7 +294,7 @@ class Network
         int node_id_counter;
         int edge_id_counter;
         bool _assign_deg_series();
-        
+
         // The network has no stubs, but gen_deg_dist (a normalized degree distribution
         // to draw deviates from) has already been stored.
         bool _rand_connect();
@@ -309,7 +309,7 @@ class Node
 {
     friend class Network;
     friend class Edge;
-    
+
     public:
 
         inline bool is_stopped() {return network->is_stopped();}
@@ -335,7 +335,11 @@ class Node
 
         double mean_min_path();
 
-        vector<double> min_paths(vector<Node*>& node_set) const; // infinite distances == -1 
+        // for path length calculations, infinite distances == -1
+        map<const Node*,double> min_path_map(vector<Node*>& node_set) const;
+        map<const Node*,double> min_path_map() const {vector<Node*> tmp; return min_path_map(tmp);}
+        vector<double> min_paths(vector<Node*>& node_set) const;
+        vector<double> min_paths() const {vector<Node*> tmp; return min_paths(tmp);}
 
         void add_stubs(int deg);
 
@@ -373,8 +377,8 @@ class Node
         void _add_outbound_edge (Edge* edge);
         void _del_outbound_edge (Edge* outbound);
 
-        vector<double> _min_paths(vector<Node*>& node_set) const; // infinite distances == -1 
-        vector<double> _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1 
+        map<const Node*,double> _min_paths(vector<Node*>& node_set) const; // infinite distances == -1
+        map<const Node*,double> _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1
 };
 
 
