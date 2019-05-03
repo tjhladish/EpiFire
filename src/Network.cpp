@@ -32,6 +32,9 @@ Network::Network( string name, netType directed) {
 }
 
 
+Network::Network(netType directed) : Network("", directed) { }
+
+
 Network* Network::duplicate() {
     Network* dup = new Network( name, directed );
     dup->unit_edges         = unit_edges;
