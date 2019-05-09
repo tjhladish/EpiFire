@@ -9,7 +9,8 @@
 #include <iterator>
 #include <iomanip>
 #include <fstream>
-#include "MersenneTwister.h"
+#include <iostream>
+#include <random>
 
 using namespace std;
 
@@ -77,13 +78,13 @@ vector<double> gen_trunc_poisson (double lambda, int min, int max);
 vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
 
-int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
-int rand_uniform_int (int min, int max, MTRand* mtrand);
-double rand_uniform (double min, double max, MTRand* mtrand);
-double rand_exp (double lambda, MTRand* mtrand);
-int rand_binomial (int n, double p, MTRand* mtrand);
+int rand_nonuniform_int (vector<double> dist, mt19937* rng);
+int rand_uniform_int (int min, int max, mt19937* rng);
+double rand_uniform (double min, double max, mt19937* rng);
+double rand_exp (double lambda, mt19937* rng);
+int rand_binomial (int n, double p, mt19937* rng);
 
-void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
+void rand_nchoosek(int n, vector<int>& sample, mt19937* rng);
 double normal_pdf(double x, double mu, double var);
 double normal_cdf(double x, double mu, double var);
  
@@ -190,9 +191,12 @@ vector<double> read_vector_file(string filename);
 
 vector<vector<double> > read_2D_vector_file(string filename, char sep);
 
-template <typename T>
-inline void shuffle(vector<T> & my_vector, MTRand* mtrand) {
+template <typename T> //TODO: could use new shuffle algorithm
+inline void shuffle(vector<T> & my_vector, std::mt19937* rng) {
     int max = my_vector.size() - 1;
-    for (int i = max; i >= 0; i-- ) swap(my_vector[i], my_vector[ mtrand->randInt(i) ]);
+    for (int i = max; i >= 0; i-- ) {
+        std::uniform_int_distribution<> dist(0, i);
+        swap(my_vector[i], my_vector[ dist(*rng) ]);
+    }
 }
 #endif

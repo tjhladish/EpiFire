@@ -45,7 +45,7 @@ class Gillespie_MassAction_Sim {
         //vector<float> Transmissions;
         double Now;                 // Current "time" in simulation
 
-        MTRand mtrand;              // RNG
+        std::mt19937 rng;              // RNG
 
         void run_simulation() {
 //            int day = -1;
@@ -86,12 +86,12 @@ class Gillespie_MassAction_Sim {
             Compartments[0]--;      // decrement susceptibles
             Compartments[1]++;      // increment infecteds
                                     // time to recovery
-            double Tr = rand_exp(GAMMA, &mtrand) + Now;
+            double Tr = rand_exp(GAMMA, &rng) + Now;
                                     // time to next contact
-            double Tc = rand_exp(BETA, &mtrand) + Now;
+            double Tc = rand_exp(BETA, &rng) + Now;
             while ( Tc < Tr ) {     // does contact occur before recovery?
                 add_event(Tc, 'c'); // potential transmission event
-                Tc += rand_exp(BETA, &mtrand);
+                Tc += rand_exp(BETA, &rng);
             }
             add_event(Tr, 'r' );
             //Transmissions.push_back(Now);
@@ -112,10 +112,10 @@ class Gillespie_MassAction_Sim {
             if (event.type == 'r') {    // recovery event
                 Compartments[1]--;      // decrement Infected class
                 Compartments[2]++;      // increment Recovered class
-            } else {                    // event type must be 'c'
-                                 
-                // N-2 because person can't self-infect, and because randint includes endpoints
-                int contact = mtrand.randInt(N-2) + 1; // add 1 b/c there's no person 0
+            } else {                    // event type must be 'c'         
+                // N-1 because person can't self-infect
+                std::uniform_int_distribution<> dist(1, N-1);
+                int contact = dist(rng);
                 if ( is_susceptible(contact) ) infect();
 
             }

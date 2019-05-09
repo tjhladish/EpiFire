@@ -9,8 +9,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 int Network::id_counter = 0;
-MTRand Network::mtrand;          // single instance of random number generator for entire program run
-// the rng can be seeded at any time by calling mtrand->seed(your_seed);
+std::mt19937 Network::rng;          // single instance of random number generator for entire program run
+// the rng can be seeded at any time by calling rng.seed(your_seed);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -26,7 +26,6 @@ Network::Network( string name, netType directed) {
     this->node_id_counter = 0;
     this->edge_id_counter = 0;
     this->_topology_altered=false;
-    this->mtrand = mtrand;
     this->process_stopped = false;
     this->known_nodes = 0;
 }
@@ -41,7 +40,6 @@ Network* Network::duplicate() {
     dup->node_id_counter    = node_id_counter;
     dup->edge_id_counter    = edge_id_counter;
     dup->_topology_altered  = _topology_altered;
-    dup->mtrand             = mtrand;
     dup->process_stopped    = process_stopped;
     dup->known_nodes        = known_nodes;
     dup->gen_deg_dist       = gen_deg_dist;
@@ -219,10 +217,10 @@ bool Network::small_world(int N, int K, double beta) {
             Node* node = nodes[i];
             int degree = node->deg();
             // How many of node's edges will be shuffled?
-            int m = rand_binomial( degree, beta, &mtrand );
+            int m = rand_binomial( degree, beta, &rng );
             // Which edges will be shuffled?
             vector<int> edge_indeces(m);
-            rand_nchoosek( degree, edge_indeces, &mtrand );
+            rand_nchoosek( degree, edge_indeces, &rng );
             
             vector<Edge*> edges = node->get_edges_out();
             for (unsigned int e=0; e<edge_indeces.size(); e++) {
@@ -263,10 +261,11 @@ bool Network::erdos_renyi(double lambda) {
     if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
+    std::uniform_real_distribution<> dist(0,1); //TODO actually [0,1)
     for (int a = 0; a < n - 1; a++) {
         if (is_stopped() ) { return false; }
         for (unsigned int b = a + 1; b < nodes.size(); b++) {
-            if ( mtrand.rand() < p) {
+            if ( dist(rng) < p) {
                 nodes[a]->connect_to(nodes[b]);
             }
         }
@@ -284,12 +283,13 @@ bool Network::sparse_random_graph(double lambda) {
     long double p = lambda / (n-1);
     long double sd = sqrtl(n*lambda*(1-p));
     //sqrtl(n*(n-1)*p*(1-p)); // sometimes yields -nan (e.g. n=50000,lambda=5)
-                                 // randNorm(mean, variance)
-    double edge_ct = mtrand.randNorm(lambda * n, sd);
+    std::normal_distribution<> normal(lambda * n, sd);
+    double edge_ct = normal(rng);
                                  // we're increasing the degree of 2 nodes!
+    std::uniform_int_distribution<> dist(0, n - 1);
     for (int i = 0; i < edge_ct; i += 2) {
-        int a = mtrand.randInt(n - 1);
-        int b = mtrand.randInt(n - 1);
+        int a = dist(rng);
+        int b = dist(rng);
                                  // for undirected graphs, this makes
         node_list[a]->connect_to(node_list[b]);
                                  // an undirected edge
@@ -375,7 +375,7 @@ bool Network::rand_connect_stubs(vector<Edge*> stubs) {
     Edge* n;
 
     //shuffle the vector
-    shuffle(stubs, &mtrand);
+    shuffle(stubs, &rng);
 
     //connect stubs
     for (unsigned int i = 0; i < stubs.size() - 1; i += 2 ) {
@@ -417,13 +417,14 @@ bool Network::lose_loops() {
     //cerr << "Bad edge count: " << bad_edges.size() << endl;
 
     //shuffle the vector
+    shuffle(bad_edges, &rng);
     int max = bad_edges.size() - 1;
-    for (int i = max; i >= 0; i-- ) swap(bad_edges[i], bad_edges[ mtrand.randInt(i) ]);
 
     while ( bad_edges.size() > 0 ) {
         PROG( 50 + (int) (50 * (max - bad_edges.size()) / max) );
         m = bad_edges.size() - 1;
-        n = mtrand.randInt(  edges.size() - 1 );
+        std::uniform_int_distribution<> dist(0, edges.size() - 1);
+        n = dist(rng);
         if ( failed_attempts > 99 ) {
             cerr    << "It may be impossible to equilibriate a network with these parameters--"
                 << "couldn't get rid of any self-loops or multi-edges in the last 100 attempts"
@@ -611,12 +612,13 @@ bool Network::gen_deg_series(vector<int> &deg_series) {
     }
 
     for (unsigned int i = 0; i < deg_series.size(); i++ ) {
-        deg_series[i] = rand_nonuniform_int(gen_deg_dist, &mtrand);
+        deg_series[i] = rand_nonuniform_int(gen_deg_dist, &rng);
     }
 
     while ( sum(deg_series) % 2 == 1 ) {
-        int idx = mtrand.randInt( deg_series.size() - 1 );
-        deg_series[idx] = rand_nonuniform_int(gen_deg_dist, &mtrand);
+        std::uniform_int_distribution<> dist(0, deg_series.size() - 1);
+        int idx = dist(rng);
+        deg_series[idx] = rand_nonuniform_int(gen_deg_dist, &rng);
     }
     return true;
 }
@@ -865,7 +867,8 @@ vector<Edge*> Network::get_edges() {
 
 Node* Network::get_rand_node() {
     int max = node_list.size() - 1;
-    return node_list[ mtrand.randInt(max) ];
+    std::uniform_int_distribution<> dist(0, max);
+    return node_list[ dist(rng) ];
 }
 
 
@@ -922,7 +925,7 @@ bool Network::shuffle_edges(double frac) {
         }
         int num_pairs_to_shuffle = (int) (frac * edges.size()/2 + 0.5); // rounding instead of truncating
         vector<int> sample(num_pairs_to_shuffle);
-        rand_nchoosek((int) edge_pairs.size(), sample, &mtrand);
+        rand_nchoosek((int) edge_pairs.size(), sample, &rng);
 
         for (unsigned int i = 0; i < sample.size(); i++) {
             Edge* edge1 = edge_pairs[ sample[i] ].first;
@@ -1326,7 +1329,8 @@ int Node::deg () const {
 
 Edge* Node::get_rand_edge() {
     assert(deg() > 0);
-    return edges_out[ network->mtrand.randInt( deg() - 1 ) ];
+    std::uniform_int_distribution<> dist(0, deg() - 1);
+    return edges_out[ dist(network->rng) ];
 }
 
 

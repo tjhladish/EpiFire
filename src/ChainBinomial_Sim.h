@@ -87,7 +87,7 @@ class ChainBinomial_Sim: public Simulator
             vector<Node*> neighbors = node->get_neighbors();
             for (unsigned int i = 0; i<neighbors.size(); i++) {
                 if (neighbors[i]->get_state() == 0) {
-                    int t = rand_nonuniform_int(time_dist, mtrand) + 1;
+                    int t = rand_nonuniform_int(time_dist, rng) + 1;
                     if (t > infectious_period) {
                         continue;
                     } else {

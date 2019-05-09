@@ -45,7 +45,8 @@ class Percolation_Sim: public Simulator
                 vector<Node*> neighbors = inode->get_neighbors();
                 for (unsigned int j = 0; j < neighbors.size(); j++) {
                     Node* test = neighbors[j];
-                    if ( test->get_state() == S && mtrand->rand() < T ) {
+                    std::uniform_real_distribution<> dist(0,1);
+                    if ( test->get_state() == S && dist(*rng) < T ) {
                         test->set_state( I );
                         new_infected.push_back( test );
                     }

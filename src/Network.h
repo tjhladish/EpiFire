@@ -14,7 +14,7 @@
 #include <math.h>
 #include "Utility.h"
 #include <assert.h>
-#include "MersenneTwister.h"
+#include <random>
 #include <limits>
 
 #include "debug.h"
@@ -59,11 +59,11 @@ typedef int stateType;
 class Network
 {
     static int id_counter;       // remains in memory until end of the program
-    static MTRand mtrand;        // random number generator
     friend class Node;
     friend class Edge;
 
     public:
+        static std::mt19937 rng; // random number generator
         typedef enum { Undirected=0, Directed=1 } netType;
         typedef enum { NodeNames=0, NodeIDs=1 } outputType;
 
@@ -99,8 +99,8 @@ class Network
         }
         inline bool             is_directed() {return (bool) directed; }
                                  // get a pointer to the random number generator
-        inline MTRand*          get_rng() {
-            return &mtrand;
+        inline std::mt19937*    get_rng() {
+            return &rng;
         }
 
         /***************************************************************************
