@@ -134,8 +134,8 @@ double rand_uniform (double min, double max, std::mt19937* rng) {
 
 
 double rand_exp(double lambda, std::mt19937* rng) {
-    std::uniform_int_distribution<> dist(0, 1);
-    return -log(dist(*rng)) / lambda;
+    std::uniform_real_distribution<> dist(0, 1);
+    return -log(dist(*rng)) / lambda; //TODO: could return inf if 0 happens to be returned
 }
 
 

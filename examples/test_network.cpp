@@ -6,7 +6,6 @@
 
 #define N_NODES 1000 
 int main() {
-    std::mt19937 rng;
     for (int i = 0; i < 5; i++ ) {
         Network net("test", Network::Undirected );
         net.populate(N_NODES);

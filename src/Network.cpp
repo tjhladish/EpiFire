@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 int Network::id_counter = 0;
-std::mt19937 Network::rng;          // single instance of random number generator for entire program run
+std::mt19937 Network::rng = std::mt19937(time(0));          // single instance of random number generator for entire program run
 // the rng can be seeded at any time by calling rng.seed(your_seed);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -261,7 +261,7 @@ bool Network::erdos_renyi(double lambda) {
     if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
-    std::uniform_real_distribution<> dist(0,1); //TODO actually [0,1)
+    std::uniform_real_distribution<> dist(0,1);
     for (int a = 0; a < n - 1; a++) {
         if (is_stopped() ) { return false; }
         for (unsigned int b = a + 1; b < nodes.size(); b++) {

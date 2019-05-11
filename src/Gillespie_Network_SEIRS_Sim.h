@@ -45,6 +45,7 @@ class Gillespie_Network_SEIRS_Sim {
             beta = b;
             gamma = g;
             immunity_duration = im_dur; // Immunity duration is fixed (not exponentially distributed)
+            rng = std::mt19937(time(0));
             reset();
         }
 
@@ -81,7 +82,7 @@ class Gillespie_Network_SEIRS_Sim {
             return state_counts[EXPOSED] + state_counts[INFECTIOUS];
         }
 
-        int reset() {
+        void reset() {
             Now = 0.0;
            
             vector<Node*> nodes = network->get_nodes();
