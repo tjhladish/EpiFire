@@ -114,8 +114,7 @@ class Gillespie_MassAction_Sim {
                 Compartments[2]++;      // increment Recovered class
             } else {                    // event type must be 'c'         
                 // N-1 because person can't self-infect
-                std::uniform_int_distribution<> dist(1, N-1);
-                int contact = dist(rng);
+                int contact = rand_uniform_int(1, N-1, &rng);
                 if ( is_susceptible(contact) ) infect();
 
             }

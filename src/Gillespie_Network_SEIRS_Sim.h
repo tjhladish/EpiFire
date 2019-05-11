@@ -166,8 +166,7 @@ class Gillespie_Network_SEIRS_Sim {
                                  
                 vector<Node*> neighbors = node->get_neighbors();
                 if (neighbors.size() > 0) {
-                    std::uniform_int_distribution<> dist(0, neighbors.size() - 1);
-                    int rand_idx = dist(rng);
+                    int rand_idx = rand_uniform_int(0, neighbors.size() - 1, rng);
                     Node* contact = neighbors[rand_idx];
                     if ( contact->get_state() == SUSCEPTIBLE ) infect(contact);
                 }

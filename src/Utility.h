@@ -81,6 +81,7 @@ vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max)
 int rand_nonuniform_int (vector<double> dist, mt19937* rng);
 int rand_uniform_int (int min, int max, mt19937* rng);
 double rand_uniform (double min, double max, mt19937* rng);
+double rand_normal (double mean, double std_dev, mt19937* rng);
 double rand_exp (double lambda, mt19937* rng);
 int rand_binomial (int n, double p, mt19937* rng);
 
@@ -195,8 +196,7 @@ template <typename T> //TODO: could use new shuffle algorithm
 inline void shuffle(vector<T> & my_vector, std::mt19937* rng) {
     int max = my_vector.size() - 1;
     for (int i = max; i >= 0; i-- ) {
-        std::uniform_int_distribution<> dist(0, i);
-        swap(my_vector[i], my_vector[ dist(*rng) ]);
+        swap(my_vector[i], my_vector[ rand_uniform_int(0, i, rng) ]);
     }
 }
 #endif

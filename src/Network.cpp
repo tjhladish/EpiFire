@@ -261,11 +261,10 @@ bool Network::erdos_renyi(double lambda) {
     if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
-    std::uniform_real_distribution<> dist(0,1);
     for (int a = 0; a < n - 1; a++) {
         if (is_stopped() ) { return false; }
         for (unsigned int b = a + 1; b < nodes.size(); b++) {
-            if ( dist(rng) < p) {
+            if ( rand_uniform(0, 1, &rng) < p) {
                 nodes[a]->connect_to(nodes[b]);
             }
         }
@@ -283,13 +282,11 @@ bool Network::sparse_random_graph(double lambda) {
     long double p = lambda / (n-1);
     long double sd = sqrtl(n*lambda*(1-p));
     //sqrtl(n*(n-1)*p*(1-p)); // sometimes yields -nan (e.g. n=50000,lambda=5)
-    std::normal_distribution<> normal(lambda * n, sd);
-    double edge_ct = normal(rng);
+    double edge_ct = rand_normal(lambda * n, sd, &rng);
                                  // we're increasing the degree of 2 nodes!
-    std::uniform_int_distribution<> dist(0, n - 1);
     for (int i = 0; i < edge_ct; i += 2) {
-        int a = dist(rng);
-        int b = dist(rng);
+        int a = rand_uniform_int(0, n-1, &rng);
+        int b = rand_uniform_int(0, n-1, &rng);
                                  // for undirected graphs, this makes
         node_list[a]->connect_to(node_list[b]);
                                  // an undirected edge
@@ -423,8 +420,7 @@ bool Network::lose_loops() {
     while ( bad_edges.size() > 0 ) {
         PROG( 50 + (int) (50 * (max - bad_edges.size()) / max) );
         m = bad_edges.size() - 1;
-        std::uniform_int_distribution<> dist(0, edges.size() - 1);
-        n = dist(rng);
+        n = rand_uniform_int(0, edges.size() - 1, &rng);
         if ( failed_attempts > 99 ) {
             cerr    << "It may be impossible to equilibriate a network with these parameters--"
                 << "couldn't get rid of any self-loops or multi-edges in the last 100 attempts"
@@ -616,8 +612,7 @@ bool Network::gen_deg_series(vector<int> &deg_series) {
     }
 
     while ( sum(deg_series) % 2 == 1 ) {
-        std::uniform_int_distribution<> dist(0, deg_series.size() - 1);
-        int idx = dist(rng);
+        int idx = rand_uniform_int(0, deg_series.size() - 1, &rng);
         deg_series[idx] = rand_nonuniform_int(gen_deg_dist, &rng);
     }
     return true;
@@ -867,8 +862,7 @@ vector<Edge*> Network::get_edges() {
 
 Node* Network::get_rand_node() {
     int max = node_list.size() - 1;
-    std::uniform_int_distribution<> dist(0, max);
-    return node_list[ dist(rng) ];
+    return node_list[ rand_uniform_int(0, max, &rng) ];
 }
 
 
@@ -1329,8 +1323,7 @@ int Node::deg () const {
 
 Edge* Node::get_rand_edge() {
     assert(deg() > 0);
-    std::uniform_int_distribution<> dist(0, deg() - 1);
-    return edges_out[ dist(network->rng) ];
+    return edges_out[ rand_uniform_int(0, deg() - 1, network->get_rng()) ];
 }
 
 

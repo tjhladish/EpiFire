@@ -98,8 +98,7 @@ vector<double> gen_trunc_exponential(double lambda, int min, int max) {
 
 int rand_nonuniform_int(vector<double> dist, std::mt19937* rng) {
     double last = 0;
-    std::uniform_real_distribution<> dis(0,1);
-    double rand = dis(*rng);
+    double rand = rand_uniform(0, 1, rng);
     for (unsigned int i = 0; i < dist.size(); i++ ) {
 
         double current = last + dist[i];
@@ -129,6 +128,11 @@ int rand_uniform_int (int min, int max, std::mt19937* rng) {
    
 double rand_uniform (double min, double max, std::mt19937* rng) {
     std::uniform_real_distribution<> dist(min, max);
+    return dist(*rng);
+}
+
+double rand_normal(double mean, double std_dev, std::mt19937* rng) {
+    std::normal_distribution<> dist(mean, std_dev);
     return dist(*rng);
 }
 
@@ -163,9 +167,8 @@ int rand_binomial (int n, double p, std::mt19937* rng) {
     int x = 0;
     double c = log( 1 - p ); // p can't be 0, but we've already checked that
 
-    std::uniform_real_distribution<> dist(0,1);
     while ( y <= n ) {
-        double u = dist(*rng);
+        double u = rand_uniform(0, 1, rng);
         //assert(u > 0.0);
         y += (int) (log(u)/c) + 1;
         if (y > n) {
@@ -194,9 +197,8 @@ void rand_nchoosek(int N, vector<int>& sample, std::mt19937* rng) {
     int lastidx=0;
     int i=0;
 
-    std::uniform_real_distribution<> dist(0,1);
     while ( k >= 2 ) {
-        double V = dist(*rng);
+        double V = rand_uniform(0, 1, rng);
         int S=0;
         double quot = top/Nreal;
         while( quot > V ) {
@@ -212,8 +214,7 @@ void rand_nchoosek(int N, vector<int>& sample, std::mt19937* rng) {
     if ( k == 1 ) {
         // the following line had (newidx+1) instead of lastidx before, which
         // produced incorrect results when N == 1; this, I believe, is correct
-        std::uniform_real_distribution<> dist(0, (int) Nreal);
-        sample[i++] = lastidx + (int) dist(*rng);
+        sample[i++] = lastidx + (int) rand_uniform(0, (int) Nreal, rng);
     }
 }
 
