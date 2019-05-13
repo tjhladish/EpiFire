@@ -1,4 +1,5 @@
 #include "mainWindow.h"
+#include <QRandomGenerator>
 #include <map>
 
 /*#############################################################################
@@ -51,6 +52,7 @@ MainWindow::MainWindow() {
     createPlotPanel();
 
     network = new Network("mynetwork",Network::Undirected);
+    Network::rng.seed(QRandomGenerator::global()->generate64());
     simulator = NULL;
     networkPlot = new GraphWidget();
     maxNodesToPlot = 40000;
