@@ -52,7 +52,7 @@ MainWindow::MainWindow() {
     createPlotPanel();
 
     network = new Network("mynetwork",Network::Undirected);
-    Network::rng.seed(QRandomGenerator::global()->generate64());
+    Network::seed(QRandomGenerator::global()->generate()); //TODO fully seed all bits?
     simulator = NULL;
     networkPlot = new GraphWidget();
     maxNodesToPlot = 40000;
