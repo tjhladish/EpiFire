@@ -9,7 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 int Network::id_counter = 0;
-std::mt19937 Network::rng = std::mt19937(time(0));          // single instance of random number generator for entire program run
+std::mt19937 Network::rng;          // single instance of random number generator for entire program run
 // the rng can be seeded at any time by calling rng.seed(your_seed);
 
 ////////////////////////////////////////////////////////////////////////////////

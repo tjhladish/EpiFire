@@ -45,7 +45,6 @@ class Gillespie_Network_SEIRS_Sim {
             beta = b;
             gamma = g;
             immunity_duration = im_dur; // Immunity duration is fixed (not exponentially distributed)
-            rng = std::mt19937(time(0));
             reset();
         }
 
@@ -166,7 +165,7 @@ class Gillespie_Network_SEIRS_Sim {
                                  
                 vector<Node*> neighbors = node->get_neighbors();
                 if (neighbors.size() > 0) {
-                    int rand_idx = rand_uniform_int(0, neighbors.size() - 1, rng);
+                    int rand_idx = rand_uniform_int(0, neighbors.size() - 1, &rng);
                     Node* contact = neighbors[rand_idx];
                     if ( contact->get_state() == SUSCEPTIBLE ) infect(contact);
                 }
