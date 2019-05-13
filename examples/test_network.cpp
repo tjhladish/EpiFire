@@ -8,7 +8,7 @@
 int main() {
     for (int i = 0; i < 5; i++ ) {
         Network net("test", Network::Undirected );
-        Network::rng.seed(time(0)); //seed RNG for network and simulator
+        Network::seed(); //seed RNG (can pass in a custom seed)
         net.populate(N_NODES);
         net.rand_connect_poisson(10);
 	    cout << "Network size: " << net.size()     << endl;

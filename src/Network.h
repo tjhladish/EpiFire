@@ -140,6 +140,8 @@ class Network
         /***************************************************************************
          * Network Modifier Functions
          **************************************************************************/
+        static void seed(); //seeds the PRNG with a random seed
+        static void seed(std::uint32_t seed); //seeds the PRNG with custom seed
         Node* add_new_node();    //creates new node and adds it to the network
         void populate(int n);    //add "n" new nodes to the network
                                  // add an existing node to the network

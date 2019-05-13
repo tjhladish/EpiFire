@@ -14,7 +14,7 @@ int main() {
 
     for ( int i = 0; i<sizes.size(); i++) {
         Network net("poisson", Network::Undirected); 
-        Network::rng.seed(time(0)); //seed RNG for network and simulator
+        Network::seed(); //seed RNG (can pass in a custom seed)
         net.populate(sizes[i]);
         net.fast_random_graph(10);
 

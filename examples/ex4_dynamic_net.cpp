@@ -19,7 +19,7 @@ int main() {
     // with size 10,000 and a poisson(5)
     // degree distribution
     Network net("name", Network::Undirected);
-    Network::rng.seed(time(0)); //seed RNG for network and simulator
+    Network::seed(); //seed RNG (can pass in a custom seed)
     net.populate(10000);
     net.fast_random_graph(5);
 
