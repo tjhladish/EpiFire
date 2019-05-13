@@ -3,6 +3,7 @@
 int main() {
     // Construct Network
     Network net("name", Network::Undirected);
+    Network::rng.seed(time(0)); //seed RNG for network and simulator
     net.populate(10000);
 
     // Let's connect the network using an arbitrary degree distribution
