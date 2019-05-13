@@ -33,7 +33,7 @@ class compTime {
 class Gillespie_MassAction_Sim {
     public:
                                     // constructor
-        Gillespie_MassAction_Sim( int n, double gamma, double beta) { N=n; GAMMA=gamma; BETA=beta; reset(); rng = std::mt19937(time(0));}
+        Gillespie_MassAction_Sim( int n, double gamma, double beta) { N=n; GAMMA=gamma; BETA=beta; reset();}
 
         int N;                      // population size
         double GAMMA;               // param for exponential recovery time
