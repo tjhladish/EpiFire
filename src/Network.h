@@ -220,7 +220,7 @@ class Network
          * Network Input/Output (including visualization)
          **************************************************************************/
                                  // read network structure from file
-        void read_edgelist(string filename, char sep = ',');
+        void read_edgelist(string filename, char sep = ',', bool alert_isolates = true);
         bool add_edgelist(std::ifstream&, char sep = ' ', string breaker = "BREAK");
                                  // write network to file
         void write_edgelist(string filename, outputType names_or_ids, char sep = ',');

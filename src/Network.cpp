@@ -56,7 +56,7 @@ Network* Network::duplicate() {
         node_copy->state = node->get_state();
         node_copy->set_network(dup);
 
-        // Create a stub for each outbound edge 
+        // Create a stub for each outbound edge
         // (since not all nodes have been created, we can't connect everything yet)
         node_copy->add_stubs( node->deg() );
         dup->node_list.push_back(node_copy);
@@ -117,7 +117,7 @@ void Network::delete_node(Node* node) {
 
 
 void Network::reset_node_ids() {
-    for (unsigned int i = 0; i < node_list.size(); ++i) node_list[i]->id = i; 
+    for (unsigned int i = 0; i < node_list.size(); ++i) node_list[i]->id = i;
 }
 
 
@@ -145,7 +145,7 @@ Node* Network::get_node_by_name(string node_name) {
 }
 
 
-bool Network::is_weighted() { 
+bool Network::is_weighted() {
     vector<Edge*> edges = get_edges();
     for( unsigned int i = 0; i<edges.size(); i++) {
         if (edges[i]->get_cost() != 1) {
@@ -223,12 +223,12 @@ bool Network::small_world(int N, int K, double beta) {
             // Which edges will be shuffled?
             vector<int> edge_indeces(m);
             rand_nchoosek( degree, edge_indeces, &mtrand );
-            
+
             vector<Edge*> edges = node->get_edges_out();
             for (unsigned int e=0; e<edge_indeces.size(); e++) {
                 // Get the current neighbor associated with this edge
                 Node* neighbor = edges[e]->get_end();
-                
+
                 // Make sure that there are nodes that can be connected to
                 int prospective_neighborhood = N - 1 - degree;
                 if (prospective_neighborhood > 0) {
@@ -260,7 +260,7 @@ bool Network::small_world(int N, int K, double beta) {
 // generates a poisson network vi the Erdos & Renyi algorithm
 bool Network::erdos_renyi(double lambda) {
     int n = size();
-    if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1 
+    if (lambda > n-1) return false; // mean degree can't be bigger than network size - 1
     double p = lambda / (n-1);
     vector<Node*> nodes = get_nodes();
     for (int a = 0; a < n - 1; a++) {
@@ -523,7 +523,7 @@ vector<Node*> Network::get_biggest_component() {
     for (unsigned int i = 0; i<all_comp.size(); i++) {
         if (all_comp[i].size() > big_comp.size()) big_comp = all_comp[i];
     }
-    
+
     return big_comp;
 }
 
@@ -565,7 +565,7 @@ vector<Node*> Network::get_component(Node* node) {
         	vector<Node*> output(cold_nodes.begin(), cold_nodes.end());
         	return output;
         }
-        
+
         vector<Node*> new_hot_nodes;
         for (unsigned int i = 0; i < hot_nodes.size(); i++) {
 
@@ -671,7 +671,7 @@ map<Node*, int> Network::k_shell_decomposition() {
                 vector<Edge*> edges_out = (*itr)->edges_out;
                 for (unsigned int i = 0; i < edges_out.size(); i++) {
                     // Decrement the tentative k-shell for this node's neighbors ...
-                    Node* neighbor = edges_out[i]->end; 
+                    Node* neighbor = edges_out[i]->end;
                     // ... but only if they're in the core
                     if (ks[neighbor] > current_shell) ks[neighbor]--;
                 }
@@ -710,7 +710,7 @@ map<string, int> Network::k_shell_decomposition_alt() {
             to_delete[i]->delete_node();
         }
         to_delete.clear();
-        
+
         if (hit == false) current_shell++;
         hit = false;
     }
@@ -791,7 +791,7 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
             }
         }
     }
-    double mean = grand_total / ct; 
+    double mean = grand_total / ct;
     return mean;
 }
 
@@ -806,7 +806,7 @@ void Network::calculate_distances(vector<Node*>& full_node_set, vector< vector<d
         for(unsigned int j = i+1; j < full_node_set.size(); j++ ) {
             node_set.push_back(full_node_set[j]);
         }
-        
+
         vector<double> empty;
         dist.push_back(empty);
 
@@ -1015,7 +1015,7 @@ bool Network::validate() {
 
 
 // read_edgelist currently supports only undirected networks
-void Network::read_edgelist(string filename, char sep) {
+void Network::read_edgelist(string filename, char sep, bool alert_isolates) {
     ifstream myfile(filename.c_str());
     std::stringstream ss;
     map<string,Node*> idmap;
@@ -1036,7 +1036,7 @@ void Network::read_edgelist(string filename, char sep) {
             } else if (fields.size() == 1) { // unconnected node
                 Node* node = this->add_new_node();
                 string name1 = strip(fields[0],whitespace);
-                cerr << "Found single node " << name1 << endl;
+                if (alert_isolates) cerr << "Found single node " << name1 << endl;
                 node->name = name1;
                 idmap[name1] = node;
                 continue;
@@ -1169,7 +1169,7 @@ void Network::read_adj_matrix(string filename, char sep) {
             vector<string> fields;
             split(line, sep, fields);
             const char whitespace[] = " \n\t\r";
-            
+
             if (net_size == 0) {
                 net_size = fields.size();
                 this->populate(net_size);
@@ -1214,7 +1214,7 @@ void Network::graphviz (string filename) {
     map< int, map <int, int> > seen_edges;
     pipe << graph_type << " NETWORK {\n\t\trankdir=LR;\n";
 
-    for (int i = 0; i<size(); i++) {    
+    for (int i = 0; i<size(); i++) {
         Node* node = node_list[i];
         int start = node->id;
 
@@ -1358,7 +1358,7 @@ bool Node::change_neighbors (Node* current, Node* future) {
             break;
         }
     }
-    
+
     if (edge_out == NULL) {
         return false;
     } else {
@@ -1507,7 +1507,7 @@ double Node::min_path(Node* dest) {
 
 map<const Node*,double> Node::_min_unweighted_paths(vector<Node*>& nodes) const {
     if (nodes.size() == 0) nodes = get_network()->node_list;
-    map <const Node*, double> known_cost; 
+    map <const Node*, double> known_cost;
     queue<const Node*> Q; // nodes to examine next
     vector<double> distances(nodes.size(), -1);
 
@@ -1598,8 +1598,8 @@ map<const Node*,double> Node::_min_paths(vector<Node*>& nodes) const {
                                  //As long as there are nodes with uncertain min costs
     while ( j++ < (signed) nodes.size() ) {
         if (get_network()->process_stopped) {return known_cost;}
-                                 
-        Node* min = NULL;       
+
+        Node* min = NULL;
                                  //Loop through the nodes we know about.
         for ( itr = known_cost.begin(); itr != known_cost.end(); itr++) {
                                  //key of the map is the node
