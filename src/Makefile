@@ -1,11 +1,11 @@
 -include local.mk
 
-CC=g++ 
-CFLAGS=-c -std=c++11 -O2 -Wall --pedantic
+CC=g++
+CFLAGS=-c -std=c++11 -O2 -Wall --pedantic -fPIC
 #CFLAGS=-c -std=c++11 -g -O0
-SOURCES= Network.cpp Utility.cpp 
+SOURCES= Network.cpp Utility.cpp
 INCLUDE= -I./
-LDFLAGS= 
+LDFLAGS=
 
 
 OBJECTS=$(SOURCES:.cpp=.o)
@@ -15,7 +15,7 @@ all: $(SOURCES) $(LIB)
 
 ARCHIVE ?= $(AR) -rv
 
-$(LIB): $(OBJECTS) 
+$(LIB): $(OBJECTS)
 	$(ARCHIVE) $(LIB) $(OBJECTS)
 
 .cpp.o:
@@ -23,4 +23,3 @@ $(LIB): $(OBJECTS)
 
 clean:
 	rm $(OBJECTS) $(LIB)
-
