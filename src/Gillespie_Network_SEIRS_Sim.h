@@ -59,7 +59,7 @@ class Gillespie_Network_SEIRS_Sim {
         vector<int> state_counts;   // S, E, I, R counts
         double Now;                 // Current "time" in simulation
 
-        std::mt19937 rng;              // RNG
+        mt19937 rng;              // RNG
 
         void run_simulation(double duration) {
             double start_time = Now;

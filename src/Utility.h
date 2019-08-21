@@ -105,28 +105,28 @@ vector<double> normalize_dist (vector<T> dist) {
 }
 
 template <typename T>
-inline std::string to_string (const T& t) {
-    std::stringstream ss;
+inline string to_string (const T& t) {
+    stringstream ss;
     ss << t;
     return ss.str();
 }
 
-inline float to_float(const std::string& s){
-    std::istringstream i(s);
+inline float to_float(const string& s){
+    istringstream i(s);
     float x = 0;
     i >> x;
     return x;
 }
 
-inline double to_double(const std::string& s){
-    std::istringstream i(s);
+inline double to_double(const string& s){
+    istringstream i(s);
     double x = 0;
     i >> x;
     return x;
 }
 
-inline int to_int(const std::string& s){
-    std::istringstream i(s);
+inline int to_int(const string& s){
+    istringstream i(s);
     int x = 0;
     i >> x;
     return x;
@@ -186,14 +186,14 @@ inline void cout_vector(vector<T> & my_vector, string sep = " ") {
 }
 
 
-inline double string2double(const std::string& s){ std::istringstream i(s); double x = 0; i >> x; return x; }
+inline double string2double(const string& s){ istringstream i(s); double x = 0; i >> x; return x; }
 
 vector<double> read_vector_file(string filename);
 
 vector<vector<double> > read_2D_vector_file(string filename, char sep);
 
 template <typename T> //TODO: could use new shuffle algorithm
-inline void shuffle(vector<T> & my_vector, std::mt19937* rng) {
+inline void shuffle(vector<T> & my_vector, mt19937* rng) {
     int max = my_vector.size() - 1;
     for (int i = max; i >= 0; i-- ) {
         swap(my_vector[i], my_vector[ rand_uniform_int(0, i, rng) ]);

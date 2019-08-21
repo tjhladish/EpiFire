@@ -45,7 +45,7 @@ class Gillespie_MassAction_Sim {
         //vector<float> Transmissions;
         double Now;                 // Current "time" in simulation
 
-        std::mt19937 rng;              // RNG
+        mt19937 rng;              // RNG
 
         void run_simulation() {
 //            int day = -1;
