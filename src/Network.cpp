@@ -1,6 +1,7 @@
 #include "Network.h"
 #include "Utility.h"
 #include <array>
+#include <functional>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -95,7 +96,7 @@ void Network::seed() {
     std::random_device rd; //supposedly has fallbacks; look into replacing with a more robust solution
     std::array<std::mt19937::result_type, std::mt19937::state_size> seed_data;
     std::generate_n(seed_data.data(), seed_data.size(), std::ref(rd));
-    std::seed_seq seed(std::begin(seed_data), std::end(seed_data));
+    std::seed_seq seed(std::begin(seed_data), std::end(seed_data)); //rng takes a seed_seq to fill bits initially
     rng.seed(seed);
 }
 
