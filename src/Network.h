@@ -25,6 +25,9 @@ using namespace std;
 class Edge;
 class Node;
 typedef int stateType;
+struct MapNodeComp { bool operator() (const Node* const& lhs, const Node* const& rhs) const; };
+typedef map<const Node*, double, MapNodeComp> DistanceMatrix;
+typedef map<const Node*, DistanceMatrix, MapNodeComp> PairwiseDistanceMatrix;
 
 /******************************************************************************
  * These classes have a natural heirarchy of Network > Node > Edge.  That means
@@ -266,6 +269,7 @@ class Network
 
                                  // distances == edge costs
         void calculate_distances( vector<Node*>& destinations, vector< vector<double> >& distances );
+        PairwiseDistanceMatrix calculate_distances_map();
         void print_distances(vector<Node*>& full_node_set);
         //                         // edge lengths assumed to be 1 -- much faster than calculate_distances!
         //vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
@@ -336,8 +340,8 @@ class Node
         double mean_min_path();
 
         // for path length calculations, infinite distances == -1
-        map<const Node*,double> min_path_map(vector<Node*>& node_set) const;
-        map<const Node*,double> min_path_map() const {vector<Node*> tmp; return min_path_map(tmp);}
+        DistanceMatrix min_path_map(vector<Node*>& node_set) const;
+        DistanceMatrix min_path_map() const {vector<Node*> tmp; return min_path_map(tmp);}
         vector<double> min_paths(vector<Node*>& node_set) const;
         vector<double> min_paths() const {vector<Node*> tmp; return min_paths(tmp);}
 
@@ -377,8 +381,8 @@ class Node
         void _add_outbound_edge (Edge* edge);
         void _del_outbound_edge (Edge* outbound);
 
-        map<const Node*,double> _min_paths(vector<Node*>& node_set) const; // infinite distances == -1
-        map<const Node*,double> _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1
+        DistanceMatrix _min_paths(vector<Node*>& node_set) const; // infinite distances == -1
+        DistanceMatrix _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1
 };
 
 
