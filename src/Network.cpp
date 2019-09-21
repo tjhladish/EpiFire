@@ -781,14 +781,12 @@ double Network::mean_dist(vector<Node*> node_set) {    // average distance betwe
     vector< vector<double> > distance_matrix;
     calculate_distances(node_set, distance_matrix);
 
-    double grand_total = 0;
+    double grand_total = 0.0;
     int ct = 0;
     for( unsigned int i=0; i < distance_matrix.size(); i++ ) {
         for( unsigned int j=0; j < distance_matrix[i].size(); j++ ) {
-            if (i != j) {  // don't consider distance from nodes to themselves
-                grand_total += distance_matrix[i][j];
-                ct++;
-            }
+            grand_total += distance_matrix[i][j];
+            ct++;
         }
     }
     double mean = grand_total / ct; 
