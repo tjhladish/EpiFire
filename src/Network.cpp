@@ -35,7 +35,7 @@ Network::Network( string name, netType directed) {
 Network::Network(netType directed) : Network("", directed) { }
 
 
-Network* Network::duplicate() {
+Network* Network::duplicate() const {
     Network* dup = new Network( name, directed );
     dup->unit_edges         = unit_edges;
     dup->node_id_counter    = node_id_counter;

@@ -72,10 +72,10 @@ class Network
          **************************************************************************/
         Network( netType directed );
         Network( string name, netType directed );
-        Network( const Network& net);
+        //Network( const Network& net); // doesn't seem to be implemented
         ~Network();
 
-        Network* duplicate();    // Return a copy, identical except for the network ID
+        Network* duplicate() const;    // Return a copy, identical except for the network ID
 
         /***************************************************************************
          * Network operators
@@ -90,7 +90,7 @@ class Network
         inline int              get_id() const { return id; }
         inline string           get_name() { return name; }
                                  // # of nodes in the network
-        inline int              size() {
+        inline int              size() const {
             return node_list.size();
         }
                                  // do all edges have same length or cost
@@ -261,7 +261,7 @@ class Network
                                  // if node_set is empty, use all nodes
         double transitivity(vector<Node*> node_set);
         bool is_weighted();      // do any edges have edge costs other than 1?
-        double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
+        double mean_dist( vector<Node*> node_set=vector<Node*>());      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
 
                                  // distances == edge costs
