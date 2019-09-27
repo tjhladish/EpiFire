@@ -6,9 +6,9 @@
 
 #define N_NODES 1000 
 int main() {
-    MTRand mtrand = MTRand();
     for (int i = 0; i < 5; i++ ) {
         Network net("test", Network::Undirected );
+        Network::seed(); //seed RNG (can pass in a custom seed)
         net.populate(N_NODES);
         net.rand_connect_poisson(10);
 	    cout << "Network size: " << net.size()     << endl;

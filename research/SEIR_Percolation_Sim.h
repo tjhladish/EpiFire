@@ -40,8 +40,7 @@ class SEIR_Percolation_Sim: public Percolation_Sim
                 Node* inode = infected[i];
                 vector<Node*> neighbors = inode->get_neighbors();
                 for (int j = 0; j < neighbors.size(); j++) {
-                    Node* test = neighbors[j];
-                    if ( test->get_state() == S && mtrand->rand() < T ) {
+                    if ( test->get_state() == S && rand_uniform(0, 1, rng) < T ) {
                         test->set_state( E );
                         new_exposed.push_back( test );
                     }

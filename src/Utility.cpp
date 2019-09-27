@@ -96,9 +96,9 @@ vector<double> gen_trunc_exponential(double lambda, int min, int max) {
 }
 
 
-int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
+int rand_nonuniform_int(vector<double> dist, std::mt19937* rng) {
     double last = 0;
-    double rand = mtrand->rand53();
+    double rand = rand_uniform(0, 1, rng);
     for (unsigned int i = 0; i < dist.size(); i++ ) {
 
         double current = last + dist[i];
@@ -119,19 +119,27 @@ int rand_nonuniform_int(vector<double> dist, MTRand* mtrand) {
 }
 
 
-int rand_uniform_int (int min, int max, MTRand* mtrand) {
+int rand_uniform_int (int min, int max, std::mt19937* rng) {
     // uniform integer on [min, max] (inclusive)
-    return mtrand->randInt( max - min ) + min;
+    std::uniform_int_distribution<> dist(min, max);
+    return dist(*rng);
 }
 
    
-double rand_uniform (double min, double max, MTRand* mtrand) {
-    return mtrand->rand( max - min ) + min;
+double rand_uniform (double min, double max, std::mt19937* rng) {
+    std::uniform_real_distribution<> dist(min, max);
+    return dist(*rng);
+}
+
+double rand_normal(double mean, double std_dev, std::mt19937* rng) {
+    std::normal_distribution<> dist(mean, std_dev);
+    return dist(*rng);
 }
 
 
-double rand_exp(double lambda, MTRand* mtrand) {
-    return -log(mtrand->rand()) / lambda;
+double rand_exp(double lambda, std::mt19937* rng) {
+    std::uniform_real_distribution<> dist(0, 1);
+    return -log(dist(*rng)) / lambda; //TODO: could return inf if 0 happens to be returned
 }
 
 
@@ -148,7 +156,7 @@ double rand_exp(double lambda, MTRand* mtrand) {
 // 5. If y < n, set x <-- x + 1, and goto 3.
 // 6. Return x.
 
-int rand_binomial (int n, double p, MTRand* mtrand) {
+int rand_binomial (int n, double p, std::mt19937* rng) {
     if ( p == 1.0 ) {
         return n;
     } else if ( p == 0.0 or n == 0 ) {
@@ -160,7 +168,7 @@ int rand_binomial (int n, double p, MTRand* mtrand) {
     double c = log( 1 - p ); // p can't be 0, but we've already checked that
 
     while ( y <= n ) {
-        double u = mtrand->rand53();
+        double u = rand_uniform(0, 1, rng);
         //assert(u > 0.0);
         y += (int) (log(u)/c) + 1;
         if (y > n) {
@@ -173,9 +181,9 @@ int rand_binomial (int n, double p, MTRand* mtrand) {
 
 
 // N is the size of the sample space--which includes 0, so the int "N" itself will never get
-// returned in the sample.  sample is an empty vector that needs to be of size k; mtrand
+// returned in the sample.  sample is an empty vector that needs to be of size k; rng
 // is a Mersenne Twister RNG.
-void rand_nchoosek(int N, vector<int>& sample, MTRand* mtrand) {
+void rand_nchoosek(int N, vector<int>& sample, std::mt19937* rng) {
 
     if (sample.size() == 0 ) return;
     int k = sample.size();       // k is specified by size of requested vector
@@ -190,7 +198,7 @@ void rand_nchoosek(int N, vector<int>& sample, MTRand* mtrand) {
     int i=0;
 
     while ( k >= 2 ) {
-        double V = mtrand->rand();
+        double V = rand_uniform(0, 1, rng);
         int S=0;
         double quot = top/Nreal;
         while( quot > V ) {
@@ -206,7 +214,7 @@ void rand_nchoosek(int N, vector<int>& sample, MTRand* mtrand) {
     if ( k == 1 ) {
         // the following line had (newidx+1) instead of lastidx before, which
         // produced incorrect results when N == 1; this, I believe, is correct
-        sample[i++] = lastidx + (int) mtrand->rand( (int) Nreal );
+        sample[i++] = lastidx + (int) rand_uniform(0, (int) Nreal, rng);
     }
 }
 

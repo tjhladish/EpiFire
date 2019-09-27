@@ -16,11 +16,10 @@ int main() {
     nodes[3]->connect_to(nodes[4]);
     nodes[3]->connect_to(nodes[5]);
     nodes[5]->connect_to(nodes[6]);
-    //net.fast_random_graph(2);
 
     PairwiseDistanceMatrix dist_map = net.calculate_distances_map();
 
-    /*
+    /* dist_map should contain:
     0 1 1 1 2 2 3
     1 0 1 2 3 3 4
     1 1 0 2 3 3 4
@@ -34,10 +33,12 @@ int main() {
         for (pair<const Node*, double> nd: dm.second) cerr << nd.second << " ";
         cerr << endl;
     }
+
     vector<int> sizes = {50, 100, 200, 1000};
 
     for (int size: sizes) {
         Network net(Network::Undirected);
+        Network::seed(); //seed RNG (can pass in a custom seed)
         net.populate(size);
         net.fast_random_graph(10);
 

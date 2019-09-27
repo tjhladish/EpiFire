@@ -9,7 +9,8 @@
 #include <iterator>
 #include <iomanip>
 #include <fstream>
-#include "MersenneTwister.h"
+#include <iostream>
+#include <random>
 
 using namespace std;
 
@@ -77,13 +78,14 @@ vector<double> gen_trunc_poisson (double lambda, int min, int max);
 vector<double> gen_trunc_exponential (double lambda, int min, int max);
 vector<double> gen_trunc_powerlaw (double alpha, double kappa, int min, int max);
 
-int rand_nonuniform_int (vector<double> dist, MTRand* mtrand);
-int rand_uniform_int (int min, int max, MTRand* mtrand);
-double rand_uniform (double min, double max, MTRand* mtrand);
-double rand_exp (double lambda, MTRand* mtrand);
-int rand_binomial (int n, double p, MTRand* mtrand);
+int rand_nonuniform_int (vector<double> dist, mt19937* rng);
+int rand_uniform_int (int min, int max, mt19937* rng);
+double rand_uniform (double min, double max, mt19937* rng);
+double rand_normal (double mean, double std_dev, mt19937* rng);
+double rand_exp (double lambda, mt19937* rng);
+int rand_binomial (int n, double p, mt19937* rng);
 
-void rand_nchoosek(int n, vector<int>& sample, MTRand* mtrand);
+void rand_nchoosek(int n, vector<int>& sample, mt19937* rng);
 double normal_pdf(double x, double mu, double var);
 double normal_cdf(double x, double mu, double var);
  
@@ -103,28 +105,28 @@ vector<double> normalize_dist (vector<T> dist) {
 }
 
 template <typename T>
-inline std::string to_string (const T& t) {
-    std::stringstream ss;
+inline string to_string (const T& t) {
+    stringstream ss;
     ss << t;
     return ss.str();
 }
 
-inline float to_float(const std::string& s){
-    std::istringstream i(s);
+inline float to_float(const string& s){
+    istringstream i(s);
     float x = 0;
     i >> x;
     return x;
 }
 
-inline double to_double(const std::string& s){
-    std::istringstream i(s);
+inline double to_double(const string& s){
+    istringstream i(s);
     double x = 0;
     i >> x;
     return x;
 }
 
-inline int to_int(const std::string& s){
-    std::istringstream i(s);
+inline int to_int(const string& s){
+    istringstream i(s);
     int x = 0;
     i >> x;
     return x;
@@ -184,15 +186,17 @@ inline void cout_vector(vector<T> & my_vector, string sep = " ") {
 }
 
 
-inline double string2double(const std::string& s){ std::istringstream i(s); double x = 0; i >> x; return x; }
+inline double string2double(const string& s){ istringstream i(s); double x = 0; i >> x; return x; }
 
 vector<double> read_vector_file(string filename);
 
 vector<vector<double> > read_2D_vector_file(string filename, char sep);
 
-template <typename T>
-inline void shuffle(vector<T> & my_vector, MTRand* mtrand) {
+template <typename T> //TODO: could use new shuffle algorithm
+inline void shuffle(vector<T> & my_vector, mt19937* rng) {
     int max = my_vector.size() - 1;
-    for (int i = max; i >= 0; i-- ) swap(my_vector[i], my_vector[ mtrand->randInt(i) ]);
+    for (int i = max; i >= 0; i-- ) {
+        swap(my_vector[i], my_vector[ rand_uniform_int(0, i, rng) ]);
+    }
 }
 #endif

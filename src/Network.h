@@ -14,7 +14,7 @@
 #include <math.h>
 #include "Utility.h"
 #include <assert.h>
-#include "MersenneTwister.h"
+#include <random>
 #include <limits>
 
 #include "debug.h"
@@ -62,11 +62,11 @@ typedef map<const Node*, DistanceMatrix, MapNodeComp> PairwiseDistanceMatrix;
 class Network
 {
     static int id_counter;       // remains in memory until end of the program
-    static MTRand mtrand;        // random number generator
     friend class Node;
     friend class Edge;
 
     public:
+        static mt19937 rng; // random number generator
         typedef enum { Undirected=0, Directed=1 } netType;
         typedef enum { NodeNames=0, NodeIDs=1 } outputType;
 
@@ -102,8 +102,8 @@ class Network
         }
         inline bool             is_directed() {return (bool) directed; }
                                  // get a pointer to the random number generator
-        inline MTRand*          get_rng() {
-            return &mtrand;
+        inline mt19937*    get_rng() {
+            return &rng;
         }
 
         /***************************************************************************
@@ -143,6 +143,8 @@ class Network
         /***************************************************************************
          * Network Modifier Functions
          **************************************************************************/
+        static void seed(); //seeds the PRNG with a random seed
+        static void seed(uint32_t seed); //seeds the PRNG with custom seed
         Node* add_new_node();    //creates new node and adds it to the network
         void populate(int n);    //add "n" new nodes to the network
                                  // add an existing node to the network
@@ -224,7 +226,7 @@ class Network
          **************************************************************************/
                                  // read network structure from file
         void read_edgelist(string filename, char sep = ',');
-        bool add_edgelist(std::ifstream&, char sep = ' ', string breaker = "BREAK");
+        bool add_edgelist(ifstream&, char sep = ' ', string breaker = "BREAK");
                                  // write network to file
         void write_edgelist(string filename, outputType names_or_ids, char sep = ',');
 
