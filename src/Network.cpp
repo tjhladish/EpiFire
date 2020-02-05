@@ -233,7 +233,6 @@ bool Network::small_world(int N, int K, double beta) {
             // Which edges will be shuffled?
             vector<int> edge_indeces(m);
             rand_nchoosek( degree, edge_indeces, &rng );
-            
             vector<Edge*> edges = node->get_edges_out();
             for (unsigned int e=0; e<edge_indeces.size(); e++) {
                 // Get the current neighbor associated with this edge
@@ -1533,7 +1532,7 @@ double Node::mean_min_path() {
 }
 
 
-double Node::min_path(Node* dest) {
+double Node::min_path(const Node* dest) {
     vector<Node*> empty(0);
     vector<double> distances = this->min_paths(empty);
     return distances[dest->id];
