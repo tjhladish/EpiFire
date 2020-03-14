@@ -56,6 +56,12 @@ class ChainBinomial_Sim: public Simulator
         void set_infectious_period(int d) { this->infectious_period = d; this->update_time_dist=true;}
         void set_transmissibility(double t) { this->T = t; this->update_time_dist=true;}
 
+        double expected_R0 () {
+            //assert(T != NULL);
+            double T_overall = 1.0 - pow(1.0 - T, infectious_period);
+            return T_overall / calc_critical_transmissibility();
+        }
+
         vector<double> define_time_dist() {
             time_dist.clear();
             for (int i = 0; i < infectious_period; i++) {
