@@ -360,7 +360,7 @@ class Node
         friend ostream& operator<< (ostream &out, Node* node);
         void dumper() const;
 
-        double min_path(Node* dest);
+        double min_path(const Node* dest);
 
         Edge* add_stub_out();
         string get_name_or_id();
