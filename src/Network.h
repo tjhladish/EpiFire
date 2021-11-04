@@ -70,7 +70,7 @@ class Network
         /***************************************************************************
          * Network Constructor and Destructor
          **************************************************************************/
-        Network( netType directed );
+        Network( netType directed = Undirected );
         Network( string name, netType directed );
         Network( const Network& net);
         ~Network();
