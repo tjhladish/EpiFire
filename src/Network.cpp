@@ -121,6 +121,14 @@ Node* Network::add_new_node() {
 }
 
 
+Node* Network::add_new_node(string name, stateType state) {
+    Node* node = add_new_node();
+    node->name = name;
+    node->state = state;
+    return(node);
+}
+
+
 void Network::delete_node(Node* node) {
     node->delete_node();
 }
@@ -1426,6 +1434,24 @@ void Node::connect_to (Node* end) {
         Edge* edge2 = end->add_stub_out();
         edge2->define_end(this);
     }
+}
+
+
+bool Node::disconnect() {
+    set<Edge*> edges_to_delete;
+    for(Edge* e: get_edges_out()) {
+        edges_to_delete.insert(e);
+        if (not get_network()->is_directed()) {
+            edges_to_delete.insert(e->get_complement());
+        }
+    }
+
+    bool was_connected = (bool) edges_to_delete.size(); // false if 0, true otherwise
+    while (edges_to_delete.size() > 0) {
+        (*edges_to_delete.begin())->delete_edge();
+        edges_to_delete.erase(edges_to_delete.begin());
+    }
+    return was_connected;
 }
 
 

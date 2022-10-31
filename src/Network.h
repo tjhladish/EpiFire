@@ -146,9 +146,11 @@ class Network
         static void seed(); //seeds the PRNG with a random seed
         static void seed(uint32_t seed); //seeds the PRNG with custom seed
         Node* add_new_node();    //creates new node and adds it to the network
+        Node* add_new_node(string name, stateType state);
+
         void populate(int n);    //add "n" new nodes to the network
                                  // add an existing node to the network
-        void add_node( Node* node );
+        //void add_node( Node* node );
                                  // delete a specified node (deleting associated edges)
         void delete_node( Node* node);
 
@@ -355,6 +357,7 @@ class Node
                                  // a->connect_to(b) == b->connect_to(a) for undirected networks
         void connect_to (Node* end);
         bool disconnect_from (Node* end); // true if they were connected, false if not
+        bool disconnect();                // disconnect from all neighbors, true if node had any
         bool change_neighbors(Node* old_neighbor, Node* new_neighbor);
         bool operator==( const Node& n2 );
         friend ostream& operator<< (ostream &out, Node* node);
