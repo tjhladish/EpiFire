@@ -1049,7 +1049,7 @@ bool Network::validate() {
 
 
 // read_edgelist currently supports only undirected networks
-void Network::read_edgelist(string filename, char sep, bool alert_isolates) {
+void Network::read_edgelist(string filename, char sep, bool alert_on_singleton) {
     ifstream myfile(filename.c_str());
     std::stringstream ss;
     map<string,Node*> idmap;
@@ -1070,7 +1070,7 @@ void Network::read_edgelist(string filename, char sep, bool alert_isolates) {
             } else if (fields.size() == 1) { // unconnected node
                 Node* node = this->add_new_node();
                 string name1 = strip(fields[0],whitespace);
-                if (alert_isolates) cerr << "Found single node " << name1 << endl;
+                if (alert_on_singleton) cerr << "Found single node " << name1 << endl;
                 node->name = name1;
                 idmap[name1] = node;
                 continue;
