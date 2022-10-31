@@ -12,12 +12,12 @@ class Simulator
 
         int time;
         Network* net;
-        MTRand* mtrand;
+        std::mt19937* rng;
 
-        Simulator() { time = 0; net=NULL; mtrand=NULL; };
-        Simulator(Network* net) { this->net = net; this->time = 0; this->mtrand = net->get_rng(); };
+        Simulator() { time = 0; net=NULL; rng=NULL; };
+        Simulator(Network* net) { this->net = net; this->time = 0; this->rng = net->get_rng(); };
 
-        void set_network( Network* net ) { this->net = net; this->mtrand = net->get_rng(); };
+        void set_network( Network* net ) { this->net = net; this->rng = net->get_rng(); };
         Network* network() { return(net); };
 
         int get_time() { return(time); };
@@ -39,7 +39,7 @@ class Simulator
             vector<Node*> nodes = net->get_nodes();
             vector<Node*> sample(n);
             vector<int> sample_ids(n);
-            rand_nchoosek(net->size(), sample_ids, mtrand);
+            rand_nchoosek(net->size(), sample_ids, rng);
             Node* node;
             for (unsigned int i = 0; i < sample_ids.size(); i++) {
                 node = nodes[ sample_ids[i] ];

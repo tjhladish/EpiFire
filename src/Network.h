@@ -14,7 +14,7 @@
 #include <math.h>
 #include "Utility.h"
 #include <assert.h>
-#include "MersenneTwister.h"
+#include <random>
 #include <limits>
 
 #include "debug.h"
@@ -25,6 +25,9 @@ using namespace std;
 class Edge;
 class Node;
 typedef int stateType;
+struct MapNodeComp { bool operator() (const Node* const& lhs, const Node* const& rhs) const; };
+typedef map<const Node*, double, MapNodeComp> DistanceMatrix;
+typedef map<const Node*, DistanceMatrix, MapNodeComp> PairwiseDistanceMatrix;
 
 /******************************************************************************
  * These classes have a natural heirarchy of Network > Node > Edge.  That means
@@ -59,11 +62,11 @@ typedef int stateType;
 class Network
 {
     static int id_counter;       // remains in memory until end of the program
-    static MTRand mtrand;        // random number generator
     friend class Node;
     friend class Edge;
 
     public:
+        static mt19937 rng; // random number generator
         typedef enum { Undirected=0, Directed=1 } netType;
         typedef enum { NodeNames=0, NodeIDs=1 } outputType;
 
@@ -72,10 +75,10 @@ class Network
          **************************************************************************/
         Network( netType directed = Undirected );
         Network( string name, netType directed );
-        Network( const Network& net);
+        //Network( const Network& net); // doesn't seem to be implemented
         ~Network();
 
-        Network* duplicate();    // Return a copy, identical except for the network ID
+        Network* duplicate() const;    // Return a copy, identical except for the network ID
 
         /***************************************************************************
          * Network operators
@@ -90,7 +93,7 @@ class Network
         inline int              get_id() const { return id; }
         inline string           get_name() { return name; }
                                  // # of nodes in the network
-        inline int              size() {
+        inline int              size() const {
             return node_list.size();
         }
                                  // do all edges have same length or cost
@@ -99,8 +102,8 @@ class Network
         }
         inline bool             is_directed() {return (bool) directed; }
                                  // get a pointer to the random number generator
-        inline MTRand*          get_rng() {
-            return &mtrand;
+        inline mt19937*    get_rng() {
+            return &rng;
         }
 
         /***************************************************************************
@@ -140,6 +143,8 @@ class Network
         /***************************************************************************
          * Network Modifier Functions
          **************************************************************************/
+        static void seed(); //seeds the PRNG with a random seed
+        static void seed(uint32_t seed); //seeds the PRNG with custom seed
         Node* add_new_node();    //creates new node and adds it to the network
         void populate(int n);    //add "n" new nodes to the network
                                  // add an existing node to the network
@@ -221,7 +226,7 @@ class Network
          **************************************************************************/
                                  // read network structure from file
         void read_edgelist(string filename, char sep = ',', bool alert_isolates = true);
-        bool add_edgelist(std::ifstream&, char sep = ' ', string breaker = "BREAK");
+        bool add_edgelist(ifstream&, char sep = ' ', string breaker = "BREAK");
                                  // write network to file
         void write_edgelist(string filename, outputType names_or_ids, char sep = ',');
 
@@ -261,11 +266,12 @@ class Network
                                  // if node_set is empty, use all nodes
         double transitivity(vector<Node*> node_set);
         bool is_weighted();      // do any edges have edge costs other than 1?
-        double mean_dist( vector<Node*> node_set);      // mean distANCE between all nodes A and B
+        double mean_dist( vector<Node*> node_set=vector<Node*>());      // mean distANCE between all nodes A and B
                                  // 2D matrix of distances
 
                                  // distances == edge costs
         void calculate_distances( vector<Node*>& destinations, vector< vector<double> >& distances );
+        PairwiseDistanceMatrix calculate_distances_map();
         void print_distances(vector<Node*>& full_node_set);
         //                         // edge lengths assumed to be 1 -- much faster than calculate_distances!
         //vector< vector<double> > calculate_unweighted_distances( vector<Node*> destinations );
@@ -336,8 +342,8 @@ class Node
         double mean_min_path();
 
         // for path length calculations, infinite distances == -1
-        map<const Node*,double> min_path_map(vector<Node*>& node_set) const;
-        map<const Node*,double> min_path_map() const {vector<Node*> tmp; return min_path_map(tmp);}
+        DistanceMatrix min_path_map(vector<Node*>& node_set) const;
+        DistanceMatrix min_path_map() const {vector<Node*> tmp; return min_path_map(tmp);}
         vector<double> min_paths(vector<Node*>& node_set) const;
         vector<double> min_paths() const {vector<Node*> tmp; return min_paths(tmp);}
 
@@ -377,8 +383,8 @@ class Node
         void _add_outbound_edge (Edge* edge);
         void _del_outbound_edge (Edge* outbound);
 
-        map<const Node*,double> _min_paths(vector<Node*>& node_set) const; // infinite distances == -1
-        map<const Node*,double> _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1
+        DistanceMatrix _min_paths(vector<Node*>& node_set) const; // infinite distances == -1
+        DistanceMatrix _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1
 };
 
 

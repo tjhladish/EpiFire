@@ -59,7 +59,7 @@ class Gillespie_Network_SEIRS_Sim {
         vector<int> state_counts;   // S, E, I, R counts
         double Now;                 // Current "time" in simulation
 
-        MTRand mtrand;              // RNG
+        mt19937 rng;              // RNG
 
         void run_simulation(double duration) {
             double start_time = Now;
@@ -81,7 +81,7 @@ class Gillespie_Network_SEIRS_Sim {
             return state_counts[EXPOSED] + state_counts[INFECTIOUS];
         }
 
-        int reset() {
+        void reset() {
             Now = 0.0;
            
             vector<Node*> nodes = network->get_nodes();
@@ -100,7 +100,7 @@ class Gillespie_Network_SEIRS_Sim {
             vector<Node*> nodes = network->get_nodes();
             vector<Node*> sample(n);
             vector<int> sample_ids(n);
-            rand_nchoosek(network->size(), sample_ids, &mtrand);
+            rand_nchoosek(network->size(), sample_ids, &rng);
             Node* node;
             for (unsigned int i = 0; i < sample_ids.size(); i++) {
                 node = nodes[ sample_ids[i] ];
@@ -125,15 +125,15 @@ class Gillespie_Network_SEIRS_Sim {
             state_counts[EXPOSED]++;      // increment exposed group
 
                                     // time to become infectious
-            double Ti = rand_exp(mu, &mtrand) + Now;
+            double Ti = rand_exp(mu, &rng) + Now;
             add_event(Ti, 'i', node);
                                     // time to recovery
-            double Tr = rand_exp(gamma, &mtrand) + Ti;
+            double Tr = rand_exp(gamma, &rng) + Ti;
                                     // time to next contact
-            double Tc = rand_exp(beta, &mtrand) + Ti;
+            double Tc = rand_exp(beta, &rng) + Ti;
             while ( Tc < Tr ) {     // does contact occur before recovery?
                 add_event(Tc, 'c', node); // potential transmission event
-                Tc += rand_exp(beta, &mtrand);
+                Tc += rand_exp(beta, &rng);
             }
             add_event(Tr, 'r', node);
                                     // time to become susceptible again
@@ -165,7 +165,7 @@ class Gillespie_Network_SEIRS_Sim {
                                  
                 vector<Node*> neighbors = node->get_neighbors();
                 if (neighbors.size() > 0) {
-                    int rand_idx = mtrand.randInt(neighbors.size() - 1); // randInt includes endpoints
+                    int rand_idx = rand_uniform_int(0, neighbors.size() - 1, &rng);
                     Node* contact = neighbors[rand_idx];
                     if ( contact->get_state() == SUSCEPTIBLE ) infect(contact);
                 }

@@ -8,6 +8,8 @@ int main() {
 
     for(int i=0; i<50; i++ ) {
         Gillespie_MassAction_Sim sim(N,GAMMA,BETA);
+        std::random_device rand;
+        sim.rng.seed(rand()); //seed RNG for simulator
         sim.rand_infect(100);
         sim.run_simulation();
         cout << sim.epidemic_size() << endl;
