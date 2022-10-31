@@ -7,6 +7,7 @@
 #include <queue>
 #include "Utility.h"
 #include "Network.h"
+#include <climits>
 
 using namespace std;
 
@@ -39,12 +40,16 @@ class Gillespie_Network_SEIRS_Sim {
             SUSCEPTIBLE, EXPOSED, INFECTIOUS, RESISTANT, STATE_SIZE // STATE_SIZE must be last
         } stateType;
                                     // constructor
-        Gillespie_Network_SEIRS_Sim ( Network* net, double m, double b, double g, double im_dur) {
+        Gillespie_Network_SEIRS_Sim ( Network* net, double m, double b, double g, double im_dur, double sde, double sdt) {
             network = net;
             mu = m;
             beta = b;
             gamma = g;
             immunity_duration = im_dur; // Immunity duration is fixed (not exponentially distributed)
+            social_distancing_effect = sde;
+            social_distancing_threshold = sdt;
+            detected_cases = 0;
+            social_distancing_start_date = INT_MAX;
             reset();
         }
 
@@ -53,6 +58,10 @@ class Gillespie_Network_SEIRS_Sim {
         double beta;                // param for exponential time to transmission
         double gamma;               // param for exponential time to recovery
         double immunity_duration;   // duration of recovered/resistant state before becoming susceptible
+        size_t detected_cases;
+        double social_distancing_effect;
+        size_t social_distancing_threshold;
+        int social_distancing_start_date;
 
                                     // event queue
         priority_queue<Event, vector<Event>, compTime > EventQ;
@@ -61,15 +70,18 @@ class Gillespie_Network_SEIRS_Sim {
 
         mt19937 rng;              // RNG
 
-        void run_simulation(double duration) {
+        void run_simulation(double duration, int serial) {
             double start_time = Now;
             int day = (int) Now;
             while (next_event() and Now < start_time + duration) {
                 if ((int) Now > day) {
-                    cout << (int) Now << " : "  << state_counts[SUSCEPTIBLE] << "\t" 
+                    cout << serial << "\t" << (int) Now << "\t"  << state_counts[SUSCEPTIBLE] << "\t" 
                                           << state_counts[EXPOSED] << "\t" 
                                           << state_counts[INFECTIOUS] << "\t" 
-                                          << state_counts[RESISTANT] << endl; 
+                                          << state_counts[RESISTANT] << "\t"
+                                          << detected_cases;
+                    if (social_distancing_start_date < Now) cout << " *"; 
+                                          cout << endl; 
                     day = (int) Now;
                 }
 
@@ -130,10 +142,16 @@ class Gillespie_Network_SEIRS_Sim {
                                     // time to recovery
             double Tr = rand_exp(gamma, &rng) + Ti;
                                     // time to next contact
-            double Tc = rand_exp(beta, &rng) + Ti;
+            //const double beta_sd = Now > social_distancing_timing ? beta*(1.0 - social_distancing_effect) : beta;
+
+            if (detected_cases > social_distancing_threshold and social_distancing_start_date == INT_MAX) {
+                social_distancing_start_date = Now + 10; // 10 days for symptoms + testing
+            }
+            const double beta_sd = social_distancing_start_date < Now ? beta*(1.0 - social_distancing_effect) : beta;
+            double Tc = rand_exp(beta_sd, &rng) + Ti;
             while ( Tc < Tr ) {     // does contact occur before recovery?
                 add_event(Tc, 'c', node); // potential transmission event
-                Tc += rand_exp(beta, &rng);
+                Tc += rand_exp(beta_sd, &rng);
             }
             add_event(Tr, 'r', node);
                                     // time to become susceptible again
@@ -150,6 +168,8 @@ class Gillespie_Network_SEIRS_Sim {
             Now = event.time;           // advance time
             Node* node = event.node;
             if (event.type == 'i') { 
+const double DETECT_PROB = 0.013; // based on FL numbers
+if (rand_uniform(0, 1, &rng) < DETECT_PROB) detected_cases++;
                 node->set_state(INFECTIOUS); 
                 state_counts[EXPOSED]--;      // decrement Infected class
                 state_counts[INFECTIOUS]++;   // increment Recovered class
