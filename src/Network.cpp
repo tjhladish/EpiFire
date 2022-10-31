@@ -233,7 +233,6 @@ bool Network::small_world(int N, int K, double beta) {
             // Which edges will be shuffled?
             vector<int> edge_indeces(m);
             rand_nchoosek( degree, edge_indeces, &rng );
-            
             vector<Edge*> edges = node->get_edges_out();
             for (unsigned int e=0; e<edge_indeces.size(); e++) {
                 // Get the current neighbor associated with this edge
@@ -1050,7 +1049,7 @@ bool Network::validate() {
 
 
 // read_edgelist currently supports only undirected networks
-void Network::read_edgelist(string filename, char sep) {
+void Network::read_edgelist(string filename, char sep, bool alert_on_singleton) {
     ifstream myfile(filename.c_str());
     std::stringstream ss;
     map<string,Node*> idmap;
@@ -1071,7 +1070,7 @@ void Network::read_edgelist(string filename, char sep) {
             } else if (fields.size() == 1) { // unconnected node
                 Node* node = this->add_new_node();
                 string name1 = strip(fields[0],whitespace);
-                cerr << "Found single node " << name1 << endl;
+                if (alert_on_singleton) cerr << "Found single node " << name1 << endl;
                 node->name = name1;
                 idmap[name1] = node;
                 continue;

@@ -73,7 +73,7 @@ class Network
         /***************************************************************************
          * Network Constructor and Destructor
          **************************************************************************/
-        Network( netType directed );
+        Network( netType directed = Undirected );
         Network( string name, netType directed );
         //Network( const Network& net); // doesn't seem to be implemented
         ~Network();
@@ -225,7 +225,7 @@ class Network
          * Network Input/Output (including visualization)
          **************************************************************************/
                                  // read network structure from file
-        void read_edgelist(string filename, char sep = ',');
+        void read_edgelist(string filename, char sep = ',', bool alert_on_singleton = true);
         bool add_edgelist(ifstream&, char sep = ' ', string breaker = "BREAK");
                                  // write network to file
         void write_edgelist(string filename, outputType names_or_ids, char sep = ',');
