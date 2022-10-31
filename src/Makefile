@@ -1,7 +1,7 @@
 -include local.mk
 
 CC := g++
-CFLAGS := -c -std=c++14 -O2 -Wall --pedantic -fPIC
+CFLAGS := -c -std=c++17 -O2 -Wall --pedantic -fPIC
 #CFLAGS=-c -std=c++11 -g -O0
 SOURCES := Network.cpp Utility.cpp
 INCLUDE := -I./
@@ -18,7 +18,7 @@ ARCHIVE ?= $(AR) -rv
 $(LIB): $(OBJECTS)
 	$(ARCHIVE) $(LIB) $(OBJECTS)
 
-.cpp.o:
+%.o: %.cpp
 	$(CC) $(CFLAGS) $(INCLUDE) $< -o $@
 
 clean:
