@@ -1532,7 +1532,7 @@ double Node::mean_min_path() {
 }
 
 
-double Node::min_path(Node* dest) {
+double Node::min_path(const Node* dest) {
     vector<Node*> empty(0);
     vector<double> distances = this->min_paths(empty);
     return distances[dest->id];
