@@ -1,7 +1,9 @@
-#include "Network.h"
-#include "Utility.h"
+
 #include <array>
 #include <functional>
+
+#include <EpiFire/Network.h>
+#include <EpiFire/Utility.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -9,7 +11,6 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-int Network::id_counter = 0;
 std::mt19937 Network::rng;          // single instance of random number generator for entire program run
 // the rng can be seeded at any time by calling rng.seed(your_seed) where your_seed is of type uint32_t
 
@@ -20,7 +21,6 @@ std::mt19937 Network::rng;          // single instance of random number generato
 ////////////////////////////////////////////////////////////////////////////////
 
 Network::Network( string name, netType directed) {
-    id = Network::id_counter++;
     this->name = name;
     this->directed = directed;
     this->unit_edges = 1;

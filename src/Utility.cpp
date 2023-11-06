@@ -1,4 +1,4 @@
-#include "Utility.h"
+#include <EpiFire/Utility.h>
 
 double EPSILON = 10e-15;         // probabilities smaller than this are treated as zero
 
@@ -20,7 +20,7 @@ long double poisson_pmf(double lambda, int k) {
 }
 
 vector<double> gen_trunc_poisson(double lambda, int min, int max) {
-    vector<double> dist(max + 1, 0.0);//initializes distribution to all 0
+    vector<double> dist(max + 1, 0.0); //initializes distribution to all 0
     double sum = 0.0;
     if (lambda < 500) {
         for (int k = (int) lambda; k >= min; k--) {
@@ -308,6 +308,13 @@ vector<vector<double> > read_2D_vector_file(string filename, char sep) {
     return M;
 }
 
+void PM::emit (const double numerator) {
+    // default: do nothing
+}
+
+void PM::set (const double denominator) {
+    // default: do nothing
+}
 
 /*      	// initialize random seed:
 void  seed_rand() {

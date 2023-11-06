@@ -199,4 +199,14 @@ inline void shuffle(vector<T> & my_vector, mt19937* rng) {
         swap(my_vector[i], my_vector[ rand_uniform_int(0, i, rng) ]);
     }
 }
+
+/**
+ * @brief a progress meter template, intended to have the emit method
+ * overloaded
+*/
+struct PM {
+    void emit (const double numerator);
+    void set (const double denominator);
+};
+
 #endif

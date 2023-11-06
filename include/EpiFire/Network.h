@@ -12,22 +12,14 @@
 #include <list>
 #include <algorithm>
 #include <math.h>
-#include "Utility.h"
 #include <assert.h>
 #include <random>
 #include <limits>
 
-#include "debug.h"
+#include <memory>
 
-using namespace std;
-
-//predeclare classes
-class Edge;
-class Node;
-typedef int stateType;
-struct MapNodeComp { bool operator() (const Node* const& lhs, const Node* const& rhs) const; };
-typedef map<const Node*, double, MapNodeComp> DistanceMatrix;
-typedef map<const Node*, DistanceMatrix, MapNodeComp> PairwiseDistanceMatrix;
+#include <EpiFire/Utility.h>
+#include <EpiFire/Shared.h>
 
 /******************************************************************************
  * These classes have a natural heirarchy of Network > Node > Edge.  That means
@@ -53,22 +45,31 @@ typedef map<const Node*, DistanceMatrix, MapNodeComp> PairwiseDistanceMatrix;
  *
  */
 
-/***************************************************************************
- *
- * BEGIN NETWORK CLASS
- *
- **************************************************************************/
+enum netType { Undirected = 0, Directed = 1 };
+enum outputType { NodeNames = 0, NodeIDs = 1 };
 
-class Network
-{
-    static int id_counter;       // remains in memory until end of the program
+
+class Network {
+
     friend class Node;
     friend class Edge;
 
+    private:
+//        static int id_counter;       // remains in memory until end of the program
+        const std::shared_ptr<PM> _pm; // pointer to the progress meter  
+
     public:
         static mt19937 rng; // random number generator
-        typedef enum { Undirected=0, Directed=1 } netType;
-        typedef enum { NodeNames=0, NodeIDs=1 } outputType;
+
+        Network (
+            const std::string name,
+            const netType directed,
+            const PM* pm 
+        );
+
+        Network (const netType directed) : Network("", directed, new PM()) { };
+        Network (const std::string name) : Network(name, Undirected, new PM()) { };
+        Network (const PM* pm) : Network("", Undirected, pm) { };
 
         /***************************************************************************
          * Network Constructor and Destructor
@@ -90,7 +91,7 @@ class Network
         /***************************************************************************
          * Network Accessor Functions (Simple)
          **************************************************************************/
-        inline int              get_id() const { return id; }
+//        inline int              get_id() const { return id; }
         inline string           get_name() { return name; }
                                  // # of nodes in the network
         inline int              size() const {
@@ -311,122 +312,4 @@ class Network
         int known_nodes; // bookkeeping var; allows get_component() to report % complete
 };
 
-class Node
-{
-    friend class Network;
-    friend class Edge;
-
-    public:
-
-        inline bool is_stopped() {return network->is_stopped();}
-
-        /***************************************************************************
-         * Constructor and Destructor
-         **************************************************************************/
-        //Use Network::add_new_node() to add nodes
-        void delete_node();
-
-        void set_network( Network* network );
-
-        inline int get_id() const { return id; }
-        inline string get_name() {  return name; }
-        inline Network* get_network() const { return network; }
-        inline vector<Edge*> get_edges_in() const { return edges_in; }
-        inline vector<Edge*> get_edges_out() const { return edges_out; }
-        inline vector<double> get_loc() const { return loc; }
-        inline stateType get_state() const { return state; }
-
-        inline void set_loc(const vector<double>& newloc) { this->loc = newloc; }
-        inline void set_state(stateType s) { this->state = s; }
-
-        double mean_min_path();
-
-        // for path length calculations, infinite distances == -1
-        DistanceMatrix min_path_map(vector<Node*>& node_set) const;
-        DistanceMatrix min_path_map() const {vector<Node*> tmp; return min_path_map(tmp);}
-        vector<double> min_paths(vector<Node*>& node_set) const;
-        vector<double> min_paths() const {vector<Node*> tmp; return min_paths(tmp);}
-
-        void add_stubs(int deg);
-
-        Edge* get_rand_edge();   // get a random outbound edge
-        vector<Node*> get_neighbors () const;
-        bool is_neighbor(Node* node2) const;
-                                 // a->connect_to(b) == b->connect_to(a) for undirected networks
-        void connect_to (Node* end);
-        bool disconnect_from (Node* end); // true if they were connected, false if not
-        bool change_neighbors(Node* old_neighbor, Node* new_neighbor);
-        bool operator==( const Node& n2 );
-        friend ostream& operator<< (ostream &out, Node* node);
-        void dumper() const;
-
-        double min_path(Node* dest);
-
-        Edge* add_stub_out();
-        string get_name_or_id();
-        int deg() const;
-
-    private:
-        Node();
-        Node(Network* network, string name, stateType state);
-        ~Node();
-
-        int id;                  //unique id
-        string name;
-        Network* network;        //pointer to network
-        vector<Edge*> edges_in;  //vector of pointers coming in
-        vector<Edge*> edges_out; //vector of pointers going out
-        vector<double> loc;
-        stateType state;
-        void _add_inbound_edge (Edge* edge);
-        void _del_inbound_edge (Edge* inbound);
-        void _add_outbound_edge (Edge* edge);
-        void _del_outbound_edge (Edge* outbound);
-
-        DistanceMatrix _min_paths(vector<Node*>& node_set) const; // infinite distances == -1
-        DistanceMatrix _min_unweighted_paths(vector<Node*>& node_set) const; // infinite distances == -1
-};
-
-
-class Edge
-{
-    friend class Network;
-    friend class Node;
-
-    public:
-        /***************************************************************************
-         * Constructor and Destructor
-         **************************************************************************/
-        ~Edge();
-        void delete_edge();      //destroys edge (A to B), leaves complement (B to A)
-        void disconnect_nodes(); //destroys edge & its complement
-
-        inline int get_id() const { return id; };
-        inline double get_cost() const { return cost; };
-        inline Node* get_start() const { return start; };
-        inline Node* get_end() const { return end; };
-        inline Network* get_network() const {return network; };
-
-        void set_cost(double c);
-
-        Edge* get_complement();
-        void swap_ends (Edge* other_edge);
-        void break_end ();
-        void define_end (Node* end_node);
-        bool is_stub();
-        bool operator==( const Edge& e2 );
-        friend ostream& operator<< (ostream &out, Edge* edge);
-        void dumper() const;
-
-    private:
-        Edge(Node* start , Node* end);
-        void _move_edge(Node* new_start_node);
-
-        int id;
-        double cost;
-        Node* start;
-        Node* end;
-        Network* network;
-
-};
 #endif

@@ -1,7 +1,7 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include "Network.h"
+#include <EpiFire/Network.h>
 #include <assert.h>
 #include <queue>
 

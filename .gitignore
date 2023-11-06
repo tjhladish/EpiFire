@@ -1,2 +1,4 @@
 build-epifire*
 epifire.pro.user
+build/*
+build-static/*
